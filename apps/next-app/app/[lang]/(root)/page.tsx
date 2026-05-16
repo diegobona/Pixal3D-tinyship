@@ -2,22 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Box,
   ChevronDown,
   CircleHelp,
-  Download,
   ImagePlus,
   Loader2,
-  Sparkles,
   WandSparkles,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@libs/react-shared/ui/button";
-import { Textarea } from "@libs/react-shared/ui/textarea";
 import { Input } from "@libs/react-shared/ui/input";
 import { useTranslation } from "@/hooks/use-translation";
-import { ModelViewer } from "@/components/pixal3d/model-viewer";
 
 type TaskStatus = "idle" | "upload-ready" | "processing" | "succeeded" | "failed";
 
@@ -53,27 +48,51 @@ interface StatusResponse {
 
 const POLL_INTERVAL_MS = 1200;
 const POLL_TIMEOUT_MS = 30000;
+const SAMPLE_IMAGES = [
+  { name: "Bunny mascot", src: "/samples/pixal3d-bunny.svg" },
+  { name: "Mushroom merchant", src: "/samples/pixal3d-mushroom.svg" },
+  { name: "Retro console", src: "/samples/pixal3d-console.svg" },
+  { name: "Fantasy dwarf", src: "/samples/pixal3d-dwarf.svg" },
+];
+const INSPIRATION_IMAGES = [
+  SAMPLE_IMAGES[0],
+  SAMPLE_IMAGES[2],
+  SAMPLE_IMAGES[1],
+  SAMPLE_IMAGES[3],
+  SAMPLE_IMAGES[2],
+  SAMPLE_IMAGES[1],
+  SAMPLE_IMAGES[3],
+  SAMPLE_IMAGES[0],
+  SAMPLE_IMAGES[1],
+  SAMPLE_IMAGES[3],
+  SAMPLE_IMAGES[0],
+  SAMPLE_IMAGES[2],
+];
+const ADVANTAGE_KEYS = [
+  "faithful",
+  "pixelAligned",
+  "geometry",
+  "pbr",
+  "fast",
+] as const;
 
 export default function Home() {
   const { t, locale } = useTranslation();
-  const [prompt, setPrompt] = useState(t.pixal3d.generator.defaultPrompt);
   const [imageDataUrl, setImageDataUrl] = useState("");
   const [imageName, setImageName] = useState("");
   const [taskStatus, setTaskStatus] = useState<TaskStatus>("idle");
   const [taskMessage, setTaskMessage] = useState(t.pixal3d.generator.status.idle);
-  const [modelUrl, setModelUrl] = useState("");
   const [isReadingFile, setIsReadingFile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(true);
 
   const canGenerate = useMemo(() => {
-    return Boolean(imageDataUrl && prompt.trim() && taskStatus !== "processing" && !isReadingFile);
-  }, [imageDataUrl, prompt, taskStatus, isReadingFile]);
+    return Boolean(imageDataUrl && taskStatus !== "processing" && !isReadingFile);
+  }, [imageDataUrl, taskStatus, isReadingFile]);
 
   useEffect(() => {
-    setPrompt(t.pixal3d.generator.defaultPrompt);
     setTaskMessage(t.pixal3d.generator.status.idle);
-  }, [t.pixal3d.generator.defaultPrompt, t.pixal3d.generator.status.idle]);
+  }, [t.pixal3d.generator.status.idle]);
 
   const readFileAsDataUrl = async (file: File) => {
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/bmp"];
@@ -98,7 +117,6 @@ export default function Home() {
       setImageName(file.name);
       setTaskStatus("upload-ready");
       setTaskMessage(t.pixal3d.generator.status.ready);
-      setModelUrl("");
     } catch {
       toast.error(t.pixal3d.generator.errors.uploadFailed);
     } finally {
@@ -109,6 +127,13 @@ export default function Home() {
   const handleFiles = (files: FileList | File[]) => {
     const file = files[0];
     if (file) void readFileAsDataUrl(file);
+  };
+
+  const useSampleImage = (sample: (typeof SAMPLE_IMAGES)[number]) => {
+    setImageDataUrl(`${window.location.origin}${sample.src}`);
+    setImageName(sample.name);
+    setTaskStatus("upload-ready");
+    setTaskMessage(t.pixal3d.generator.status.ready);
   };
 
   const pollTask = async (taskId: string) => {
@@ -142,14 +167,9 @@ export default function Home() {
       toast.error(t.pixal3d.generator.errors.imageRequired);
       return;
     }
-    if (!prompt.trim()) {
-      toast.error(t.pixal3d.generator.errors.promptRequired);
-      return;
-    }
 
     setTaskStatus("processing");
     setTaskMessage(t.pixal3d.generator.status.creating);
-    setModelUrl("");
 
     try {
       const response = await fetch("/api/3d-generate", {
@@ -157,7 +177,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageUrl: imageDataUrl,
-          prompt: prompt.trim(),
+          prompt: t.pixal3d.generator.defaultPrompt,
           quality: "standard",
         }),
       });
@@ -194,8 +214,7 @@ export default function Home() {
         throw new Error(data.message || t.pixal3d.generator.errors.generationFailed);
       }
 
-      const generatedModelUrl = await pollTask(data.data.taskId);
-      setModelUrl(generatedModelUrl);
+      await pollTask(data.data.taskId);
       setTaskStatus("succeeded");
       setTaskMessage(t.pixal3d.generator.status.succeeded);
       toast.success(t.pixal3d.generator.status.succeeded);
@@ -271,7 +290,6 @@ export default function Home() {
                         setImageName("");
                         setTaskStatus("idle");
                         setTaskMessage(t.pixal3d.generator.status.idle);
-                        setModelUrl("");
                       }}
                       aria-label={t.pixal3d.generator.removeImage}
                     >
@@ -290,28 +308,36 @@ export default function Home() {
                   <p className="mt-5 text-xl font-medium text-[#757f9b]">{t.pixal3d.generator.dragDropPaste}</p>
                   <Button
                     type="button"
-                    className="mt-24 h-16 w-full max-w-[390px] rounded-full border border-[#313b59] bg-[#141b31] text-2xl font-bold text-[#dbe1f2] hover:bg-[#1a2440]"
+                    className="mt-20 h-16 w-full max-w-[390px] rounded-full border border-[#313b59] bg-[#141b31] text-2xl font-bold text-[#dbe1f2] hover:bg-[#1a2440]"
                     disabled={isReadingFile}
                   >
                     {isReadingFile ? <Loader2 className="h-6 w-6 animate-spin" /> : null}
                     {t.pixal3d.generator.selectFileButton}
                   </Button>
+                  <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
+                    <p className="text-xl font-semibold text-[#7f889e]">{t.pixal3d.generator.samplePrompt}</p>
+                    <div className="flex flex-wrap justify-center gap-3">
+                      {SAMPLE_IMAGES.map((sample) => (
+                        <button
+                          key={sample.src}
+                          type="button"
+                          className="h-[72px] w-[72px] overflow-hidden rounded-2xl border border-[#35415f] bg-[#10182d] p-1 transition hover:border-[#48bdff] hover:bg-[#172341]"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            useSampleImage(sample);
+                          }}
+                          aria-label={`${t.pixal3d.generator.useSample} ${sample.name}`}
+                        >
+                          <img src={sample.src} alt="" className="h-full w-full rounded-xl object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </>
               )}
             </div>
 
-            <div className="mt-7 border-t border-[#303a59] pt-6">
-              <Textarea
-                id="pixal3d-prompt"
-                data-testid="pixal3d-prompt"
-                value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
-                placeholder={t.pixal3d.generator.promptPlaceholder}
-                className="min-h-[88px] resize-none rounded-md border-[#303a59] bg-[#0b1329] text-base text-[#dbe1f2] placeholder:text-[#727b96] focus-visible:ring-[#48bdff]/30"
-              />
-            </div>
-
-            <div className="mt-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="mt-7 border-t border-[#303a59] pt-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="inline-flex h-12 items-center gap-3 rounded-full bg-[#48bdff] px-6 text-lg font-extrabold text-[#051021]">
                   {t.pixal3d.generator.stylePreset}
@@ -376,42 +402,65 @@ export default function Home() {
             </div>
           )}
 
-          <div className="mt-10 w-full max-w-[1420px] border-t border-[#25314f] pt-10">
-            <div className="mb-7 flex flex-col gap-4 text-center md:flex-row md:items-end md:justify-between md:text-left">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#48bdff]">{t.pixal3d.generator.previewTitle}</p>
-                <h2 className="mt-2 text-3xl font-extrabold text-white">{t.pixal3d.generator.previewHeading}</h2>
-              </div>
-              {modelUrl && (
-                <Button asChild className="rounded-full bg-[#48bdff] text-[#051021] hover:bg-[#72ceff]">
-                  <a data-testid="pixal3d-download-link" href={modelUrl} download target="_blank" rel="noreferrer">
-                    <Download className="h-4 w-4" />
-                    {t.pixal3d.generator.downloadButton}
-                  </a>
-                </Button>
-              )}
+          <div id="features" className="mt-8 w-full max-w-[1420px] scroll-mt-24 border-t border-[#25314f] pt-8">
+            <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-[#aeb6ca]">
+              {t.pixal3d.advantages.eyebrow}
+            </p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-normal text-white sm:text-4xl">
+              {t.pixal3d.advantages.title}
+            </h2>
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              {ADVANTAGE_KEYS.map((key) => (
+                <article
+                  key={key}
+                  className="min-h-[118px] rounded-lg border border-[#25314f] bg-[#0b1426]/88 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.14)]"
+                >
+                  <h3 className="text-lg font-extrabold tracking-normal text-white">
+                    {t.pixal3d.advantages.items[key].title}
+                  </h3>
+                  <p className="mt-3 text-base leading-7 tracking-normal text-[#aeb6ca]">
+                    {t.pixal3d.advantages.items[key].description}
+                  </p>
+                </article>
+              ))}
             </div>
-            <div className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
-              <div className="min-h-[420px] rounded-xl border border-[#25314f] bg-[#0c1737] p-3">
-                <ModelViewer
-                  modelUrl={modelUrl}
-                  idleLabel={t.pixal3d.generator.viewer.idle}
-                  loadingLabel={t.pixal3d.generator.viewer.loading}
-                  errorLabel={t.pixal3d.generator.viewer.error}
-                />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                <div className="rounded-xl border border-[#25314f] bg-[#0c1737] p-5">
-                  <Sparkles className="h-8 w-8 text-[#48bdff]" />
-                  <h3 className="mt-5 text-xl font-extrabold text-white">{t.pixal3d.generator.trialTitle}</h3>
-                  <p className="mt-3 text-sm leading-6 text-[#aeb6ca]">{t.pixal3d.generator.trialDescription}</p>
-                </div>
-                <div className="rounded-xl border border-[#25314f] bg-[#0c1737] p-5">
-                  <Box className="h-8 w-8 text-[#00f08a]" />
-                  <h3 className="mt-5 text-xl font-extrabold text-white">{t.pixal3d.generator.outputTitle}</h3>
-                  <p className="mt-3 text-sm leading-6 text-[#aeb6ca]">{t.pixal3d.generator.outputDescription}</p>
-                </div>
-              </div>
+          </div>
+
+          <div className="mt-10 w-full max-w-[1420px] border-t border-[#25314f] pt-8">
+            <div className="text-center">
+              <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#00d884]">
+                {t.pixal3d.inspiration.eyebrow}
+              </p>
+              <h2 className="mt-4 text-xl font-medium tracking-normal text-[#c6cbda] sm:text-2xl">
+                {t.pixal3d.inspiration.title}
+              </h2>
+            </div>
+
+            <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:gap-x-8">
+              {INSPIRATION_IMAGES.map((item, index) => (
+                <button
+                  key={`${item.src}-${index}`}
+                  type="button"
+                  className="group relative flex min-h-[112px] items-center justify-center rounded-lg outline-none transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-[#00f08a]"
+                  onClick={() => {
+                    useSampleImage(item);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  aria-label={`${t.pixal3d.inspiration.generateSimilar} ${item.name}`}
+                >
+                  <span className="absolute inset-x-8 bottom-3 h-10 rounded-full bg-[#00f08a]/10 opacity-0 blur-xl transition-opacity group-hover:opacity-100" />
+                  <img
+                    src={item.src}
+                    alt=""
+                    className="relative h-24 w-24 object-contain drop-shadow-[0_18px_26px_rgba(0,0,0,0.34)] transition-transform group-hover:scale-105 sm:h-28 sm:w-28"
+                  />
+                  {index === 1 && (
+                    <span className="absolute bottom-0 left-1/2 hidden -translate-x-1/2 rounded-lg border border-[#005f4d] bg-[#06130f] px-4 py-2 text-xs font-semibold leading-5 text-[#00d884] shadow-[0_12px_30px_rgba(0,216,132,0.12)] md:inline-flex md:max-w-[190px]">
+                      {t.pixal3d.inspiration.generateSimilar}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
         </div>

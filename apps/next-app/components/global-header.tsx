@@ -53,6 +53,7 @@ export default function Header({ className }: HeaderProps) {
   };
 
   const homeHref = currentLocale === config.app.i18n.defaultLocale ? '/' : `/${currentLocale}`;
+  const featuresHref = currentLocale === config.app.i18n.defaultLocale ? '/#features' : `/${currentLocale}#features`;
 
   const handleLanguageChange = (locale: SupportedLocale) => {
     // Don't change if it's the same locale
@@ -85,14 +86,14 @@ export default function Header({ className }: HeaderProps) {
 
           {/* Desktop navigation */}
           <nav className="hidden md:flex md:flex-1 md:items-center md:justify-center md:space-x-16">
+            <Link href={featuresHref} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
+              {t.pixal3d.generator.featuresNav}
+            </Link>
             <Link href={`/${currentLocale}/pricing`} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
               {t.header.navigation.pricing}
             </Link>
             <Link href={`/${currentLocale}/blog`} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
               {t.header.navigation.blog}
-            </Link>
-            <Link href={homeHref} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
-              {t.navigation.home}
             </Link>
           </nav>
 
@@ -216,8 +217,8 @@ export default function Header({ className }: HeaderProps) {
       {isMenuOpen && (
         <div className="border-t border-[#26324d] bg-[#050b1d] md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link href={homeHref} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
-              {t.navigation.home}
+            <Link href={featuresHref} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
+              {t.pixal3d.generator.featuresNav}
             </Link>
             <Link href={`/${currentLocale}/blog`} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
               {t.header.navigation.blog}

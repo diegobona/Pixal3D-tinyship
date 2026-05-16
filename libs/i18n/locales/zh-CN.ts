@@ -84,7 +84,10 @@ export const zhCN: Locale = {
       uploadButton: "上传图片",
       dragDropPaste: "拖拽、粘贴或选择文件",
       selectFileButton: "选择文件",
+      samplePrompt: "没有图片？试试这些：",
+      useSample: "使用示例",
       removeImage: "移除已上传图片",
+      featuresNav: "功能",
       promptLabel: "模型描述",
       promptPlaceholder: "描述材质、形状、清理要求和想要的风格。",
       defaultPrompt: "生成一个干净的游戏级 3D 资产，比例准确，拓扑整洁，使用中性棚拍光照，并适合 PBR 材质流程。",
@@ -128,6 +131,37 @@ export const zhCN: Locale = {
         trialUsedDescription: "创建账号后即可继续生成 Pixal3D 模型。",
         insufficientCredits: "积分不足，无法生成 3D 模型。"
       }
+    },
+    advantages: {
+      eyebrow: "Pixal3D 优势",
+      title: "为什么选择 Pixal3D",
+      items: {
+        faithful: {
+          title: "忠实还原输入图片",
+          description: "生成更贴近原始形状、风格和视觉识别的 3D 模型。"
+        },
+        pixelAligned: {
+          title: "像素对齐的 3D 生成",
+          description: "强化 2D 图像像素与 3D 空间之间的连接，让图像转 3D 结果更清晰。"
+        },
+        geometry: {
+          title: "细节几何重建",
+          description: "捕捉物体轮廓、结构和形状细节，而不是输出过度简化的 3D 模型。"
+        },
+        pbr: {
+          title: "PBR 纹理生成",
+          description: "创建带有更丰富物理材质纹理的 3D 模型，用于更真实的 GLB 预览和资产项目。"
+        },
+        fast: {
+          title: "快速模型生成",
+          description: "约 10 秒完成模型生成，更适合快速测试 Pixal3D AI、图像转 3D 和 STL 准备流程。"
+        }
+      }
+    },
+    inspiration: {
+      eyebrow: "模型灵感画廊",
+      title: "探索适合下一次生成的 3D 模型方向",
+      generateSimilar: "点击生成相似 3D 模型"
     }
   },
   email: {

@@ -75,16 +75,19 @@ export const en: Locale = {
   pixal3d: {
     generator: {
       badge: "Image to 3D",
-      heroTitle: "Image to 3D",
+      heroTitle: "Turn Any Image into a Faithful 3D Model",
       title: "Turn one product image into a GLB model",
-      subtitle: "Convert any product image into a downloadable GLB 3D model.",
+      subtitle: "Free to start, no login required",
       imageLabel: "Reference image",
       imageHint: "Single image input for the v1 mock pipeline.",
       imagePreviewAlt: "Uploaded reference image",
       uploadButton: "Upload image",
       dragDropPaste: "Drag & drop, or paste",
       selectFileButton: "Select file",
+      samplePrompt: "No image? Try these:",
+      useSample: "Use sample",
       removeImage: "Remove uploaded image",
+      featuresNav: "Features",
       promptLabel: "Model brief",
       promptPlaceholder: "Describe material, shape, clean-up needs, and the style you want.",
       defaultPrompt: "Create a clean, game-ready 3D asset with accurate proportions, tidy topology, neutral studio lighting, and PBR-friendly materials.",
@@ -128,6 +131,37 @@ export const en: Locale = {
         trialUsedDescription: "Create an account to continue generating Pixal3D models.",
         insufficientCredits: "Not enough credits for 3D generation."
       }
+    },
+    advantages: {
+    eyebrow: "Pixal3D Advantages",
+    title: "Why choose Pixal3D",
+    items: {
+      faithful: {
+        title: "Faithful to your image",
+        description: "Generate 3D models that stay closer to the original shape, style, and visual identity of your input image."
+      },
+      pixelAligned: {
+        title: "Pixel-aligned 3D generation",
+        description: "Build a stronger connection between 2D image pixels and 3D space for clearer image-to-3D results."
+      },
+      geometry: {
+        title: "Detailed geometry reconstruction",
+        description: "Capture object contours, structures, and shape details instead of settling for an overly simplified 3D model."
+      },
+      pbr: {
+        title: "PBR texture generation",
+        description: "Create 3D models with richer physically based textures for more realistic GLB previews and 3D asset projects."
+      },
+      fast: {
+        title: "Fast model generation",
+        description: "Complete model generation in about 10 seconds for quicker Pixal3D AI, image-to-3D model, and STL preparation tests."
+      }
+    }
+    },
+    inspiration: {
+      eyebrow: "Model Inspiration Gallery",
+      title: "Explore example 3D model directions for your next generation",
+      generateSimilar: "Click to generate a similar 3D model"
     }
   },
   email: {
