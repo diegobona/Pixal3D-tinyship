@@ -182,12 +182,20 @@ export default function Header({ className }: HeaderProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href={`/${currentLocale}/pricing`}>
-                <Button className="rounded-full bg-[#48bdff] px-5 text-base font-bold text-[#04101e] hover:bg-[#72ceff]">
-                  <Crown className="h-5 w-5" />
-                  {t.pixal3d.generator.upgradeButton}
-                </Button>
-              </Link>
+              <>
+                <Link
+                  href={`/${currentLocale}/signin`}
+                  className="text-sm font-semibold text-white/70 transition-colors hover:text-white"
+                >
+                  {t.header.auth.signIn}
+                </Link>
+                <Link href={`/${currentLocale}/pricing`}>
+                  <Button className="rounded-full bg-[#48bdff] px-5 text-base font-bold text-[#04101e] hover:bg-[#72ceff]">
+                    <Crown className="h-5 w-5" />
+                    {t.pixal3d.generator.upgradeButton}
+                  </Button>
+                </Link>
+              </>
             )}
           </div>
 
@@ -288,7 +296,10 @@ export default function Header({ className }: HeaderProps) {
                 </button>
               </div>
             ) : (
-              <div className="px-4 py-2">
+              <div className="space-y-3 px-4 py-2">
+                <Link href={`/${currentLocale}/signin`} className="block text-center text-sm font-semibold text-white/70 hover:text-white">
+                  {t.header.auth.signIn}
+                </Link>
                 <Link href={`/${currentLocale}/pricing`}>
                   <Button className="w-full rounded-full bg-[#48bdff] text-sm font-bold text-[#04101e] hover:bg-[#72ceff]">
                     <Crown className="h-4 w-4" />
