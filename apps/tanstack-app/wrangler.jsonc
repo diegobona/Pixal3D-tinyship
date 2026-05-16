@@ -1,0 +1,32 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "tinyship-tanstack",
+	"compatibility_date": "2026-03-17",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"main": "@tanstack/react-start/server-entry",
+	"observability": {
+		"enabled": true
+	},
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "d811cfad030643698c9c92f88f47ee34",
+			"localConnectionString": "postgresql://viking:unused@localhost:5432/shipeasy_dev"
+		}
+	],
+	// Non-sensitive environment variables
+	"vars": {
+	  "APP_BASE_URL": "https://tinyship.vikingz.me",
+	  "BETTER_AUTH_URL": "https://tinyship.vikingz.me"
+	},
+	// Database acceleration via Hyperdrive (requires `npx wrangler hyperdrive create`)
+	// Uncomment after creating a Hyperdrive config:
+	// "hyperdrive": [
+	//   {
+	//     "binding": "HYPERDRIVE",
+	//     "id": "<your-hyperdrive-config-id>"
+	//   }
+	// ]
+}
