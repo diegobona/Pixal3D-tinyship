@@ -21,7 +21,7 @@ export function LoginForm({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  const { t, locale, tWithParams } = useTranslation();
+  const { t, localizedPath, tWithParams } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [errorCode, setErrorCode] = useState('');
@@ -63,7 +63,7 @@ export function LoginForm({
 
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get('returnTo');
-    const callbackURL = returnTo || `/${locale}`;
+    const callbackURL = returnTo || localizedPath('/');
     
     const { error } = await authClientReact.signIn.email({
       email: data.email,
@@ -139,7 +139,7 @@ export function LoginForm({
             <div className="flex items-center">
               <Label htmlFor="password">{t.auth.signin.password}</Label>
               <Link
-                href={`/${locale}/forgot-password`}
+                href={localizedPath('/forgot-password')}
                 className="ml-auto text-sm underline-offset-4 hover:underline"
               >
                 {t.auth.signin.forgotPassword}
@@ -191,7 +191,7 @@ export function LoginForm({
         </div>
         <div className="text-center text-sm">
           {t.auth.signin.noAccount}{" "}
-          <Link href={`/${locale}/signup`} className="underline underline-offset-4">
+          <Link href={localizedPath('/signup')} className="underline underline-offset-4">
             {t.auth.signin.signupLink}
           </Link>
         </div>

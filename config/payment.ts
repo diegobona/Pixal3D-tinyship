@@ -694,7 +694,7 @@ export const paymentConfig = {
     starterYearly: {
       provider: 'stripe',
       id: 'starterYearly',
-      amount: 76,
+      amount: 72,
       currency: 'USD',
       duration: { months: 12, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_STARTER_YEARLY') || 'price_starter_yearly_replace_me',
@@ -730,7 +730,7 @@ export const paymentConfig = {
     creatorYearly: {
       provider: 'stripe',
       id: 'creatorYearly',
-      amount: 160,
+      amount: 156,
       currency: 'USD',
       recommended: true,
       duration: { months: 12, type: 'recurring' },
@@ -771,7 +771,7 @@ export const paymentConfig = {
     proYearly: {
       provider: 'stripe',
       id: 'proYearly',
-      amount: 412,
+      amount: 408,
       currency: 'USD',
       duration: { months: 12, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_PRO_YEARLY') || 'price_pro_yearly_replace_me',

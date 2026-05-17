@@ -9,7 +9,7 @@ import { DashboardTabs } from "./components/dashboard-tabs";
 import { Loader2 } from "lucide-react";
 
 export default function DashboardPage() {
-  const { t, locale: currentLocale } = useTranslation();
+  const { t, locale: currentLocale, localizedPath } = useTranslation();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -37,9 +37,9 @@ export default function DashboardPage() {
     } else if (!isPending) {
       setLoading(false);
       // Redirect to signin page when user is not authenticated
-      router.push(`/${currentLocale}/signin`);
+      router.push(localizedPath('/signin'));
     }
-  }, [user, refreshKey, isPending, router, currentLocale]);
+  }, [user, refreshKey, isPending, router, currentLocale, localizedPath]);
 
   // 格式化日期
   const formatDate = (dateString: string | Date) => {

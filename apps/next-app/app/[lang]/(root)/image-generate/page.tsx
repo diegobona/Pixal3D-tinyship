@@ -32,7 +32,7 @@ interface GenerationResult {
 }
 
 export default function ImageGeneratePage() {
-  const { t, locale } = useTranslation();
+  const { t, localizedPath } = useTranslation();
   
   // Provider and model state
   const imageConfig = config.aiImage;
@@ -129,7 +129,7 @@ export default function ImageGeneratePage() {
             description: t.ai.image.errors.insufficientCreditsDescription,
             action: {
               label: t.common?.viewPlans || 'View Plans',
-              onClick: () => { window.location.href = `/${locale}/pricing`; }
+              onClick: () => { window.location.href = localizedPath('/pricing'); }
             }
           });
           return;

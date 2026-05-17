@@ -26,9 +26,12 @@ describe('Pixal3D pricing plans', () => {
     expect(paidPlans.filter((plan) => plan.duration.months === 1)).toHaveLength(3);
     expect(paidPlans.filter((plan) => plan.duration.months === 12)).toHaveLength(3);
 
-    expect(config.payment.plans.starterYearly.amount).toBe(76);
-    expect(config.payment.plans.creatorYearly.amount).toBe(160);
-    expect(config.payment.plans.proYearly.amount).toBe(412);
+    expect(config.payment.plans.starterYearly.amount).toBe(72);
+    expect(config.payment.plans.creatorYearly.amount).toBe(156);
+    expect(config.payment.plans.proYearly.amount).toBe(408);
+    expect(config.payment.plans.starterYearly.amount % 12).toBe(0);
+    expect(config.payment.plans.creatorYearly.amount % 12).toBe(0);
+    expect(config.payment.plans.proYearly.amount % 12).toBe(0);
 
     expect(plans.every((plan) => plan.i18n.en.name.includes('Stripe'))).toBe(false);
     expect(plans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('credits')))).toBe(true);

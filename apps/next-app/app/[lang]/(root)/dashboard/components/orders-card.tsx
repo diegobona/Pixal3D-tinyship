@@ -43,7 +43,7 @@ interface OrdersCardProps {
 const PAGE_SIZE = 10;
 
 export function OrdersCard({}: OrdersCardProps) {
-  const { t, locale: currentLocale } = useTranslation();
+  const { t, locale: currentLocale, localizedPath } = useTranslation();
   const [ordersData, setOrdersData] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -220,7 +220,7 @@ export function OrdersCard({}: OrdersCardProps) {
             {t.dashboard.orders.noOrdersDescription}
           </p>
           <Button variant="outline" asChild>
-            <Link href={`/${currentLocale}/pricing`}>
+            <Link href={localizedPath('/pricing')}>
               {t.dashboard.subscription.viewPlans}
             </Link>
           </Button>

@@ -28,7 +28,7 @@ export function ResendVerificationDialog({
   onClose, 
   email 
 }: ResendVerificationDialogProps) {
-  const { t, locale } = useTranslation();
+  const { t, localizedPath } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileKey, setTurnstileKey] = useState(0);
@@ -53,7 +53,7 @@ export function ResendVerificationDialog({
     
     const { data, error } = await authClientReact.sendVerificationEmail({
       email,
-      callbackURL: `/${locale}`,
+      callbackURL: localizedPath('/'),
       fetchOptions: {
         headers: {
           "x-resend-source": "user-initiated", // 标识这是用户主动重发请求

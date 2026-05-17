@@ -19,7 +19,7 @@ import {
 } from "@libs/react-shared/ui/sidebar"
 
 export function AppSidebar() {
-  const { t, locale: currentLocale } = useTranslation();
+  const { t, localizedPath } = useTranslation();
   const pathname = usePathname();
 
   // Admin dashboard item
@@ -61,7 +61,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <Link href={`/${currentLocale}`}>
+        <Link href={localizedPath('/')}>
           <Logo size="md" />
         </Link>
       </SidebarHeader>
@@ -71,8 +71,8 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === `/${currentLocale}${dashboardItem.url}`}>
-                  <Link href={`/${currentLocale}${dashboardItem.url}`}>
+                <SidebarMenuButton asChild isActive={pathname === localizedPath(dashboardItem.url)}>
+                  <Link href={localizedPath(dashboardItem.url)}>
                     <dashboardItem.icon />
                     <span>{dashboardItem.title}</span>
                   </Link>
@@ -89,8 +89,8 @@ export function AppSidebar() {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname.startsWith(`/${currentLocale}${item.url}`)}>
-                    <Link href={`/${currentLocale}${item.url}`}>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith(localizedPath(item.url))}>
+                    <Link href={localizedPath(item.url)}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>

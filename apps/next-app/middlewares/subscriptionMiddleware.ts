@@ -4,6 +4,15 @@ import { auth } from "@libs/auth";
 import { i18n } from '../app/i18n-config';
 import { checkSubscriptionStatus, isLifetimeMember } from '@libs/database/utils/subscription';
 
+function getLocaleFromPathname(pathname: string) {
+  const segment = pathname.split('/')[1];
+  return i18n.locales.includes(segment as any) ? segment : i18n.defaultLocale;
+}
+
+function localizedPath(path: string, locale: string) {
+  return locale === i18n.defaultLocale ? path : `/${locale}${path}`;
+}
+
 /**
  * 检查用户是否具有有效订阅
  * @param userId 用户ID
@@ -44,8 +53,8 @@ export async function subscriptionMiddleware(
   
   // 未登录，重定向到登录页面
   if (!session || !session.user) {
-    const currentLocale = pathname.split('/')[1] || i18n.defaultLocale;
-    const loginUrl = new URL(`/${currentLocale}/login`, request.url);
+    const currentLocale = getLocaleFromPathname(pathname);
+    const loginUrl = new URL(localizedPath('/signin', currentLocale), request.url);
     return NextResponse.redirect(loginUrl);
   }
   
@@ -55,8 +64,8 @@ export async function subscriptionMiddleware(
   if (!hasSubscription) {
     if (options.redirectToUpgrade) {
       // 重定向到升级页面
-      const currentLocale = pathname.split('/')[1] || i18n.defaultLocale;
-      const upgradeUrl = new URL(`/${currentLocale}/pricing`, request.url);
+      const currentLocale = getLocaleFromPathname(pathname);
+      const upgradeUrl = new URL(localizedPath('/pricing', currentLocale), request.url);
       return NextResponse.redirect(upgradeUrl);
     } else {
       // API请求返回错误

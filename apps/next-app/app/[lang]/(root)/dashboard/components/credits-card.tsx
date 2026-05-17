@@ -48,7 +48,7 @@ interface CreditTransaction {
 const PAGE_SIZE = 10;
 
 export function CreditsCard() {
-  const { t, locale: currentLocale } = useTranslation();
+  const { t, locale: currentLocale, localizedPath } = useTranslation();
   const [creditData, setCreditData] = useState<CreditStatus | null>(null);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -341,7 +341,7 @@ export function CreditsCard() {
 
         {/* Buy More Credits Button */}
         <Button asChild className="w-full">
-          <Link href={`/${currentLocale}/pricing`}>
+          <Link href={localizedPath('/pricing')}>
             <Coins className="h-4 w-4 mr-2" />
             {t.dashboard.credits.buyMore}
             <ArrowRight className="h-4 w-4 ml-2" />

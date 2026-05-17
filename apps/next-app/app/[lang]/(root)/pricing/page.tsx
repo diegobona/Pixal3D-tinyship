@@ -33,8 +33,22 @@ import { cn } from "@/lib/utils";
 
 type BillingCycle = 'monthly' | 'yearly';
 
+const formatPrice = (amount: number) => {
+  if (Number.isInteger(amount)) {
+    return amount.toString();
+  }
+
+  return amount.toFixed(2).replace(/\.?0+$/, '');
+};
+
+const extractMonthlyCredits = (features: string[]) => {
+  const creditsFeature = features.find((feature) => feature.toLowerCase().includes('monthly credits'));
+  const match = creditsFeature?.match(/[\d,]+/);
+  return match ? Number(match[0].replace(/,/g, '')) : 0;
+};
+
 export default function PricingPage() {
-  const { t, locale: currentLocale } = useTranslation();
+  const { t, locale: currentLocale, localizedPath } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
   const [loading, setLoading] = useState<string | null>(null);
@@ -79,7 +93,7 @@ export default function PricingPage() {
         if (data.status === 'paid') {
           clearInterval(interval);
           setPollingInterval(null);
-          router.push(`/${currentLocale}/payment-success?provider=wechat`);
+          router.push(`${localizedPath('/payment-success')}?provider=wechat`);
         } else if (data.status === 'failed') {
           clearInterval(interval);
           setPollingInterval(null);
@@ -101,7 +115,7 @@ export default function PricingPage() {
 
       if (!user) {
         const returnPath = encodeURIComponent(pathname);
-        router.push(`/${currentLocale}/signin?returnTo=${returnPath}`);
+        router.push(`${localizedPath('/signin')}?returnTo=${returnPath}`);
         return;
       }
 
@@ -303,6 +317,16 @@ export default function PricingPage() {
                 const isCreditPack = plan.duration?.type === 'credits';
                 
             const features = i18n?.features || [];
+                const isYearlyPlan = 'months' in plan.duration && plan.duration?.months === 12;
+                const monthlyPeer = isYearlyPlan
+                  ? allPlans.find((candidate) => candidate.id === plan.id.replace('Yearly', 'Monthly'))
+                  : undefined;
+                const referenceAmount = monthlyPeer?.amount || plan.amount;
+                const displayedMonthlyAmount = isYearlyPlan ? plan.amount / 12 : plan.amount;
+                const monthlyCredits = extractMonthlyCredits(features);
+                const pricePerHundredCredits = monthlyCredits > 0
+                  ? (displayedMonthlyAmount / monthlyCredits) * 100
+                  : undefined;
             
             return (
                   <motion.div
@@ -355,17 +379,27 @@ export default function PricingPage() {
                     {/* Price */}
                     <div className="text-center mb-6">
                       <div className="flex items-baseline justify-center space-x-2">
+                        {isYearlyPlan && (
+                          <span className="text-xl font-medium text-muted-foreground line-through">
+                            {plan.currency === 'CNY' ? '¥' : '$'}{formatPrice(referenceAmount)}
+                          </span>
+                        )}
                         <span className={`text-4xl font-bold ${
                           isRecommended ? 'text-card-foreground' : 'text-foreground'
                         }`}>
-                      {plan.currency === 'CNY' ? '楼' : '$'}{plan.amount}
+                          {plan.currency === 'CNY' ? '¥' : '$'}{formatPrice(displayedMonthlyAmount)}
                     </span>
                         <span className={`text-base font-medium ${
                           isRecommended ? 'text-muted-foreground' : 'text-muted-foreground'
                         }`}>
-                      /{i18n?.duration || 'Duration'}
+                          /month
                     </span>
                       </div>
+                      {pricePerHundredCredits !== undefined && (
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          {plan.currency === 'CNY' ? '¥' : '$'}{pricePerHundredCredits.toFixed(2)} / 100 credits
+                        </div>
+                      )}
                       
                       {isLifetime && (
                         <div className="mt-2 inline-flex items-center space-x-1 px-2.5 py-1 bg-chart-5-bg-15 text-chart-5 rounded-full text-xs font-medium">

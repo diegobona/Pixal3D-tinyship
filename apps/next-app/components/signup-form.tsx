@@ -25,7 +25,7 @@ export function SignupForm({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   const router = useRouter();
-  const { t, locale, tWithParams } = useTranslation();
+  const { t, localizedPath, tWithParams } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [errorCode, setErrorCode] = useState('');
@@ -109,7 +109,7 @@ export function SignupForm({
     } else {
       const params = new URLSearchParams(window.location.search);
       const returnTo = params.get('returnTo');
-      router.push(returnTo || `/${locale}`);
+      router.push(returnTo || localizedPath('/'));
     }
     
     setLoading(false);
@@ -248,7 +248,7 @@ export function SignupForm({
         </div>
         <div className="text-center text-sm">
           {t.auth.signup.haveAccount}{" "}
-          <Link href={`/${locale}/signin`} className="text-primary hover:underline underline-offset-4">
+          <Link href={localizedPath('/signin')} className="text-primary hover:underline underline-offset-4">
             {t.auth.signup.signinLink}
           </Link>
         </div>

@@ -40,7 +40,7 @@ interface AdminOrdersCardProps {
 }
 
 export function AdminOrdersCard({ limit = 10 }: AdminOrdersCardProps) {
-  const { t, locale: currentLocale } = useTranslation();
+  const { t, locale: currentLocale, localizedPath } = useTranslation();
   const [ordersData, setOrdersData] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -275,7 +275,7 @@ export function AdminOrdersCard({ limit = 10 }: AdminOrdersCardProps) {
           {/* 查看更多按钮 */}
           <div className="p-6 border-t border-border">
             <Button variant="outline" asChild className="w-full">
-              <Link href={`/${currentLocale}/admin/orders`}>
+                <Link href={localizedPath('/admin/orders')}>
                 {t.dashboard.orders.viewAllOrders}
                 <ExternalLink className="ml-2 h-4 w-4" />
               </Link>

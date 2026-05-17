@@ -35,7 +35,7 @@ import {
 import '@/app/highlight.css'
 
 export default function Chat() {
-  const { t, locale } = useTranslation();
+  const { t, localizedPath } = useTranslation();
   const initialMessages: any[] = [
     { 
       id: '1', 
@@ -116,7 +116,7 @@ export default function Chat() {
           label: t.dashboard.credits?.buyMore || t.common.viewPlans,
           onClick: () => {
             // Navigate to pricing page
-            window.location.href = `/${locale}/pricing`;
+            window.location.href = localizedPath('/pricing');
           }
         }
       });

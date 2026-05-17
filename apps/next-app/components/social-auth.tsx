@@ -20,7 +20,7 @@ export function SocialAuth({
   ...props
 }: SocialAuthProps) {
   const router = useRouter();
-  const { locale: currentLocale, t } = useTranslation();
+  const { localizedPath, t } = useTranslation();
   const [loadingProvider, setLoadingProvider] = useState<SocialProvider | null>(null);
 
   const handleProviderClick = async (provider: SocialProvider) => {
@@ -32,10 +32,10 @@ export function SocialAuth({
 
     switch (provider) {
       case 'wechat':
-        router.push(`/${currentLocale}/wechat${queryString}`);
+        router.push(`${localizedPath('/wechat')}${queryString}`);
         break;
       case 'phone':
-        router.push(`/${currentLocale}/cellphone${queryString}`);
+        router.push(`${localizedPath('/cellphone')}${queryString}`);
         break;
       default:
         setLoadingProvider(provider);

@@ -22,55 +22,70 @@ interface ProtectedRouteConfig {
   redirectIfSubscribed?: boolean; // New field to redirect subscribed users (e.g., pricing page)
 }
 
+const localePrefixPattern = `(?:\\/(${i18n.locales.join('|')}))?`;
+
+function pagePattern(path: string) {
+  return new RegExp(`^${localePrefixPattern}${path}$`);
+}
+
+function getLocaleFromPathname(pathname: string) {
+  const segment = pathname.split('/')[1];
+  return i18n.locales.includes(segment as any) ? segment : i18n.defaultLocale;
+}
+
+function localizedPath(path: string, locale: string) {
+  return locale === i18n.defaultLocale ? path : `/${locale}${path}`;
+}
+
 // --- Configuration for Protected Routes ---
 // TODO: Adjust Subject values based on your @libs/permissions definitions.
 const protectedRoutes: ProtectedRouteConfig[] = [
   // Auth routes - redirect logged-in users to dashboard
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/signin$`),
+    pattern: pagePattern('/signin'),
     type: 'page',
     requiresAuth: false,
     isAuthRoute: true
   },
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/signup$`),
+    pattern: pagePattern('/signup'),
     type: 'page',
     requiresAuth: false,
     isAuthRoute: true
   },
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/forgot-password$`),
+    pattern: pagePattern('/forgot-password'),
     type: 'page',
     requiresAuth: false,
     isAuthRoute: true
   },
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/reset-password$`),
+    pattern: pagePattern('/reset-password'),
     type: 'page',
     requiresAuth: false,
     isAuthRoute: true
   },
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/cellphone$`),
+    pattern: pagePattern('/cellphone'),
     type: 'page',
     requiresAuth: false,
     isAuthRoute: true
   },
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/wechat$`),
+    pattern: pagePattern('/wechat'),
     type: 'page',
     requiresAuth: false,
     isAuthRoute: true
   },
   
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/admin(\\/.*)?$`), 
+    pattern: pagePattern('/admin(\\/.*)?'), 
     type: 'page',
     requiresAuth: true,
     requiredPermission: { action: Action.MANAGE, subject: Subject.ALL } 
   },
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/settings(\\/.*)?$`), 
+    pattern: pagePattern('/settings(\\/.*)?'), 
     type: 'page',
     requiresAuth: true
   },
@@ -80,17 +95,17 @@ const protectedRoutes: ProtectedRouteConfig[] = [
   //   requiresAuth: true
   // },
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/dashboard(\\/.*)?$`), 
+    pattern: pagePattern('/dashboard(\\/.*)?'), 
     type: 'page',
     requiresAuth: true
   },
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/upload(\\/.*)?$`), 
+    pattern: pagePattern('/upload(\\/.*)?'), 
     type: 'page',
     requiresAuth: true
   },
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/premium-features(\\/.*)?$`), 
+    pattern: pagePattern('/premium-features(\\/.*)?'), 
     type: 'page',
     requiresAuth: true,
     requiresSubscription: true // 高级功能区域
@@ -107,12 +122,12 @@ const protectedRoutes: ProtectedRouteConfig[] = [
   
   // Payment pages - require authentication
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/payment-success$`),
+    pattern: pagePattern('/payment-success'),
     type: 'page',
     requiresAuth: true
   },
   {
-    pattern: new RegExp(`^\\/(${i18n.locales.join('|')})\\/payment-cancel$`),
+    pattern: pagePattern('/payment-cancel'),
     type: 'page',
     requiresAuth: true
   },
@@ -240,8 +255,8 @@ export async function authMiddleware(request: NextRequest): Promise<NextResponse
 
     if (session && session.user) {
       console.log(`↩️ User already authenticated, redirecting from ${pathname} to dashboard`);
-      const currentLocale = pathname.split('/')[1]; 
-      const dashboardUrl = new URL(`/${currentLocale}/dashboard`, request.url);
+      const currentLocale = getLocaleFromPathname(pathname);
+      const dashboardUrl = new URL(localizedPath('/dashboard', currentLocale), request.url);
       return NextResponse.redirect(dashboardUrl);
     }
     
@@ -260,8 +275,8 @@ export async function authMiddleware(request: NextRequest): Promise<NextResponse
     console.log(`Authentication failed for: ${pathname}`);
     
     if (matchedRoute.type === 'page') {
-      const currentLocale = pathname.split('/')[1]; 
-      const loginUrl = new URL(`/${currentLocale}/signin`, request.url);
+      const currentLocale = getLocaleFromPathname(pathname);
+      const loginUrl = new URL(localizedPath('/signin', currentLocale), request.url);
       return NextResponse.redirect(loginUrl);
     } else if (matchedRoute.type === 'api') {
       return new NextResponse('Unauthorized', { status: 401 });
@@ -277,8 +292,8 @@ export async function authMiddleware(request: NextRequest): Promise<NextResponse
     if (!hasSubscription) {
       console.log(`Subscription check failed for: ${pathname}, User: ${session!.user?.id}`);
       if (matchedRoute.type === 'page') {
-        const currentLocale = pathname.split('/')[1];
-        const pricingUrl = new URL(`/${currentLocale}/pricing`, request.url);
+        const currentLocale = getLocaleFromPathname(pathname);
+        const pricingUrl = new URL(localizedPath('/pricing', currentLocale), request.url);
         return NextResponse.redirect(pricingUrl);
       } else if (matchedRoute.type === 'api') {
         return new NextResponse('Subscription required', { status: 402 });
@@ -294,8 +309,8 @@ export async function authMiddleware(request: NextRequest): Promise<NextResponse
     
     if (hasSubscription) {
       console.log(`User is subscribed, redirecting from ${pathname} to dashboard`);
-      const currentLocale = pathname.split('/')[1];
-      const dashboardUrl = new URL(`/${currentLocale}/dashboard`, request.url);
+      const currentLocale = getLocaleFromPathname(pathname);
+      const dashboardUrl = new URL(localizedPath('/dashboard', currentLocale), request.url);
       return NextResponse.redirect(dashboardUrl);
     }
     
@@ -311,8 +326,8 @@ export async function authMiddleware(request: NextRequest): Promise<NextResponse
     if (!session) {
       console.log(`Authorization failed (no session) for: ${pathname}`);
       if (matchedRoute.type === 'page') {
-        const currentLocale = pathname.split('/')[1]; 
-        const loginUrl = new URL(`/${currentLocale}/signin`, request.url);
+        const currentLocale = getLocaleFromPathname(pathname);
+        const loginUrl = new URL(localizedPath('/signin', currentLocale), request.url);
         return NextResponse.redirect(loginUrl);
       } else if (matchedRoute.type === 'api') {
         return new NextResponse('Unauthorized', { status: 401 });

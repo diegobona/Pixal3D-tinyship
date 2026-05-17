@@ -71,7 +71,7 @@ const TASK_POLL_INTERVAL_MS = 3000;
 const TASK_POLL_TIMEOUT_MS = 10 * 60 * 1000;
 
 export default function VideoGeneratePage() {
-  const { t, locale } = useTranslation();
+  const { t, localizedPath } = useTranslation();
   
   // Provider and model state
   const videoConfig = config.aiVideo;
@@ -212,7 +212,7 @@ export default function VideoGeneratePage() {
             description: t.ai.video.errors.insufficientCreditsDescription,
             action: {
               label: t.common?.viewPlans || 'View Plans',
-              onClick: () => { window.location.href = `/${locale}/pricing`; }
+              onClick: () => { window.location.href = localizedPath('/pricing'); }
             }
           });
           return;

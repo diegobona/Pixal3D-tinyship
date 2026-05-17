@@ -23,7 +23,7 @@ interface DeleteAccountDialogProps {
 }
 
 export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogProps) {
-  const { t, locale: currentLocale } = useTranslation();
+  const { t, localizedPath } = useTranslation();
   const router = useRouter();
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -43,7 +43,7 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
     
     toast.success(t.dashboard.accountManagement.deleteAccount.success);
     // 删除成功后会自动登出，重定向到首页
-    router.push(`/${currentLocale}`);
+    router.push(localizedPath('/'));
     
     setDeleteLoading(false);
     onOpenChange(false);

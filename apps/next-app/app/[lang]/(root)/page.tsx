@@ -77,7 +77,7 @@ const ADVANTAGE_KEYS = [
 ] as const;
 
 export default function Home() {
-  const { t, locale } = useTranslation();
+  const { t, locale, localizedPath } = useTranslation();
   const [imageDataUrl, setImageDataUrl] = useState("");
   const [imageName, setImageName] = useState("");
   const [taskStatus, setTaskStatus] = useState<TaskStatus>("idle");
@@ -190,7 +190,7 @@ export default function Home() {
             action: {
               label: t.actions.createAccount,
               onClick: () => {
-                window.location.href = `/${locale}/signup`;
+                  window.location.href = localizedPath('/signup');
               },
             },
           });
@@ -203,7 +203,7 @@ export default function Home() {
             action: {
               label: t.common.viewPlans,
               onClick: () => {
-                window.location.href = `/${locale}/pricing`;
+                  window.location.href = localizedPath('/pricing');
               },
             },
           });
@@ -385,7 +385,7 @@ export default function Home() {
               {t.pixal3d.generator.advanced}
               <ChevronDown className={`h-5 w-5 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
             </button>
-            <a className="inline-flex items-center gap-3 transition-colors hover:text-[#48bdff]" href={`/${locale}/blog`}>
+            <a className="inline-flex items-center gap-3 transition-colors hover:text-[#48bdff]" href={localizedPath('/blog')}>
               <CircleHelp className="h-5 w-5" />
               {t.pixal3d.generator.howToUse}
             </a>

@@ -13,7 +13,7 @@ declare global {
 }
 
 export default function WeixinLoginPage() {
-  const { t, locale } = useTranslation();
+  const { t, localizedPath } = useTranslation();
   
   useEffect(() => {
     const initWxLogin = () => {
@@ -66,11 +66,11 @@ export default function WeixinLoginPage() {
               {" "}{t.common.and} <a href="#">{t.auth.wechat.privacyPolicy}</a>.
             </div>
             <div className="flex justify-center gap-4 text-sm">
-              <Link href={`/${locale}/signin`} className="text-primary hover:underline">
+              <Link href={localizedPath('/signin')} className="text-primary hover:underline">
                 {t.auth.signin.title}
               </Link>
               <span className="text-muted-foreground">|</span>
-              <Link href={`/${locale}/signup`} className="text-primary hover:underline">
+              <Link href={localizedPath('/signup')} className="text-primary hover:underline">
                 {t.auth.signup.createAccount}
               </Link>
             </div>

@@ -28,7 +28,7 @@ export function PhoneLoginForm({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   const router = useRouter();
-  const { t, locale, tWithParams } = useTranslation();
+  const { t, localizedPath, tWithParams } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<{ code?: string; message: string } | null>(null);
   const [otpSent, setOtpSent] = useState(false);
@@ -186,7 +186,7 @@ export function PhoneLoginForm({
     if (data) {
       const params = new URLSearchParams(window.location.search);
       const returnTo = params.get('returnTo');
-      router.push(returnTo || `/${locale}`);
+      router.push(returnTo || localizedPath('/'));
     }
     
     setLoading(false);

@@ -22,7 +22,7 @@ interface SubscriptionCardProps {
 }
 
 export function SubscriptionCard({}: SubscriptionCardProps) {
-  const { t, locale: currentLocale } = useTranslation();
+  const { t, locale: currentLocale, localizedPath } = useTranslation();
   const [subscriptionData, setSubscriptionData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
@@ -49,7 +49,7 @@ export function SubscriptionCard({}: SubscriptionCardProps) {
   const openCustomerPortal = async (provider?: string) => {
     try {
       setRedirecting(true);
-      const returnUrl = `${window.location.origin}/${currentLocale}/dashboard`;
+      const returnUrl = `${window.location.origin}${localizedPath('/dashboard')}`;
       
       const response = await fetch('/api/subscription/portal', {
         method: 'POST',
@@ -141,7 +141,7 @@ export function SubscriptionCard({}: SubscriptionCardProps) {
           <CardContent>
             <p className="mb-4">{t.subscription.noSubscription.description}</p>
             <Button asChild>
-              <Link href={`/${currentLocale}/pricing`}>{t.subscription.noSubscription.viewPlans}</Link>
+              <Link href={localizedPath('/pricing')}>{t.subscription.noSubscription.viewPlans}</Link>
             </Button>
           </CardContent>
         </Card>

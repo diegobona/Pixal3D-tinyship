@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams, useRouter, usePathname } from 'next/navigation';
+import { useCallback } from 'react';
 import { translations, type SupportedLocale, locales, type Translations } from '@libs/i18n';
 import { createNextTranslationFunction } from '@libs/validators';
 import { config } from '@config';
@@ -14,13 +15,20 @@ export function useTranslation() {
 
   // 创建支持参数插值的翻译函数
   const tWithParams = createNextTranslationFunction(t);
+  const localizedPath = useCallback((path: string) =>
+    locale === config.app.i18n.defaultLocale ? path : `/${locale}${path}`,
+  [locale]);
 
   const changeLocale = (newLocale: SupportedLocale) => {
     // Get the current path without the locale prefix
     const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/';
     
     // Navigate to the new locale path
-    router.push(`/${newLocale}${pathWithoutLocale}`);
+    router.push(
+      newLocale === config.app.i18n.defaultLocale
+        ? pathWithoutLocale
+        : `/${newLocale}${pathWithoutLocale === '/' ? '' : pathWithoutLocale}`
+    );
     
     // Store the preference
     document.cookie = `${config.app.i18n.cookieKey}=${newLocale}; path=/; max-age=31536000`;
@@ -33,6 +41,7 @@ export function useTranslation() {
     locales,
     defaultLocale: config.app.i18n.defaultLocale,
     changeLocale,
+    localizedPath,
     isDefaultLocale: locale === config.app.i18n.defaultLocale,
   } as const;
 } 

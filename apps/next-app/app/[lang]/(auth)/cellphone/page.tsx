@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@libs
 import { useTranslation } from "@/hooks/use-translation"
 
 export default function LoginPage() {
-  const { t, locale } = useTranslation()
+  const { t, localizedPath } = useTranslation()
 
   return (
     <Card className="w-[380px]">
@@ -23,11 +23,11 @@ export default function LoginPage() {
           {t.common.and} <a href="#">{t.auth.phone.privacyPolicy}</a>.
         </div>
         <div className="flex justify-center gap-4 text-sm">
-          <Link href={`/${locale}/signin`} className="text-primary hover:underline">
+          <Link href={localizedPath('/signin')} className="text-primary hover:underline">
             {t.auth.signin.title}
           </Link>
           <span className="text-muted-foreground">|</span>
-          <Link href={`/${locale}/signup`} className="text-primary hover:underline">
+          <Link href={localizedPath('/signup')} className="text-primary hover:underline">
             {t.auth.signup.createAccount}
           </Link>
         </div>

@@ -46,14 +46,16 @@ export default function Header({ className }: HeaderProps) {
     isPending
   } = authClientReact.useSession();
   const user = session?.user;
+  const localizedPath = (path: string) =>
+    currentLocale === config.app.i18n.defaultLocale ? path : `/${currentLocale}${path}`;
 
   const handleSignOut = async () => {
     await authClientReact.signOut();
-    router.push(currentLocale === config.app.i18n.defaultLocale ? '/' : `/${currentLocale}`);
+    router.push(localizedPath('/'));
   };
 
-  const homeHref = currentLocale === config.app.i18n.defaultLocale ? '/' : `/${currentLocale}`;
-  const featuresHref = currentLocale === config.app.i18n.defaultLocale ? '/#features' : `/${currentLocale}#features`;
+  const homeHref = localizedPath('/');
+  const featuresHref = `${localizedPath('/')}#features`;
 
   const handleLanguageChange = (locale: SupportedLocale) => {
     // Don't change if it's the same locale
@@ -68,9 +70,9 @@ export default function Header({ className }: HeaderProps) {
     // Navigate to the new locale path using window.location to ensure full page reload
     // This prevents theme state issues during navigation
     window.location.href =
-      locale === config.app.i18n.defaultLocale && pathWithoutLocale === '/'
-        ? '/'
-        : `/${locale}${pathWithoutLocale}`;
+      locale === config.app.i18n.defaultLocale
+        ? pathWithoutLocale
+        : `/${locale}${pathWithoutLocale === '/' ? '' : pathWithoutLocale}`;
   };
 
   return (
@@ -89,10 +91,10 @@ export default function Header({ className }: HeaderProps) {
             <Link href={featuresHref} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
               {t.pixal3d.generator.featuresNav}
             </Link>
-            <Link href={`/${currentLocale}/pricing`} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
+            <Link href={localizedPath('/pricing')} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
               {t.header.navigation.pricing}
             </Link>
-            <Link href={`/${currentLocale}/blog`} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
+            <Link href={localizedPath('/blog')} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
               {t.header.navigation.blog}
             </Link>
           </nav>
@@ -150,7 +152,7 @@ export default function Header({ className }: HeaderProps) {
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
                     <DropdownMenuItem asChild>
-                      <Link href={`/${currentLocale}/dashboard`} className="flex items-center">
+                      <Link href={localizedPath('/dashboard')} className="flex items-center">
                         <svg className="mr-2 h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
                           <circle cx="12" cy="12" r="3"></circle>
@@ -160,7 +162,7 @@ export default function Header({ className }: HeaderProps) {
                     </DropdownMenuItem>
                     {user.role === 'admin' && (
                       <DropdownMenuItem asChild>
-                        <Link href={`/${currentLocale}/admin`} className="flex items-center">
+                        <Link href={localizedPath('/admin')} className="flex items-center">
                           <svg className="mr-2 h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 3v18h18V3H3zm16 16H5V5h14v14z"/>
                             <path d="M8 8h8m-8 4h8m-8 4h5"/>
@@ -184,12 +186,12 @@ export default function Header({ className }: HeaderProps) {
             ) : (
               <>
                 <Link
-                  href={`/${currentLocale}/signin`}
+                  href={localizedPath('/signin')}
                   className="text-sm font-semibold text-white/70 transition-colors hover:text-white"
                 >
                   {t.header.auth.signIn}
                 </Link>
-                <Link href={`/${currentLocale}/pricing`}>
+                <Link href={localizedPath('/pricing')}>
                   <Button className="rounded-full bg-[#48bdff] px-5 text-base font-bold text-[#04101e] hover:bg-[#72ceff]">
                     <Crown className="h-5 w-5" />
                     {t.pixal3d.generator.upgradeButton}
@@ -228,10 +230,10 @@ export default function Header({ className }: HeaderProps) {
             <Link href={featuresHref} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
               {t.pixal3d.generator.featuresNav}
             </Link>
-            <Link href={`/${currentLocale}/blog`} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
+            <Link href={localizedPath('/blog')} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
               {t.header.navigation.blog}
             </Link>
-            <Link href={`/${currentLocale}/pricing`} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
+            <Link href={localizedPath('/pricing')} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10" onClick={() => setIsMenuOpen(false)}>
               {t.header.navigation.pricing}
             </Link>
             
@@ -280,11 +282,11 @@ export default function Header({ className }: HeaderProps) {
                     <div className="text-sm font-medium text-white/60">{user.email}</div>
                   </div>
                 </div>
-                <Link href={`/${currentLocale}/settings`} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10">
+                <Link href={localizedPath('/settings')} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10">
                   {t.header.userMenu.personalSettings}
                 </Link>
                 {user.role === 'admin' && (
-                  <Link href={`/${currentLocale}/admin`} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10">
+                  <Link href={localizedPath('/admin')} className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-white/10">
                     {t.header.userMenu.adminPanel || 'Admin Panel'}
                   </Link>
                 )}
@@ -297,10 +299,10 @@ export default function Header({ className }: HeaderProps) {
               </div>
             ) : (
               <div className="space-y-3 px-4 py-2">
-                <Link href={`/${currentLocale}/signin`} className="block text-center text-sm font-semibold text-white/70 hover:text-white">
+                <Link href={localizedPath('/signin')} className="block text-center text-sm font-semibold text-white/70 hover:text-white">
                   {t.header.auth.signIn}
                 </Link>
-                <Link href={`/${currentLocale}/pricing`}>
+                <Link href={localizedPath('/pricing')}>
                   <Button className="w-full rounded-full bg-[#48bdff] text-sm font-bold text-[#04101e] hover:bg-[#72ceff]">
                     <Crown className="h-4 w-4" />
                     {t.pixal3d.generator.upgradeButton}
@@ -314,3 +316,4 @@ export default function Header({ className }: HeaderProps) {
     </header>
   );
 } 
+
