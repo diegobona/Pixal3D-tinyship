@@ -927,14 +927,15 @@ export const zhCN: Locale = {
   },
   pricing: {
     metadata: {
-      title: "TinyShip - 定价方案",
-      description: "选择最适合您需求的完美方案。灵活的定价选项包括月度、年度和终身订阅，享受高级功能。",
-              keywords: "定价, 方案, 订阅, 月度, 年度, 终身, 高级, 功能"
+      title: "Pixal3D - Pricing",
+      description: "选择 Pixal3D 月度积分套餐，按生成质量参数区分权益。",
+              keywords: "Pixal3D pricing, AI 3D model generation, credits, GLB, image to 3D"
     },
     title: "定价",
-    subtitle: "选择最适合您的方案",
-    description: "支持传统按时间订阅（月付/年付/终身）与 AI 时代流行的积分模式。订阅无限畅享，或充值积分按需消费。",
+    subtitle: "Pixal3D credits for every workflow",
+    description: "Each plan includes monthly credits and clear generation limits for resolution, texture size, mesh target, and remeshing.",
     cta: "立即开始",
+    currentPlan: "Current plan",
     recommendedBadge: "推荐选择",
     lifetimeBadge: "一次购买，终身使用",
     creditsBadge: "积分包",
@@ -943,18 +944,23 @@ export const zhCN: Locale = {
       subscription: "订阅套餐",
       credits: "积分充值"
     },
+    billing: {
+      monthly: "Monthly",
+      yearly: "Yearly",
+      yearlyDiscount: "-30%"
+    },
     features: {
       securePayment: {
-        title: "多渠道安全支付",
-        description: "支持微信支付、Stripe、Creem 等多种企业级安全支付方式"
+        title: "Secure checkout",
+        description: "Encrypted card checkout with support for local test payments"
       },
       flexibleSubscription: {
-        title: "灵活付费模式",
-        description: "传统订阅或 AI 时代积分制，任你选择"
+        title: "Monthly credits",
+        description: "Credits renew with your plan and keep generation costs predictable"
       },
       globalCoverage: {
-        title: "全球支付覆盖",
-        description: "多币种和地区支付方式，为全球用户提供便捷支付体验"
+        title: "Quality limits",
+        description: "Higher plans unlock larger textures, denser meshes, and remeshing"
       }
     },
     plans: {

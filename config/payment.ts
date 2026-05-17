@@ -179,7 +179,7 @@ export const paymentConfig = {
   /**
    * Subscription Plans
    */
-  plans: {
+  legacyPlans: {
     monthlyWechat: {
       provider: 'wechat',
       id: 'monthlyWechat',
@@ -533,5 +533,280 @@ export const paymentConfig = {
         }
       }
     },
+  } as const,
+
+  plans: {
+    free: {
+      provider: 'free',
+      id: 'free',
+      amount: 0,
+      currency: 'USD',
+      duration: {
+        months: 1,
+        type: 'recurring'
+      },
+      i18n: {
+        'en': {
+          name: 'Free',
+          description: 'No credit card needed.',
+          duration: 'month',
+          features: [
+            '300 monthly credits',
+            '1 concurrent task',
+            '2 downloads per day',
+            'Limited queue priority',
+            'Asset ownership: shared sample license',
+            'Advanced limits: 1024 resolution, 1024 texture, 100k mesh target'
+          ]
+        },
+        'zh-CN': {
+          name: 'Free',
+          description: 'No credit card needed.',
+          duration: 'month',
+          features: [
+            '300 monthly credits',
+            '1 concurrent task',
+            '2 downloads per day',
+            'Limited queue priority',
+            'Asset ownership: shared sample license',
+            'Advanced limits: 1024 resolution, 1024 texture, 100k mesh target'
+          ]
+        }
+      }
+    },
+    starterMonthly: {
+      provider: 'stripe',
+      id: 'starterMonthly',
+      amount: 9,
+      currency: 'USD',
+      duration: { months: 1, type: 'recurring' },
+      stripePriceId: getEnv('STRIPE_PRICE_STARTER_MONTHLY') || getEnv('STRIPE_PRICE_STARTER') || 'price_starter_monthly_replace_me',
+      i18n: {
+        'en': {
+          name: 'Starter',
+          description: 'Start generating production-ready 3D models with monthly credits.',
+          duration: 'month',
+          features: [
+            '10,000 monthly credits',
+            '1 concurrent task',
+            '20 downloads per day',
+            'Standard queue priority',
+            'Asset ownership: private',
+            'Advanced limits: 1024 resolution, 1024 texture, 150k mesh target'
+          ]
+        },
+        'zh-CN': {
+          name: 'Starter',
+          description: '用月度积分开始生成可下载的 3D 模型。',
+          duration: 'month',
+          features: [
+            '10,000 monthly credits',
+            '1 concurrent task',
+            '20 downloads per day',
+            'Standard queue priority',
+            'Asset ownership: private',
+            'Advanced limits: 1024 resolution, 1024 texture, 150k mesh target'
+          ]
+        }
+      }
+    },
+    creatorMonthly: {
+      provider: 'stripe',
+      id: 'creatorMonthly',
+      amount: 19,
+      currency: 'USD',
+      recommended: true,
+      duration: { months: 1, type: 'recurring' },
+      stripePriceId: getEnv('STRIPE_PRICE_CREATOR_MONTHLY') || getEnv('STRIPE_PRICE_CREATOR') || 'price_creator_monthly_replace_me',
+      i18n: {
+        'en': {
+          name: 'Creator',
+          description: 'Higher texture detail and remeshing for serious asset creation.',
+          duration: 'month',
+          features: [
+            '30,000 monthly credits',
+            '2 concurrent tasks',
+            'Unlimited downloads per day',
+            'Priority queue',
+            'Asset ownership: private',
+            'Advanced limits: 1024 resolution, 2048 texture, 200k mesh target',
+            'Remesh enabled',
+            'Saved model history'
+          ]
+        },
+        'zh-CN': {
+          name: 'Creator',
+          description: '更高纹理细节和重拓扑，适合正式资产创作。',
+          duration: 'month',
+          features: [
+            '30,000 monthly credits',
+            '2 concurrent tasks',
+            'Unlimited downloads per day',
+            'Priority queue',
+            'Asset ownership: private',
+            'Advanced limits: 1024 resolution, 2048 texture, 200k mesh target',
+            'Remesh enabled',
+            'Saved model history'
+          ]
+        }
+      }
+    },
+    proMonthly: {
+      provider: 'stripe',
+      id: 'proMonthly',
+      amount: 49,
+      currency: 'USD',
+      duration: { months: 1, type: 'recurring' },
+      stripePriceId: getEnv('STRIPE_PRICE_PRO_MONTHLY') || getEnv('STRIPE_PRICE_PRO') || 'price_pro_monthly_replace_me',
+      i18n: {
+        'en': {
+          name: 'Pro',
+          description: 'Maximum detail settings for high-end GLB output.',
+          duration: 'month',
+          features: [
+            '100,000 monthly credits',
+            '4 concurrent tasks',
+            'Unlimited downloads per day',
+            'Maximum queue priority',
+            'Asset ownership: private',
+            'Advanced limits: 1536 resolution, 4096 texture, 300k mesh target',
+            'Remesh enabled',
+            'Team-ready model history'
+          ]
+        },
+        'zh-CN': {
+          name: 'Pro',
+          description: '最高细节参数，适合高规格 GLB 输出。',
+          duration: 'month',
+          features: [
+            '100,000 monthly credits',
+            '4 concurrent tasks',
+            'Unlimited downloads per day',
+            'Maximum queue priority',
+            'Asset ownership: private',
+            'Advanced limits: 1536 resolution, 4096 texture, 300k mesh target',
+            'Remesh enabled',
+            'Team-ready model history'
+          ]
+        }
+      }
+    },
+    starterYearly: {
+      provider: 'stripe',
+      id: 'starterYearly',
+      amount: 76,
+      currency: 'USD',
+      duration: { months: 12, type: 'recurring' },
+      stripePriceId: getEnv('STRIPE_PRICE_STARTER_YEARLY') || 'price_starter_yearly_replace_me',
+      i18n: {
+        'en': {
+          name: 'Starter',
+          description: 'Start generating production-ready 3D models with monthly credits.',
+          duration: 'year',
+          features: [
+            '10,000 monthly credits',
+            '1 concurrent task',
+            '20 downloads per day',
+            'Standard queue priority',
+            'Asset ownership: private',
+            'Advanced limits: 1024 resolution, 1024 texture, 150k mesh target'
+          ]
+        },
+        'zh-CN': {
+          name: 'Starter',
+          description: '用月度积分开始生成可下载的 3D 模型。',
+          duration: 'year',
+          features: [
+            '10,000 monthly credits',
+            '1 concurrent task',
+            '20 downloads per day',
+            'Standard queue priority',
+            'Asset ownership: private',
+            'Advanced limits: 1024 resolution, 1024 texture, 150k mesh target'
+          ]
+        }
+      }
+    },
+    creatorYearly: {
+      provider: 'stripe',
+      id: 'creatorYearly',
+      amount: 160,
+      currency: 'USD',
+      recommended: true,
+      duration: { months: 12, type: 'recurring' },
+      stripePriceId: getEnv('STRIPE_PRICE_CREATOR_YEARLY') || 'price_creator_yearly_replace_me',
+      i18n: {
+        'en': {
+          name: 'Creator',
+          description: 'Higher texture detail and remeshing for serious asset creation.',
+          duration: 'year',
+          features: [
+            '30,000 monthly credits',
+            '2 concurrent tasks',
+            'Unlimited downloads per day',
+            'Priority queue',
+            'Asset ownership: private',
+            'Advanced limits: 1024 resolution, 2048 texture, 200k mesh target',
+            'Remesh enabled',
+            'Saved model history'
+          ]
+        },
+        'zh-CN': {
+          name: 'Creator',
+          description: '更高纹理细节和重拓扑，适合正式资产创作。',
+          duration: 'year',
+          features: [
+            '30,000 monthly credits',
+            '2 concurrent tasks',
+            'Unlimited downloads per day',
+            'Priority queue',
+            'Asset ownership: private',
+            'Advanced limits: 1024 resolution, 2048 texture, 200k mesh target',
+            'Remesh enabled',
+            'Saved model history'
+          ]
+        }
+      }
+    },
+    proYearly: {
+      provider: 'stripe',
+      id: 'proYearly',
+      amount: 412,
+      currency: 'USD',
+      duration: { months: 12, type: 'recurring' },
+      stripePriceId: getEnv('STRIPE_PRICE_PRO_YEARLY') || 'price_pro_yearly_replace_me',
+      i18n: {
+        'en': {
+          name: 'Pro',
+          description: 'Maximum detail settings for high-end GLB output.',
+          duration: 'year',
+          features: [
+            '100,000 monthly credits',
+            '4 concurrent tasks',
+            'Unlimited downloads per day',
+            'Maximum queue priority',
+            'Asset ownership: private',
+            'Advanced limits: 1536 resolution, 4096 texture, 300k mesh target',
+            'Remesh enabled',
+            'Team-ready model history'
+          ]
+        },
+        'zh-CN': {
+          name: 'Pro',
+          description: '最高细节参数，适合高规格 GLB 输出。',
+          duration: 'year',
+          features: [
+            '100,000 monthly credits',
+            '4 concurrent tasks',
+            'Unlimited downloads per day',
+            'Maximum queue priority',
+            'Asset ownership: private',
+            'Advanced limits: 1536 resolution, 4096 texture, 300k mesh target',
+            'Remesh enabled',
+            'Team-ready model history'
+          ]
+        }
+      }
+    }
   } as const,
 } as const;

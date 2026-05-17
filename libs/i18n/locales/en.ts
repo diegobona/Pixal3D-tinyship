@@ -920,14 +920,15 @@ export const en: Locale = {
   },
   pricing: {
     metadata: {
-      title: "TinyShip - Pricing Plans",
-      description: "Choose the perfect plan for your needs. Flexible pricing options including monthly, yearly, and lifetime subscriptions with premium features.",
-      keywords: "pricing, plans, subscription, monthly, yearly, lifetime, premium, features"
+      title: "Pixal3D - Pricing",
+      description: "Choose monthly credits for image-to-3D generation with clear output quality limits.",
+      keywords: "Pixal3D pricing, AI 3D model generation, credits, GLB, image to 3D"
     },
     title: "Pricing",
-    subtitle: "Choose the plan that's right for you",
-    description: "We offer both traditional time-based subscriptions (monthly/yearly/lifetime) and the AI-era popular credit system. Subscribe for unlimited access, or purchase credits and pay only for what you use.",
+    subtitle: "Pixal3D credits for every workflow",
+    description: "Each plan includes monthly credits and clear generation limits for resolution, texture size, mesh target, and remeshing.",
     cta: "Get started",
+    currentPlan: "Current plan",
     recommendedBadge: "Recommended",
     lifetimeBadge: "One-time purchase, lifetime access",
     creditsBadge: "Credits",
@@ -936,18 +937,23 @@ export const en: Locale = {
       subscription: "Subscription",
       credits: "Credits"
     },
+    billing: {
+      monthly: "Monthly",
+      yearly: "Yearly",
+      yearlyDiscount: "-30%"
+    },
     features: {
       securePayment: {
-        title: "Multi-Provider Security",
-        description: "Support WeChat Pay, Stripe, Creem with enterprise-grade security"
+        title: "Secure checkout",
+        description: "Encrypted card checkout with support for local test payments"
       },
       flexibleSubscription: {
-        title: "Flexible Payment Models",
-        description: "Time-based subscription or AI-era credit system — choose your style"
+        title: "Monthly credits",
+        description: "Credits renew with your plan and keep generation costs predictable"
       },
       globalCoverage: {
-        title: "Global Payment Coverage", 
-        description: "Multi-currency and regional payment methods for worldwide access"
+        title: "Quality limits",
+        description: "Higher plans unlock larger textures, denser meshes, and remeshing"
       }
     },
     plans: {

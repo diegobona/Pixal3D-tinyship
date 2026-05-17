@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { config } from '@config';
 import { useTranslation } from "@/hooks/use-translation";
 import type { Plan } from '@config';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 import { authClientReact } from "@libs/auth/authClient";
@@ -19,8 +19,7 @@ import {
   Heart,
   ArrowRight,
   Loader2,
-  Coins,
-  CreditCard
+  Coins
 } from "lucide-react";
 import {
   Dialog,
@@ -32,7 +31,7 @@ import { Steps, Step } from "@libs/react-shared/ui/steps";
 import { Button } from "@libs/react-shared/ui/button";
 import { cn } from "@/lib/utils";
 
-type PricingTab = 'subscription' | 'credits';
+type BillingCycle = 'monthly' | 'yearly';
 
 export default function PricingPage() {
   const { t, locale: currentLocale } = useTranslation();
@@ -47,29 +46,17 @@ export default function PricingPage() {
   
   const { data: session, isPending } = authClientReact.useSession();
   const user = session?.user;
-  const [activeTab, setActiveTab] = useState<PricingTab>('subscription');
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
 
   const allPlans = Object.values(config.payment.plans) as unknown as Plan[];
-  
-  // Filter plans based on active tab
-  const { subscriptionPlans, creditPlans } = useMemo(() => {
-    const subscription: Plan[] = [];
-    const credits: Plan[] = [];
-    
-    allPlans.forEach(plan => {
-      if ((plan as any).duration?.type === 'credits') {
-        credits.push(plan);
-      } else {
-        subscription.push(plan);
-      }
-    });
-    
-    return { subscriptionPlans: subscription, creditPlans: credits };
-  }, [allPlans]);
-  
-  const plans = activeTab === 'subscription' ? subscriptionPlans : creditPlans;
+  const plans = allPlans.filter((plan) => {
+    if (plan.id === 'free') return true;
+    if (!('months' in plan.duration)) return false;
+    return billingCycle === 'monthly'
+      ? plan.duration?.months === 1
+      : plan.duration?.months === 12;
+  });
 
-  // 清理轮询定时器
   useEffect(() => {
     return () => {
       if (pollingInterval) {
@@ -79,7 +66,7 @@ export default function PricingPage() {
   }, [pollingInterval]);
 
   const startPolling = (orderId: string) => {
-    // 先清除可能存在的轮询
+    // 鍏堟竻闄ゅ彲鑳藉瓨鍦ㄧ殑杞
     if (pollingInterval) {
       clearInterval(pollingInterval);
     }
@@ -102,13 +89,16 @@ export default function PricingPage() {
       } catch (error) {
         console.error('Payment polling error:', error);
       }
-    }, 3000); // 每3秒查询一次
-
+    }, 3000); // 姣?绉掓煡璇竴娆?
     setPollingInterval(interval);
   };
 
   const handleSubscribe = async (plan: Plan) => {
     try {
+      if (plan.id === 'free') {
+        return;
+      }
+
       if (!user) {
         const returnPath = encodeURIComponent(pathname);
         router.push(`/${currentLocale}/signin?returnTo=${returnPath}`);
@@ -163,14 +153,12 @@ export default function PricingPage() {
   };
 
   const closeQrCodeModal = () => {
-    // 如果当前正在处理支付，提示用户确认是否取消
-    if (currentStep < 2 && orderId) { // 还未完成支付且有订单ID
+    // 濡傛灉褰撳墠姝ｅ湪澶勭悊鏀粯锛屾彁绀虹敤鎴风‘璁ゆ槸鍚﹀彇娑?    if (currentStep < 2 && orderId) { // 杩樻湭瀹屾垚鏀粯涓旀湁璁㈠崟ID
       const confirmCancel = window.confirm(t.payment.confirmCancel);
       if (!confirmCancel) {
-        return; // 用户取消关闭，继续支付流程
-      }
+        return; // 鐢ㄦ埛鍙栨秷鍏抽棴锛岀户缁敮浠樻祦绋?      }
       
-      // 调用关闭订单API
+      // 璋冪敤鍏抽棴璁㈠崟API
       fetch(`/api/payment/cancel?orderId=${orderId}&provider=wechat`, {
         method: 'POST'
       }).then(response => {
@@ -201,13 +189,6 @@ export default function PricingPage() {
     { title: t.payment.steps.scan, description: t.payment.steps.scanDesc },
     { title: t.payment.steps.pay, description: t.payment.steps.payDesc },
   ];
-
-  // 获取推荐计划
-  const getRecommendedPlan = () => {
-    return plans.find(plan => plan.recommended) || plans[0];
-  };
-
-  const recommendedPlan = getRecommendedPlan();
 
   return (
     <>
@@ -274,46 +255,45 @@ export default function PricingPage() {
         <section className="py-24">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             {/* Tab Switcher */}
-            {creditPlans.length > 0 && (
-              <motion.div 
-                className="flex justify-center mb-12"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <div className="inline-flex p-1 bg-muted rounded-xl">
-                  <button
-                    onClick={() => setActiveTab('subscription')}
-                    className={cn(
-                      "flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-                      activeTab === 'subscription'
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    {t.pricing.tabs?.subscription || (currentLocale === 'zh-CN' ? '订阅套餐' : 'Subscription')}
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('credits')}
-                    className={cn(
-                      "flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-                      activeTab === 'credits'
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <Coins className="h-4 w-4" />
-                    {t.pricing.tabs?.credits || (currentLocale === 'zh-CN' ? '积分充值' : 'Credits')}
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
+            <motion.div 
+              className="flex justify-center mb-12"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="inline-flex p-1 bg-muted rounded-xl">
+                <button
+                  onClick={() => setBillingCycle('monthly')}
+                  className={cn(
+                    "px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200",
+                    billingCycle === 'monthly'
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {t.pricing.billing?.monthly || 'Monthly'}
+                </button>
+                <button
+                  onClick={() => setBillingCycle('yearly')}
+                  className={cn(
+                    "flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200",
+                    billingCycle === 'yearly'
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <span>{t.pricing.billing?.yearly || 'Yearly'}</span>
+                  <span className="rounded-md bg-yellow-400 px-2 py-0.5 text-xs font-bold text-black">
+                    {t.pricing.billing?.yearlyDiscount || '-30%'}
+                  </span>
+                </button>
+              </div>
+            </motion.div>
             <div className={cn(
               "grid gap-8 lg:gap-12",
               plans.length === 1 ? "grid-cols-1 max-w-md mx-auto" :
               plans.length === 2 ? "grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto" :
+              plans.length === 4 ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-4" :
               "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
             )}>
               {plans.map((plan, index) => {
@@ -378,7 +358,7 @@ export default function PricingPage() {
                         <span className={`text-4xl font-bold ${
                           isRecommended ? 'text-card-foreground' : 'text-foreground'
                         }`}>
-                      {plan.currency === 'CNY' ? '¥' : '$'}{plan.amount}
+                      {plan.currency === 'CNY' ? '楼' : '$'}{plan.amount}
                     </span>
                         <span className={`text-base font-medium ${
                           isRecommended ? 'text-muted-foreground' : 'text-muted-foreground'
@@ -422,11 +402,13 @@ export default function PricingPage() {
                     {/* CTA Button */}
                     <Button
                       onClick={() => handleSubscribe(plan)}
-                  disabled={loading === plan.id || isPending}
+                  disabled={plan.id === 'free' || loading === plan.id || isPending}
                       className={cn(
                         "w-full py-3 rounded-lg font-semibold text-base transition-all duration-300 hover:scale-[1.02]",
                         "shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
-                        "bg-primary text-primary-foreground hover:bg-primary/90"
+                        plan.id === 'free'
+                          ? "bg-muted text-muted-foreground"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
                       )}
                 >
                       {loading === plan.id ? (
@@ -436,8 +418,8 @@ export default function PricingPage() {
                         </div>
                       ) : (
                         <div className="flex items-center justify-center space-x-2">
-                          <span>{t.pricing.cta}</span>
-                          <ArrowRight className="h-4 w-4" />
+                          <span>{plan.id === 'free' ? (t.pricing.currentPlan || 'Current plan') : t.pricing.cta}</span>
+                          {plan.id !== 'free' && <ArrowRight className="h-4 w-4" />}
               </div>
                       )}
                     </Button>
@@ -496,7 +478,7 @@ export default function PricingPage() {
             <DialogTitle className="text-center">
               {currentPlan && (
                 <span>
-                  {currentPlan.currency === 'CNY' ? '¥' : '$'}{currentPlan.amount} - 
+                  {currentPlan.currency === 'CNY' ? '楼' : '$'}{currentPlan.amount} - 
                   {currentPlan.i18n?.[currentLocale]?.name || 'Plan'}
                 </span>
               )}
