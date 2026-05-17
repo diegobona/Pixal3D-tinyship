@@ -9,6 +9,7 @@
   "packageManager": "pnpm@9.4.0",
   "scripts": {
     "dev:next": "turbo run dev --filter=@tinyship/next-app",
+    "dev:next:proxy": "node scripts/dev-next-proxy.mjs",
     "dev:nuxt": "turbo run dev --filter=@tinyship/nuxt-app",
     "dev:tanstack": "turbo run dev --filter=@tinyship/tanstack-app",
     "dev:docs": "turbo run dev --filter=docs-app",
