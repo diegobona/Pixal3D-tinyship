@@ -1320,9 +1320,9 @@ export const en: Locale = {
   },
   home: {
     metadata: {
-      title: "TinyShip - Modern Full-Stack SaaS Development Starter",
-      description: "A modern, full-featured monorepo starter kit for building SaaS applications with support for both domestic (China) and international markets. Built with Next.js/Nuxt.js, TypeScript, and comprehensive authentication.",
-      keywords: "SaaS, monorepo, starter kit, Next.js, Nuxt.js, TypeScript, authentication, i18n, China market, international"
+      title: "Pixal3D - Image to 3D AI Model Generator",
+      description: "Turn images into downloadable GLB 3D models with Pixal3D. Free to start, no login required.",
+      keywords: "Pixal3D, Pixal 3D, Pixel 3D AI, image to 3D model, AI 3D model generator, make 3D model from image, image to GLB, 3D model maker"
     },
     hero: {
       title: "Though it's a small boat, it can take you far",

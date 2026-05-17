@@ -1605,9 +1605,9 @@ export const zhCN: Locale = {
   },
   home: {
     metadata: {
-      title: "TinyShip - 现代化全栈 SaaS 开发启动器",
-      description: "现代化、功能齐全的 monorepo 启动套件，用于构建支持国内外双市场的 SaaS 应用程序。基于 Next.js/Nuxt.js、TypeScript 和完整认证系统构建。",
-      keywords: "SaaS, monorepo, 启动套件, Next.js, Nuxt.js, TypeScript, 认证, 国际化, 中国市场, 国际市场"
+      title: "Pixal3D - Image to 3D AI Model Generator",
+      description: "Turn images into downloadable GLB 3D models with Pixal3D. Free to start, no login required.",
+      keywords: "Pixal3D, Pixal 3D, Pixel 3D AI, image to 3D model, AI 3D model generator, make 3D model from image, image to GLB, 3D model maker"
     },
     hero: {
       title: "虽然是小船，也能载你远航",
