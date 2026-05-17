@@ -1,6 +1,4 @@
 import { config } from '@config';
-import Image from 'next/image';
-
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   variant?: 'full' | 'icon-only' | 'text-only';
@@ -45,7 +43,7 @@ export function Logo({
   if (variant === 'full' && logoConfig.fullLogoUrl) {
     return (
       <div className={`flex items-center ${currentSize.fullLogoHeight} ${logoConfig.iconClassName} ${className}`}>
-        <Image 
+        <img
           src={logoConfig.fullLogoUrl} 
           alt={config.app.name}
           width={currentSize.imageSize * 5}
@@ -58,12 +56,12 @@ export function Logo({
 
   const IconComponent = () => (
     <div className={`${currentSize.container} flex items-center justify-center ${logoConfig.iconClassName} ${iconClassName}`}>
-      <Image 
+      <img
         src={logoConfig.iconUrl} 
         alt={config.app.name}
         width={currentSize.imageSize}
         height={currentSize.imageSize}
-        className="object-contain"
+        className="h-full w-full object-contain"
       />
     </div>
   );

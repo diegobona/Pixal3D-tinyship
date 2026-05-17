@@ -62,7 +62,7 @@ export const config = {
        * Use this to add background color, border, rounded corners, padding, etc.
        * @example 'bg-primary rounded-full p-1' or 'bg-white shadow-sm rounded-lg'
        */
-      iconClassName: 'bg-chart-1 rounded-full p-2' as string,
+      iconClassName: '' as string,
     },
 
     /**
