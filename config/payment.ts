@@ -579,6 +579,7 @@ export const paymentConfig = {
       id: 'starterMonthly',
       amount: 9,
       currency: 'USD',
+      credits: 10000,
       duration: { months: 1, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_STARTER_MONTHLY') || getEnv('STRIPE_PRICE_STARTER') || 'price_starter_monthly_replace_me',
       i18n: {
@@ -615,6 +616,7 @@ export const paymentConfig = {
       id: 'creatorMonthly',
       amount: 19,
       currency: 'USD',
+      credits: 30000,
       recommended: true,
       duration: { months: 1, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_CREATOR_MONTHLY') || getEnv('STRIPE_PRICE_CREATOR') || 'price_creator_monthly_replace_me',
@@ -656,6 +658,7 @@ export const paymentConfig = {
       id: 'proMonthly',
       amount: 49,
       currency: 'USD',
+      credits: 100000,
       duration: { months: 1, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_PRO_MONTHLY') || getEnv('STRIPE_PRICE_PRO') || 'price_pro_monthly_replace_me',
       i18n: {
@@ -696,6 +699,7 @@ export const paymentConfig = {
       id: 'starterYearly',
       amount: 72,
       currency: 'USD',
+      credits: 10000,
       duration: { months: 12, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_STARTER_YEARLY') || 'price_starter_yearly_replace_me',
       i18n: {
@@ -732,6 +736,7 @@ export const paymentConfig = {
       id: 'creatorYearly',
       amount: 156,
       currency: 'USD',
+      credits: 30000,
       recommended: true,
       duration: { months: 12, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_CREATOR_YEARLY') || 'price_creator_yearly_replace_me',
@@ -773,6 +778,7 @@ export const paymentConfig = {
       id: 'proYearly',
       amount: 408,
       currency: 'USD',
+      credits: 100000,
       duration: { months: 12, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_PRO_YEARLY') || 'price_pro_yearly_replace_me',
       i18n: {

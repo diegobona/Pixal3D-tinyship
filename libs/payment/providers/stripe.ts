@@ -1,6 +1,5 @@
 import Stripe from 'stripe';
 import { config } from '@config';
-import type { CreditPlan } from '@config';
 import { 
   PaymentProvider, 
   PaymentParams, 
@@ -15,6 +14,7 @@ import {
   paymentTypes 
 } from '@libs/database/schema/subscription';
 import { order, orderStatus } from '@libs/database/schema/order';
+import { creditTransaction } from '@libs/database/schema/credit-transaction';
 import { eq } from 'drizzle-orm';
 import { user } from '@libs/database/schema/user';
 import { randomUUID } from 'crypto';
@@ -171,7 +171,63 @@ export class StripeProvider implements PaymentProvider {
       })
     });
 
+    await this.grantSubscriptionCredits({
+      userId: session.metadata.userId,
+      orderId: session.metadata.orderId,
+      planId: session.metadata.planId,
+      sessionId: session.id,
+      subscriptionId: subscription.id,
+      periodStart,
+      periodEnd,
+    });
+
     return { success: true, orderId: session.metadata.orderId };
+  }
+
+  private async grantSubscriptionCredits(params: {
+    userId: string;
+    orderId: string;
+    planId: string;
+    sessionId: string;
+    subscriptionId: string;
+    periodStart: Date;
+    periodEnd: Date;
+  }): Promise<void> {
+    const plan = config.payment.plans[params.planId as keyof typeof config.payment.plans] as PaymentPlan;
+    const credits = plan.credits ?? 0;
+
+    if (credits <= 0) {
+      return;
+    }
+
+    const [existingGrant] = await db
+      .select({ id: creditTransaction.id })
+      .from(creditTransaction)
+      .where(eq(creditTransaction.orderId, params.orderId))
+      .limit(1);
+
+    if (existingGrant) {
+      console.log(`Stripe subscription credits already granted for order ${params.orderId}`);
+      return;
+    }
+
+    console.log(`Stripe subscription purchase - Adding ${credits} credits to user ${params.userId}`);
+
+    await creditService.addCredits({
+      userId: params.userId,
+      amount: credits,
+      type: 'purchase',
+      orderId: params.orderId,
+      description: TransactionTypeCode.PURCHASE,
+      metadata: {
+        sessionId: params.sessionId,
+        subscriptionId: params.subscriptionId,
+        planId: params.planId,
+        provider: 'stripe',
+        periodStart: params.periodStart.toISOString(),
+        periodEnd: params.periodEnd.toISOString(),
+      }
+    });
   }
 
   private async handleOneTimePayment(session: Stripe.Checkout.Session): Promise<WebhookVerification> {
