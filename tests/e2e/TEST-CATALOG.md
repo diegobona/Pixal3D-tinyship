@@ -784,3 +784,13 @@ PayPal 重定向到 /api/payment/return/paypal?order_id=xxx&token=xxx&PayerID=xx
 | 2026-03-09 | Next.js | 11 | 0 | 0 | 博客增强后回归（blog.spec.ts）— 全部通过（55.5s） |
 
 _每次测试运行后更新此表。_
+
+---
+
+## Pixal3D Free Trial Embed Backlog
+
+**File:** `specs/public-pages.spec.ts` | **Priority:** P1 | **Next-only v1**
+
+| # | Test name | Flow |
+|---|-----------|------|
+| 1 | HuggingFace free trial embed | Open `/` -> click `pixal3d-free-trial-button` -> backend selects the least busy HuggingFace Pixal3D instance -> verify `pixal3d-hf-trial-panel` iframe appears; if the resolver returns 503, verify the busy toast copy appears |

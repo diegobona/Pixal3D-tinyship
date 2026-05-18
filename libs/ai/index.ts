@@ -32,6 +32,14 @@ export {
   query3DTask,
   calculate3DCreditCost,
 } from './3d';
+export {
+  extractGradioLiveUrls,
+  selectLeastBusyHfPixal3DInstance,
+} from './hf-pixal3d-instance';
+export type {
+  HfPixal3DInstanceSelection,
+  HfPixal3DInstanceStatus,
+} from './hf-pixal3d-instance';
 export type {
   ThreeDGenerationOptions,
   ThreeDGenerationResult,

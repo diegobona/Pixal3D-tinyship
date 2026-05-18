@@ -46,6 +46,20 @@ interface StatusResponse {
   message?: string;
 }
 
+interface HfInstanceResponse {
+  success: boolean;
+  data?: {
+    selected: {
+      index: number;
+      url: string;
+      queueSize: number | null;
+      available: boolean;
+    };
+  };
+  error?: string;
+  message?: string;
+}
+
 const POLL_INTERVAL_MS = 1200;
 const POLL_TIMEOUT_MS = 30000;
 const SAMPLE_IMAGES = [
@@ -85,6 +99,9 @@ export default function Home() {
   const [isReadingFile, setIsReadingFile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(true);
+  const [hfTrialUrl, setHfTrialUrl] = useState("");
+  const [hfTrialQueueSize, setHfTrialQueueSize] = useState<number | null>(null);
+  const [isOpeningHfTrial, setIsOpeningHfTrial] = useState(false);
 
   const canGenerate = useMemo(() => {
     return Boolean(imageDataUrl && taskStatus !== "processing" && !isReadingFile);
@@ -226,6 +243,31 @@ export default function Home() {
     }
   };
 
+  const handleOpenHfTrial = async () => {
+    setIsOpeningHfTrial(true);
+
+    try {
+      const response = await fetch("/api/hf-pixal3d-instance", {
+        method: "GET",
+        headers: { accept: "application/json" },
+      });
+      const data = (await response.json()) as HfInstanceResponse;
+
+      if (!response.ok || !data.success || !data.data?.selected.url) {
+        throw new Error(data.message || t.pixal3d.generator.errors.freeTrialBusy);
+      }
+
+      setHfTrialUrl(data.data.selected.url);
+      setHfTrialQueueSize(data.data.selected.queueSize);
+      toast.success(t.pixal3d.generator.freeTrialSelected);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t.pixal3d.generator.errors.freeTrialBusy;
+      toast.error(t.pixal3d.generator.errors.freeTrialBusy, { description: message });
+    } finally {
+      setIsOpeningHfTrial(false);
+    }
+  };
+
   return (
     <div className="min-h-screen overflow-hidden bg-[#071431] text-white">
       <section className="relative min-h-[calc(100vh-4rem)] border-l border-r border-[#2b3657] bg-[radial-gradient(circle_at_50%_-10%,rgba(22,91,173,0.22),transparent_42%),linear-gradient(180deg,#071431_0%,#0a1737_46%,#071431_100%)] px-4 py-10 sm:px-6 lg:px-8">
@@ -359,22 +401,73 @@ export default function Home() {
                 </div>
               </div>
 
-              <Button
-                data-testid="pixal3d-generate-button"
-                size="lg"
-                className="h-14 rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] px-8 text-xl font-extrabold text-[#051021] shadow-[0_18px_55px_rgba(0,240,138,0.18)] hover:brightness-110 disabled:opacity-50"
-                disabled={!canGenerate}
-                onClick={handleGenerate}
-              >
-                {taskStatus === "processing" ? (
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                ) : (
-                  <WandSparkles className="h-6 w-6" />
-                )}
-                {taskStatus === "processing" ? t.pixal3d.generator.generatingButton : t.pixal3d.generator.generateButton}
-              </Button>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button
+                  data-testid="pixal3d-generate-button"
+                  size="lg"
+                  className="h-14 rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] px-8 text-xl font-extrabold text-[#051021] shadow-[0_18px_55px_rgba(0,240,138,0.18)] hover:brightness-110 disabled:opacity-50"
+                  disabled={!canGenerate}
+                  onClick={handleGenerate}
+                >
+                  {taskStatus === "processing" ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <WandSparkles className="h-6 w-6" />
+                  )}
+                  {taskStatus === "processing" ? t.pixal3d.generator.generatingButton : t.pixal3d.generator.generateButton}
+                </Button>
+                <Button
+                  data-testid="pixal3d-free-trial-button"
+                  type="button"
+                  size="lg"
+                  variant="outline"
+                  className="h-14 rounded-full border-[#48bdff]/55 bg-[#0b1328] px-7 text-lg font-extrabold text-[#dbe1f2] hover:border-[#48bdff] hover:bg-[#132448] hover:text-white disabled:opacity-60"
+                  disabled={isOpeningHfTrial}
+                  onClick={handleOpenHfTrial}
+                >
+                  {isOpeningHfTrial ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+                  {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
+                </Button>
+              </div>
             </div>
           </div>
+
+          {hfTrialUrl && (
+            <div
+              data-testid="pixal3d-hf-trial-panel"
+              className="mt-7 w-full max-w-[1420px] overflow-hidden rounded-lg border border-[#25314f] bg-[#070d20]/92 shadow-[0_28px_120px_rgba(0,0,0,0.26)]"
+            >
+              <div className="flex flex-col gap-3 border-b border-[#25314f] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-extrabold text-white">{t.pixal3d.generator.hfTrialTitle}</h2>
+                  <p className="mt-1 text-sm text-[#aeb6ca]">
+                    {t.pixal3d.generator.hfTrialDescription}
+                    {hfTrialQueueSize !== null ? ` ${t.pixal3d.generator.hfTrialQueueLabel}: ${hfTrialQueueSize}` : ""}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-10 rounded-full px-4 text-[#aeb6ca] hover:bg-white/10 hover:text-white"
+                  onClick={() => {
+                    setHfTrialUrl("");
+                    setHfTrialQueueSize(null);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                  {t.pixal3d.generator.hfTrialClose}
+                </Button>
+              </div>
+              <iframe
+                title={t.pixal3d.generator.hfTrialTitle}
+                src={hfTrialUrl}
+                className="h-[680px] w-full bg-[#0b0f1a]"
+                allow="clipboard-read; clipboard-write"
+                sandbox="allow-downloads allow-forms allow-modals allow-popups allow-same-origin allow-scripts"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          )}
 
           <div className="mt-7 flex w-full max-w-[1420px] items-center justify-between px-5 text-lg font-bold text-[#dbe1f2]">
             <button
