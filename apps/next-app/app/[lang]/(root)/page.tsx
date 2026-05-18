@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   CircleHelp,
@@ -102,6 +102,7 @@ export default function Home() {
   const [hfTrialUrl, setHfTrialUrl] = useState("");
   const [hfTrialQueueSize, setHfTrialQueueSize] = useState<number | null>(null);
   const [isOpeningHfTrial, setIsOpeningHfTrial] = useState(false);
+  const hfTrialPanelRef = useRef<HTMLDivElement | null>(null);
 
   const canGenerate = useMemo(() => {
     return Boolean(imageDataUrl && taskStatus !== "processing" && !isReadingFile);
@@ -260,6 +261,12 @@ export default function Home() {
       setHfTrialUrl(data.data.selected.url);
       setHfTrialQueueSize(data.data.selected.queueSize);
       toast.success(t.pixal3d.generator.freeTrialSelected);
+      window.setTimeout(() => {
+        hfTrialPanelRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 100);
     } catch (error) {
       const message = error instanceof Error ? error.message : t.pixal3d.generator.errors.freeTrialBusy;
       toast.error(t.pixal3d.generator.errors.freeTrialBusy, { description: message });
@@ -434,16 +441,18 @@ export default function Home() {
 
           {hfTrialUrl && (
             <div
+              ref={hfTrialPanelRef}
               data-testid="pixal3d-hf-trial-panel"
               className="mt-7 w-full max-w-[1420px] overflow-hidden rounded-lg border border-[#25314f] bg-[#070d20]/92 shadow-[0_28px_120px_rgba(0,0,0,0.26)]"
             >
               <div className="flex flex-col gap-3 border-b border-[#25314f] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-lg font-extrabold text-white">{t.pixal3d.generator.hfTrialTitle}</h2>
-                  <p className="mt-1 text-sm text-[#aeb6ca]">
-                    {t.pixal3d.generator.hfTrialDescription}
-                    {hfTrialQueueSize !== null ? ` ${t.pixal3d.generator.hfTrialQueueLabel}: ${hfTrialQueueSize}` : ""}
-                  </p>
+                  {hfTrialQueueSize !== null && (
+                    <p className="mt-1 text-sm text-[#aeb6ca]">
+                      {t.pixal3d.generator.hfTrialQueueLabel}: {hfTrialQueueSize}
+                    </p>
+                  )}
                 </div>
                 <Button
                   type="button"
@@ -461,7 +470,7 @@ export default function Home() {
               <iframe
                 title={t.pixal3d.generator.hfTrialTitle}
                 src={hfTrialUrl}
-                className="h-[680px] w-full bg-[#0b0f1a]"
+                className="h-[860px] w-full bg-[#0b0f1a] lg:h-[960px]"
                 allow="clipboard-read; clipboard-write"
                 sandbox="allow-downloads allow-forms allow-modals allow-popups allow-same-origin allow-scripts"
                 referrerPolicy="no-referrer"
