@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createHash, randomUUID } from 'node:crypto';
 import {
   calculate3DCreditCost,
   create3DTask,
@@ -9,15 +7,12 @@ import {
 } from '@libs/ai';
 import {
   create3DGenerationRecord,
-  reserveAnonymousTrial,
 } from '@libs/ai/3d-task-store';
 import { auth } from '@libs/auth';
 import { creditService, TransactionTypeCode } from '@libs/credits';
 import { config } from '@config';
 
 export const maxDuration = 60;
-
-const TRIAL_COOKIE = 'pixal3d_trial';
 
 async function getOptionalUserId(req: Request): Promise<string | undefined> {
   try {
@@ -27,16 +22,6 @@ async function getOptionalUserId(req: Request): Promise<string | undefined> {
     console.warn('3D generation session lookup failed; continuing as anonymous:', error);
     return undefined;
   }
-}
-
-function getClientIp(req: Request): string {
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0]?.trim() || 'unknown';
-  return req.headers.get('x-real-ip') || 'unknown';
-}
-
-function hashIp(ip: string): string {
-  return createHash('sha256').update(ip).digest('hex').slice(0, 32);
 }
 
 function isSupportedImageUrl(value: string): boolean {
@@ -67,77 +52,63 @@ export async function POST(req: Request) {
       );
     }
 
-    let anonymousKey: string | undefined;
-    let trialToken: string | undefined;
     const creditCost = calculate3DCreditCost({ provider, model });
     let consumeTransactionId: string | undefined;
     let remainingCredits: number | undefined;
 
     if (!userId) {
-      const cookieStore = await cookies();
-      const ipHash = hashIp(getClientIp(req));
-      trialToken = cookieStore.get(TRIAL_COOKIE)?.value || randomUUID();
-      anonymousKey = `${ipHash}:${trialToken}`;
-      const trial = reserveAnonymousTrial({
-        ipHash,
-        trialToken,
-      });
-
-      if (!trial.allowed) {
-        return NextResponse.json(
-          {
-            error: 'trial_used',
-            message: 'Your free Pixal3D trial has already been used. Sign in to keep generating.',
-          },
-          { status: 403 }
-        );
-      }
-    } else {
-      const balance = await creditService.getBalance(userId);
-      if (balance < creditCost) {
-        return NextResponse.json(
-          {
-            error: 'insufficient_credits',
-            message: 'Not enough credits for 3D model generation.',
-            required: creditCost,
-            balance,
-          },
-          { status: 402 }
-        );
-      }
-
-      const consumeResult = await creditService.consumeCredits({
-        userId,
-        amount: creditCost,
-        description: TransactionTypeCode.AI_3D_GENERATION,
-        metadata: {
-          provider,
-          model: model || config.ai3d.defaultModels[provider],
-          prompt: prompt.substring(0, 100),
-          quality,
+      return NextResponse.json(
+        {
+          error: 'sign_in_required',
+          message: 'Sign in or upgrade to generate and save models.',
         },
-      });
-
-      if (!consumeResult.success) {
-        return NextResponse.json(
-          {
-            error: 'credit_consumption_failed',
-            message: consumeResult.error || 'Failed to consume credits.',
-            required: creditCost,
-            balance: consumeResult.newBalance,
-          },
-          { status: 402 }
-        );
-      }
-
-      consumeTransactionId = consumeResult.transactionId;
-      remainingCredits = consumeResult.newBalance;
+        { status: 401 }
+      );
     }
+
+    const balance = await creditService.getBalance(userId);
+    if (balance < creditCost) {
+      return NextResponse.json(
+        {
+          error: 'insufficient_credits',
+          message: 'Not enough credits for 3D model generation.',
+          required: creditCost,
+          balance,
+        },
+        { status: 402 }
+      );
+    }
+
+    const consumeResult = await creditService.consumeCredits({
+      userId,
+      amount: creditCost,
+      description: TransactionTypeCode.AI_3D_GENERATION,
+      metadata: {
+        provider,
+        model: model || config.ai3d.defaultModels[provider],
+        prompt: prompt.substring(0, 100),
+        quality,
+      },
+    });
+
+    if (!consumeResult.success) {
+      return NextResponse.json(
+        {
+          error: 'credit_consumption_failed',
+          message: consumeResult.error || 'Failed to consume credits.',
+          required: creditCost,
+          balance: consumeResult.newBalance,
+        },
+        { status: 402 }
+      );
+    }
+
+    consumeTransactionId = consumeResult.transactionId;
+    remainingCredits = consumeResult.newBalance;
 
     const task = create3DTask({ imageUrl, prompt, provider, model, quality });
     const record = create3DGenerationRecord({
       userId,
-      anonymousKey,
       inputImageUrl: imageUrl,
       prompt,
       provider: task.provider,
@@ -157,17 +128,8 @@ export async function POST(req: Request) {
       },
       credits: userId
         ? { consumed: creditCost, remaining: remainingCredits }
-        : { trial: true },
+        : undefined,
     });
-
-    if (!userId && trialToken) {
-      response.cookies.set(TRIAL_COOKIE, trialToken, {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 365,
-      });
-    }
 
     return response;
   } catch (error) {

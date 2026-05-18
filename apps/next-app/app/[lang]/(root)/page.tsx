@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ChevronDown,
-  CircleHelp,
   ImagePlus,
   Loader2,
   WandSparkles,
@@ -56,6 +54,11 @@ interface HfInstanceResponse {
       available: boolean;
     };
   };
+  usage?: {
+    used: number;
+    remaining: number;
+    limit: number;
+  };
   error?: string;
   message?: string;
 }
@@ -98,7 +101,6 @@ export default function Home() {
   const [taskMessage, setTaskMessage] = useState(t.pixal3d.generator.status.idle);
   const [isReadingFile, setIsReadingFile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(true);
   const [hfTrialUrl, setHfTrialUrl] = useState("");
   const [hfTrialQueueSize, setHfTrialQueueSize] = useState<number | null>(null);
   const [isOpeningHfTrial, setIsOpeningHfTrial] = useState(false);
@@ -229,6 +231,19 @@ export default function Home() {
           setTaskMessage(t.pixal3d.generator.errors.insufficientCredits);
           return;
         }
+        if (response.status === 401) {
+          toast.error(t.pixal3d.generator.errors.signInRequired, {
+            action: {
+              label: t.common.login,
+              onClick: () => {
+                  window.location.href = localizedPath('/signin');
+              },
+            },
+          });
+          setTaskStatus("failed");
+          setTaskMessage(t.pixal3d.generator.errors.signInRequired);
+          return;
+        }
         throw new Error(data.message || t.pixal3d.generator.errors.generationFailed);
       }
 
@@ -253,6 +268,18 @@ export default function Home() {
         headers: { accept: "application/json" },
       });
       const data = (await response.json()) as HfInstanceResponse;
+
+      if (response.status === 429 && data.error === "free_trial_limit_reached") {
+        toast.error(t.pixal3d.generator.errors.freeTrialLimitReached, {
+          action: {
+            label: t.common.viewPlans,
+            onClick: () => {
+                window.location.href = localizedPath('/pricing');
+            },
+          },
+        });
+        return;
+      }
 
       if (!response.ok || !data.success || !data.data?.selected.url) {
         throw new Error(data.message || t.pixal3d.generator.errors.freeTrialBusy);
@@ -478,31 +505,9 @@ export default function Home() {
             </div>
           )}
 
-          <div className="mt-7 flex w-full max-w-[1420px] items-center justify-between px-5 text-lg font-bold text-[#dbe1f2]">
-            <button
-              type="button"
-              className="inline-flex items-center gap-3 transition-colors hover:text-[#48bdff]"
-              onClick={() => setShowAdvanced((value) => !value)}
-            >
-              {t.pixal3d.generator.advanced}
-              <ChevronDown className={`h-5 w-5 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
-            </button>
-            <a className="inline-flex items-center gap-3 transition-colors hover:text-[#48bdff]" href={localizedPath('/blog')}>
-              <CircleHelp className="h-5 w-5" />
-              {t.pixal3d.generator.howToUse}
-            </a>
+          <div className="mt-5 w-full max-w-[1420px] rounded-lg border border-[#25314f] bg-[#0a1430]/70 px-5 py-4 text-sm leading-6 text-[#aeb6ca]">
+            <p>{t.pixal3d.generator.trialDescription}</p>
           </div>
-
-          {showAdvanced && (
-            <div className="mt-5 w-full max-w-[1420px] rounded-lg border border-[#25314f] bg-[#0a1430]/70 p-5 text-sm leading-6 text-[#aeb6ca]">
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <p>{t.pixal3d.generator.trialDescription}</p>
-                <p data-testid="pixal3d-task-status" className="font-semibold text-[#dbe1f2]">
-                  {taskMessage}
-                </p>
-              </div>
-            </div>
-          )}
 
           <div id="features" className="mt-8 w-full max-w-[1420px] scroll-mt-24 border-t border-[#25314f] pt-8">
             <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-[#aeb6ca]">

@@ -36,6 +36,17 @@ export {
   extractGradioLiveUrls,
   selectLeastBusyHfPixal3DInstance,
 } from './hf-pixal3d-instance';
+export {
+  FREE_TRIAL_LIMIT,
+  getFreeTrialUsage,
+  reserveFreeTrial,
+  resetFreeTrialStore,
+} from './free-trial-store';
+export type {
+  FreeTrialIdentity,
+  FreeTrialReservation,
+  FreeTrialUsage,
+} from './free-trial-store';
 export type {
   HfPixal3DInstanceSelection,
   HfPixal3DInstanceStatus,

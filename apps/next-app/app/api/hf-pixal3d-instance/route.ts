@@ -1,11 +1,76 @@
 import { NextResponse } from 'next/server';
-import { selectLeastBusyHfPixal3DInstance } from '@libs/ai';
+import { cookies } from 'next/headers';
+import { createHash, randomUUID } from 'node:crypto';
+import {
+  getFreeTrialUsage,
+  reserveFreeTrial,
+  selectLeastBusyHfPixal3DInstance,
+  type FreeTrialIdentity,
+} from '@libs/ai';
+import { auth } from '@libs/auth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 15;
 
-export async function GET() {
+const FREE_TRIAL_COOKIE = 'pixal3d_free_trial';
+
+async function getOptionalUserId(req: Request): Promise<string | undefined> {
   try {
+    const session = await auth.api.getSession({ headers: new Headers(req.headers) });
+    return session?.user?.id;
+  } catch (error) {
+    console.warn('Free trial session lookup failed; continuing as anonymous:', error);
+    return undefined;
+  }
+}
+
+function getClientIp(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0]?.trim() || 'unknown';
+  return req.headers.get('x-real-ip') || 'unknown';
+}
+
+function hashIp(ip: string): string {
+  return createHash('sha256').update(ip).digest('hex').slice(0, 32);
+}
+
+async function getFreeTrialIdentity(req: Request): Promise<{
+  identity: FreeTrialIdentity;
+  trialToken?: string;
+}> {
+  const userId = await getOptionalUserId(req);
+  if (userId) {
+    return { identity: { userId } };
+  }
+
+  const cookieStore = await cookies();
+  const trialToken = cookieStore.get(FREE_TRIAL_COOKIE)?.value || randomUUID();
+  return {
+    identity: {
+      ipHash: hashIp(getClientIp(req)),
+      trialToken,
+    },
+    trialToken,
+  };
+}
+
+export async function GET(req: Request) {
+  try {
+    const { identity, trialToken } = await getFreeTrialIdentity(req);
+    const usage = getFreeTrialUsage(identity);
+
+    if (usage.remaining <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'free_trial_limit_reached',
+          message: 'Free trials used. Sign in or upgrade to keep generating.',
+          usage,
+        },
+        { status: 429 }
+      );
+    }
+
     const selection = await selectLeastBusyHfPixal3DInstance();
 
     if (!selection) {
@@ -19,10 +84,24 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json(
+    const reservation = reserveFreeTrial(identity);
+    if (!reservation.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'free_trial_limit_reached',
+          message: 'Free trials used. Sign in or upgrade to keep generating.',
+          usage: reservation,
+        },
+        { status: 429 }
+      );
+    }
+
+    const response = NextResponse.json(
       {
         success: true,
         data: selection,
+        usage: reservation,
       },
       {
         headers: {
@@ -30,6 +109,17 @@ export async function GET() {
         },
       }
     );
+
+    if (trialToken) {
+      response.cookies.set(FREE_TRIAL_COOKIE, trialToken, {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error('HF Pixal3D instance resolver failed:', error);
     return NextResponse.json(
