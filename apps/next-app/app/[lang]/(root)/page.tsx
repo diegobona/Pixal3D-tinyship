@@ -65,6 +65,7 @@ interface HfInstanceResponse {
 
 const POLL_INTERVAL_MS = 1200;
 const POLL_TIMEOUT_MS = 30000;
+const FREE_TRIAL_DURATION_SECONDS = 10 * 60;
 const SAMPLE_IMAGES = [
   { name: "Bunny mascot", src: "/samples/pixal3d-bunny.svg" },
   { name: "Mushroom merchant", src: "/samples/pixal3d-mushroom.svg" },
@@ -103,6 +104,8 @@ export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [hfTrialUrl, setHfTrialUrl] = useState("");
   const [hfTrialQueueSize, setHfTrialQueueSize] = useState<number | null>(null);
+  const [hfTrialSecondsLeft, setHfTrialSecondsLeft] = useState(0);
+  const [hfTrialEndsAt, setHfTrialEndsAt] = useState<number | null>(null);
   const [isOpeningHfTrial, setIsOpeningHfTrial] = useState(false);
   const hfTrialPanelRef = useRef<HTMLDivElement | null>(null);
 
@@ -113,6 +116,42 @@ export default function Home() {
   useEffect(() => {
     setTaskMessage(t.pixal3d.generator.status.idle);
   }, [t.pixal3d.generator.status.idle]);
+
+  useEffect(() => {
+    if (!hfTrialEndsAt || !hfTrialUrl) return;
+
+    const updateCountdown = () => {
+      const nextSecondsLeft = Math.max(0, Math.ceil((hfTrialEndsAt - Date.now()) / 1000));
+      setHfTrialSecondsLeft(nextSecondsLeft);
+
+      if (nextSecondsLeft <= 0) {
+        setHfTrialUrl("");
+        setHfTrialQueueSize(null);
+        setHfTrialEndsAt(null);
+        toast.info(t.pixal3d.generator.freeTrialExpired);
+      }
+    };
+
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [hfTrialEndsAt, hfTrialUrl, t.pixal3d.generator.freeTrialExpired]);
+
+  const closeHfTrial = () => {
+    setHfTrialUrl("");
+    setHfTrialQueueSize(null);
+    setHfTrialSecondsLeft(0);
+    setHfTrialEndsAt(null);
+  };
+
+  const formatTrialTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+  };
 
   const readFileAsDataUrl = async (file: File) => {
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/bmp"];
@@ -287,6 +326,8 @@ export default function Home() {
 
       setHfTrialUrl(data.data.selected.url);
       setHfTrialQueueSize(data.data.selected.queueSize);
+      setHfTrialSecondsLeft(FREE_TRIAL_DURATION_SECONDS);
+      setHfTrialEndsAt(Date.now() + FREE_TRIAL_DURATION_SECONDS * 1000);
       toast.success(t.pixal3d.generator.freeTrialSelected);
       window.setTimeout(() => {
         hfTrialPanelRef.current?.scrollIntoView({
@@ -481,14 +522,14 @@ export default function Home() {
                     </p>
                   )}
                 </div>
+                <div className="text-sm font-bold text-[#48bdff]">
+                  {t.pixal3d.generator.hfTrialTimeLeft}: {formatTrialTime(hfTrialSecondsLeft)}
+                </div>
                 <Button
                   type="button"
                   variant="ghost"
                   className="h-10 rounded-full px-4 text-[#aeb6ca] hover:bg-white/10 hover:text-white"
-                  onClick={() => {
-                    setHfTrialUrl("");
-                    setHfTrialQueueSize(null);
-                  }}
+                  onClick={closeHfTrial}
                 >
                   <X className="h-4 w-4" />
                   {t.pixal3d.generator.hfTrialClose}
