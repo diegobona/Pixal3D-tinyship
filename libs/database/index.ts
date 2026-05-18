@@ -41,8 +41,8 @@ function createEphemeralClient(): Client {
 
 const poolInstance = new Pool({
   connectionString: getConnectionString(),
-  connectionTimeoutMillis: isWorkersRuntime ? CF_CONNECT_TIMEOUT : 3000,
-  query_timeout: isWorkersRuntime ? CF_QUERY_TIMEOUT : 5000,
+  connectionTimeoutMillis: isWorkersRuntime ? CF_CONNECT_TIMEOUT : 10000,
+  query_timeout: isWorkersRuntime ? CF_QUERY_TIMEOUT : 10000,
   idleTimeoutMillis: isWorkersRuntime ? 1500 : 10000,
   max: isWorkersRuntime ? 12 : 5,
   maxUses: isWorkersRuntime ? 1 : undefined,
