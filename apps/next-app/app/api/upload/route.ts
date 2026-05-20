@@ -20,7 +20,7 @@ const ALLOWED_MIME_TYPES = [
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp'];
 
 // Supported storage providers
-const SUPPORTED_PROVIDERS: StorageProviderType[] = ['oss', 's3', 'r2', 'cos'];
+const SUPPORTED_PROVIDERS: StorageProviderType[] = ['s3', 'r2'];
 
 /**
  * Validate file extension
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine storage provider
-    let provider: StorageProviderType = 'oss'; // default
+    let provider: StorageProviderType = 'r2';
     if (providerParam && SUPPORTED_PROVIDERS.includes(providerParam as StorageProviderType)) {
       provider = providerParam as StorageProviderType;
     }
@@ -165,4 +165,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

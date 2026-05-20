@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPaymentProvider } from '@libs/payment';
 import { auth } from '@libs/auth';
 import { db } from '@libs/database';
 import { order } from '@libs/database/schema';
@@ -16,7 +15,7 @@ export async function GET(req: NextRequest) {
     
     const searchParams = req.nextUrl.searchParams;
     const orderId = searchParams.get('orderId');
-    const provider = searchParams.get('provider') as 'wechat' | 'stripe';
+    const provider = searchParams.get('provider') as 'stripe';
 
     if (!orderId || !provider) {
       return NextResponse.json({ error: 'Missing orderId or provider' }, { status: 400 });
@@ -43,12 +42,6 @@ export async function GET(req: NextRequest) {
     // 验证provider是否匹配
     if (userOrder[0].provider !== provider) {
       return NextResponse.json({ error: 'Provider mismatch' }, { status: 400 });
-    }
-
-    if (provider === 'wechat') {
-      const wechatProvider = createPaymentProvider('wechat');
-      const result = await wechatProvider.queryOrder(orderId);
-      return NextResponse.json(result);
     }
 
     return NextResponse.json({ error: 'Unsupported provider' }, { status: 400 });

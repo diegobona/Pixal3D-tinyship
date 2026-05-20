@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "pixal3d-next",
+  "name": "pixal3d-tinyship",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-05-19",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],

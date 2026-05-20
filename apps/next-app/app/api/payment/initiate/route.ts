@@ -23,6 +23,10 @@ export async function POST(req: Request) {
       return Response.json({ error: 'Plan ID is required' }, { status: 400 });
     }
 
+    if (provider !== paymentProviders.STRIPE) {
+      return Response.json({ error: 'Unsupported payment provider' }, { status: 400 });
+    }
+
     // 3. Create order record
     const orderId = nanoid();
     const plan = config.payment.plans[planId as keyof typeof config.payment.plans];
@@ -64,11 +68,6 @@ export async function POST(req: Request) {
           
           console.log(`Order ${orderId} expired and canceled`);
           
-          // For WeChat Pay, call the close order API
-          if (provider === paymentProviders.WECHAT) {
-            const paymentProvider = createPaymentProvider('wechat');
-            await paymentProvider.closeOrder(orderId);
-          }
         }
       } catch (error) {
         console.error(`Failed to process expired order ${orderId}:`, error);
@@ -76,7 +75,7 @@ export async function POST(req: Request) {
     }, ORDER_EXPIRATION_TIME);
 
     // 4. Create payment provider instance and initiate payment
-    const paymentProvider = createPaymentProvider(provider as 'stripe' | 'wechat' | 'paypal');
+    const paymentProvider = createPaymentProvider('stripe');
     // x-forwarded-for may contain multiple IPs (comma-separated), we only need the first one
     // WeChat Pay requires payer_client_ip to be max 45 bytes
     const forwardedFor = req.headers.get('x-forwarded-for')

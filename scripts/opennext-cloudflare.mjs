@@ -88,22 +88,24 @@ function patchOpenNextServerBundleExternals() {
     return;
   }
 
-  const original =
-    'external: ["next", "./middleware.mjs", "./next-server.runtime.prod.js"],';
-  const patched =
-    'external: ["next", "./middleware.mjs", "./next-server.runtime.prod.js", "pg-cloudflare", "proxy-agent"],';
-
   const source = readFileSync(serverBundlePath, "utf8");
-  if (source.includes(patched)) {
-    return;
-  }
+  const patched = source.replace(/external:\s*\[[^\]]+\],/, (match) => {
+    const packages = [...match.matchAll(/"([^"]+)"/g)].map((entry) => entry[1]);
+    const externalPackages = [...new Set(packages.filter((entry) => entry !== "proxy-agent"))];
 
-  if (!source.includes(original)) {
+    if (!externalPackages.includes("pg-cloudflare")) {
+      externalPackages.push("pg-cloudflare");
+    }
+
+    return `external: [${externalPackages.map((entry) => `"${entry}"`).join(", ")}],`;
+  });
+
+  if (patched === source) {
     console.warn("[opennext] Unable to patch server bundle externals.");
     return;
   }
 
-  writeFileSync(serverBundlePath, source.replace(original, patched), "utf8");
+  writeFileSync(serverBundlePath, patched, "utf8");
 }
 
 function patchPgCloudflareStaticRequire() {
