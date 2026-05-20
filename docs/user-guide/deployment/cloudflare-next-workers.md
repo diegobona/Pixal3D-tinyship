@@ -17,21 +17,25 @@ routes, auth, Stripe webhooks, database access, and server-side logic.
 
 ## Cloudflare Build
 
-Use a GitHub-connected Cloudflare Workers deployment. The recommended build
-command is:
+Use a GitHub-connected Cloudflare Workers deployment.
+
+If Cloudflare shows separate build and deploy command fields, use:
+
+```bash
+corepack pnpm install --frozen-lockfile && corepack pnpm build:next:cf
+```
+
+Deploy command:
+
+```bash
+cd apps/next-app && corepack pnpm exec wrangler deploy
+```
+
+If Cloudflare only provides one command field, use:
 
 ```bash
 corepack pnpm install --frozen-lockfile && corepack pnpm deploy:next:cf
 ```
-
-If Cloudflare separates install and deploy steps, use:
-
-```bash
-corepack pnpm install --frozen-lockfile
-corepack pnpm deploy:next:cf
-```
-
-The deploy command runs the Next/OpenNext build and then deploys with Wrangler.
 
 ## Required Environment Variables
 
