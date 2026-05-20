@@ -10,6 +10,7 @@ const require = createRequire(join(process.cwd(), "package.json"));
 
 patchOpenNextWindowsCopy();
 patchOpenNextServerBundleExternals();
+patchPgCloudflareStaticRequire();
 
 mkdirSync(shimDir, { recursive: true });
 writeFileSync(join(shimDir, "pnpm.cmd"), "@echo off\r\ncorepack pnpm %*\r\n", "utf8");
@@ -103,4 +104,29 @@ function patchOpenNextServerBundleExternals() {
   }
 
   writeFileSync(serverBundlePath, source.replace(original, patched), "utf8");
+}
+
+function patchPgCloudflareStaticRequire() {
+  let pgStreamPath;
+  try {
+    pgStreamPath = require.resolve("pg/lib/stream.js");
+  } catch {
+    return;
+  }
+
+  const original = "const { CloudflareSocket } = require('pg-cloudflare')";
+  const patched = `const cloudflareSocketPackage = 'pg-cloudflare'
+    const { CloudflareSocket } = require(cloudflareSocketPackage)`;
+
+  const source = readFileSync(pgStreamPath, "utf8");
+  if (source.includes(patched)) {
+    return;
+  }
+
+  if (!source.includes(original)) {
+    console.warn("[opennext] Unable to patch pg-cloudflare require.");
+    return;
+  }
+
+  writeFileSync(pgStreamPath, source.replace(original, patched), "utf8");
 }
