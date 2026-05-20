@@ -9,6 +9,7 @@ const shimDir = join(tmpdir(), "pixal3d-pnpm-shim");
 const require = createRequire(join(process.cwd(), "package.json"));
 
 patchOpenNextWindowsCopy();
+patchOpenNextServerBundleExternals();
 
 mkdirSync(shimDir, { recursive: true });
 writeFileSync(join(shimDir, "pnpm.cmd"), "@echo off\r\ncorepack pnpm %*\r\n", "utf8");
@@ -76,4 +77,30 @@ function patchOpenNextWindowsCopy() {
   }
 
   writeFileSync(helperPath, source.replace(original, patched), "utf8");
+}
+
+function patchOpenNextServerBundleExternals() {
+  let serverBundlePath;
+  try {
+    serverBundlePath = require.resolve("@opennextjs/aws/build/createServerBundle.js");
+  } catch {
+    return;
+  }
+
+  const original =
+    'external: ["next", "./middleware.mjs", "./next-server.runtime.prod.js"],';
+  const patched =
+    'external: ["next", "./middleware.mjs", "./next-server.runtime.prod.js", "pg-cloudflare", "proxy-agent"],';
+
+  const source = readFileSync(serverBundlePath, "utf8");
+  if (source.includes(patched)) {
+    return;
+  }
+
+  if (!source.includes(original)) {
+    console.warn("[opennext] Unable to patch server bundle externals.");
+    return;
+  }
+
+  writeFileSync(serverBundlePath, source.replace(original, patched), "utf8");
 }
