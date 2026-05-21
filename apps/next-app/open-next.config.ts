@@ -9,7 +9,7 @@ if (config.middleware?.external) {
 }
 
 config.default.install = {
-  packages: ["pg-cloudflare@1.4.0"],
+  packages: ["pg-cloudflare@1.4.0", "semver@7.7.3"],
 };
 
 export default config;
