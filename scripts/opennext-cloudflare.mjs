@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
-import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
 
@@ -8,8 +8,14 @@ const args = process.argv.slice(2);
 const shimDir = join(tmpdir(), "pixal3d-pnpm-shim");
 const require = createRequire(join(process.cwd(), "package.json"));
 
+if (args[0] === "build") {
+  rmSync(join(process.cwd(), ".open-next"), { recursive: true, force: true });
+}
+
 patchOpenNextWindowsCopy();
 patchOpenNextServerBundleExternals();
+patchOpenNextInstallDepsBinCheck();
+patchOpenNextMinifierBrokenSymlink();
 patchPgCloudflareStaticRequire();
 
 mkdirSync(shimDir, { recursive: true });
@@ -106,6 +112,94 @@ function patchOpenNextServerBundleExternals() {
   }
 
   writeFileSync(serverBundlePath, patched, "utf8");
+}
+
+function patchOpenNextInstallDepsBinCheck() {
+  let installDepsPath;
+  try {
+    installDepsPath = require.resolve("@opennextjs/aws/build/installDeps.js");
+  } catch {
+    return;
+  }
+
+  const original = `for (const fileName of fs.readdirSync(tempBinDir)) {
+            const symlinkPath = path.join(tempBinDir, fileName);
+            const stat = fs.lstatSync(symlinkPath);
+            if (stat.isSymbolicLink()) {
+                const linkTarget = fs.readlinkSync(symlinkPath);
+                const realFilePath = path.resolve(tempBinDir, linkTarget);
+                const outputFilePath = path.join(outputBinDir, fileName);
+                if (fs.existsSync(outputFilePath)) {
+                    fs.unlinkSync(outputFilePath);
+                }
+                fs.copyFileSync(realFilePath, outputFilePath);
+                fs.chmodSync(outputFilePath, "755");
+                logger.debug(\`Replaced symlink \${fileName} with actual file\`);
+            }
+        }`;
+  const patched = `if (fs.existsSync(tempBinDir)) {
+            fs.mkdirSync(outputBinDir, { recursive: true });
+            for (const fileName of fs.readdirSync(tempBinDir)) {
+                const symlinkPath = path.join(tempBinDir, fileName);
+                const stat = fs.lstatSync(symlinkPath);
+                if (stat.isSymbolicLink()) {
+                    const linkTarget = fs.readlinkSync(symlinkPath);
+                    const realFilePath = path.resolve(tempBinDir, linkTarget);
+                    const outputFilePath = path.join(outputBinDir, fileName);
+                    if (fs.existsSync(outputFilePath)) {
+                        fs.unlinkSync(outputFilePath);
+                    }
+                    fs.copyFileSync(realFilePath, outputFilePath);
+                    fs.chmodSync(outputFilePath, "755");
+                    logger.debug(\`Replaced symlink \${fileName} with actual file\`);
+                }
+            }
+        }`;
+
+  const source = readFileSync(installDepsPath, "utf8");
+  if (source.includes("fs.existsSync(tempBinDir)")) {
+    return;
+  }
+
+  if (!source.includes(original)) {
+    console.warn("[opennext] Unable to patch dependency bin handling.");
+    return;
+  }
+
+  writeFileSync(installDepsPath, source.replace(original, patched), "utf8");
+}
+
+function patchOpenNextMinifierBrokenSymlink() {
+  let minifierPath;
+  try {
+    minifierPath = require.resolve("@opennextjs/aws/minimize-js.js");
+  } catch {
+    return;
+  }
+
+  const original = "const stat = await fs.stat(filePath);";
+  const patched = `let stat;
+        try {
+            stat = await fs.stat(filePath);
+        }
+        catch (error) {
+            if (error?.code === "ENOENT") {
+                continue;
+            }
+            throw error;
+        }`;
+
+  const source = readFileSync(minifierPath, "utf8");
+  if (source.includes('error?.code === "ENOENT"')) {
+    return;
+  }
+
+  if (!source.includes(original)) {
+    console.warn("[opennext] Unable to patch minifier broken symlink handling.");
+    return;
+  }
+
+  writeFileSync(minifierPath, source.replace(original, patched), "utf8");
 }
 
 function patchPgCloudflareStaticRequire() {
