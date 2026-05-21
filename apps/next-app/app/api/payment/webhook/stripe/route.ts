@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createPaymentProvider, StripeProvider } from '@libs/payment';
+import { createPaymentProvider } from '@libs/payment';
 
 export async function POST(request: Request) {
   const body = await request.text();

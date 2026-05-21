@@ -2,7 +2,6 @@
 
 import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@libs/react-shared/ui/button";
-import { XCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function PaymentCancelPage() {
@@ -12,7 +11,7 @@ export default function PaymentCancelPage() {
     <div className="container max-w-2xl py-20">
       <div className="flex flex-col items-center text-center space-y-6">
         <div className="rounded-full bg-red-100 p-3">
-          <XCircle className="h-12 w-12 text-red-600" />
+          <span className="flex h-12 w-12 items-center justify-center text-3xl font-bold text-red-600" aria-hidden="true">x</span>
         </div>
         
         <h1 className="text-3xl font-bold">

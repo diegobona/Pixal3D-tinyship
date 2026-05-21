@@ -1,65 +1,208 @@
-import Stripe from 'stripe';
 import { config } from '@config';
-import { 
-  PaymentProvider, 
-  PaymentParams, 
-  PaymentResult, 
+import {
+  PaymentProvider,
+  PaymentParams,
+  PaymentResult,
   WebhookVerification,
-  PaymentPlan
+  PaymentPlan,
 } from '../types';
 import { db } from '@libs/database';
-import { 
-  subscription as userSubscription, 
-  subscriptionStatus, 
-  paymentTypes 
+import {
+  subscription as userSubscription,
+  subscriptionStatus,
+  paymentTypes,
 } from '@libs/database/schema/subscription';
 import { order, orderStatus } from '@libs/database/schema/order';
 import { creditTransaction } from '@libs/database/schema/credit-transaction';
 import { eq } from 'drizzle-orm';
 import { user } from '@libs/database/schema/user';
-import { randomUUID } from 'crypto';
 import { utcNow } from '@libs/database/utils/utc';
 import { creditService, TransactionTypeCode } from '@libs/credits';
+import {
+  mapStripeSubscriptionStatus,
+  syncStripeSubscriptionState,
+} from '../stripe-subscription-sync';
+
+const STRIPE_API_BASE = 'https://api.stripe.com/v1';
+const STRIPE_API_VERSION = '2025-04-30.basil';
+
+type StripeCustomer = {
+  id: string;
+  deleted?: boolean;
+};
+
+type StripeCheckoutSession = {
+  id: string;
+  url?: string | null;
+  mode?: 'payment' | 'subscription';
+  payment_status?: string;
+  customer?: string | StripeCustomer | null;
+  subscription?: string | StripeSubscription | null;
+  metadata?: Record<string, string> | null;
+};
+
+type StripeSubscription = {
+  id: string;
+  status: string;
+  customer: string | StripeCustomer;
+  cancel_at_period_end?: boolean;
+  items: {
+    data: Array<{
+      current_period_start: number;
+      current_period_end: number;
+      price: {
+        id: string;
+      };
+    }>;
+  };
+};
+
+type StripeWebhookEvent = {
+  type: string;
+  data: {
+    object: StripeCheckoutSession | StripeSubscription;
+  };
+};
+
+function getObjectId(value: string | { id: string } | null | undefined): string {
+  if (!value) {
+    return '';
+  }
+
+  return typeof value === 'string' ? value : value.id;
+}
+
+function getPlan(planId: string): PaymentPlan {
+  return config.payment.plans[planId as keyof typeof config.payment.plans] as PaymentPlan;
+}
+
+function appendMetadata(body: URLSearchParams, metadata: Record<string, string>) {
+  for (const [key, value] of Object.entries(metadata)) {
+    body.set(`metadata[${key}]`, value);
+  }
+}
+
+function encodeHex(bytes: ArrayBuffer): string {
+  return Array.from(new Uint8Array(bytes))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+
+  return diff === 0;
+}
+
+async function verifyStripeSignature(payload: string, header: string, secret: string): Promise<boolean> {
+  const parts = new Map(
+    header.split(',').map((part) => {
+      const [key, value] = part.split('=');
+      return [key, value] as const;
+    })
+  );
+  const timestamp = parts.get('t');
+  const signature = parts.get('v1');
+
+  if (!timestamp || !signature) {
+    return false;
+  }
+
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const digest = await crypto.subtle.sign('HMAC', key, encoder.encode(`${timestamp}.${payload}`));
+
+  return constantTimeEqual(encodeHex(digest), signature);
+}
+
+async function stripeRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${STRIPE_API_BASE}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${config.payment.providers.stripe.secretKey}`,
+      'Stripe-Version': STRIPE_API_VERSION,
+      ...init?.headers,
+    },
+  });
+
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
+
+  if (!response.ok) {
+    const message = data?.error?.message || `Stripe request failed: ${response.status}`;
+    throw new Error(message);
+  }
+
+  return data as T;
+}
+
+async function stripePost<T>(path: string, body: URLSearchParams): Promise<T> {
+  return stripeRequest<T>(path, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body,
+  });
+}
+
+export async function retrieveStripeCheckoutSession(sessionId: string): Promise<StripeCheckoutSession> {
+  return stripeRequest<StripeCheckoutSession>(`/checkout/sessions/${encodeURIComponent(sessionId)}`);
+}
 
 export class StripeProvider implements PaymentProvider {
-  public stripe: Stripe;
+  async verifyCheckoutSession(sessionId: string): Promise<WebhookVerification> {
+    const session = await retrieveStripeCheckoutSession(sessionId);
 
-  constructor() {
-    this.stripe = new Stripe(config.payment.providers.stripe.secretKey, {
-      apiVersion: '2025-04-30.basil',
-    });
+    if (!session?.payment_status) {
+      return { success: false };
+    }
+
+    if (session.payment_status !== 'paid') {
+      return { success: false };
+    }
+
+    if (session.mode === 'subscription') {
+      return this.handleSubscriptionCreated(session);
+    }
+
+    return this.handleOneTimePayment(session);
   }
 
   async createPayment(params: PaymentParams): Promise<PaymentResult> {
-    const plan = config.payment.plans[params.planId as keyof typeof config.payment.plans] as PaymentPlan;
-    
+    const plan = getPlan(params.planId);
+
     if (plan.duration.type === 'recurring') {
       return this.createSubscription(params, plan);
-    } else {
-      // Both 'one_time' and 'credits' use the same payment mode
-      return this.createOneTimePayment(params, plan);
     }
+
+    return this.createOneTimePayment(params, plan);
   }
 
   private async createSubscription(params: PaymentParams, plan: PaymentPlan): Promise<PaymentResult> {
-    // 1. 获取或创建客户
     const customer = await this.getOrCreateCustomer(params.userId);
-
-    // 2. 创建 Checkout Session
-    const session = await this.stripe.checkout.sessions.create({
-      customer: customer.id,
-      line_items: [{
-        price: plan.stripePriceId!,
-        quantity: 1,
-      }],
+    const session = await this.createCheckoutSession({
+      customerId: customer.id,
+      priceId: plan.stripePriceId!,
       mode: 'subscription',
-      success_url: `${config.app.payment.successUrl}?session_id={CHECKOUT_SESSION_ID}&provider=stripe`,
-      cancel_url: config.app.payment.cancelUrl,
       metadata: {
         orderId: params.orderId,
         userId: params.userId,
-        planId: params.planId
-      }
+        planId: params.planId,
+      },
     });
 
     return {
@@ -67,109 +210,143 @@ export class StripeProvider implements PaymentProvider {
       providerOrderId: session.id,
       metadata: {
         customerId: customer.id,
-        sessionId: session.id
-      }
+        sessionId: session.id,
+      },
     };
   }
 
   private async createOneTimePayment(params: PaymentParams, plan: PaymentPlan): Promise<PaymentResult> {
     const customer = await this.getOrCreateCustomer(params.userId);
-    const session = await this.stripe.checkout.sessions.create({
-      customer: customer.id,
-      line_items: [{
-        price: plan.stripePriceId!,
-        quantity: 1,
-      }],
+    const session = await this.createCheckoutSession({
+      customerId: customer.id,
+      priceId: plan.stripePriceId!,
       mode: 'payment',
-      success_url: `${config.app.payment.successUrl}?session_id={CHECKOUT_SESSION_ID}&provider=stripe`,
-      cancel_url: config.app.payment.cancelUrl,
       metadata: {
         orderId: params.orderId,
         userId: params.userId,
-        planId: params.planId
-      }
+        planId: params.planId,
+      },
     });
 
     return {
       paymentUrl: session.url || '',
       providerOrderId: session.id,
       metadata: {
-        sessionId: session.id
-      }
+        sessionId: session.id,
+      },
     };
   }
 
-  async handleWebhook(payload: any, signature: string): Promise<WebhookVerification> {
+  private async createCheckoutSession(params: {
+    customerId: string;
+    priceId: string;
+    mode: 'payment' | 'subscription';
+    metadata: Record<string, string>;
+  }): Promise<StripeCheckoutSession> {
+    const body = new URLSearchParams();
+    body.set('customer', params.customerId);
+    body.set('line_items[0][price]', params.priceId);
+    body.set('line_items[0][quantity]', '1');
+    body.set('mode', params.mode);
+    body.set('success_url', `${config.app.payment.successUrl}?session_id={CHECKOUT_SESSION_ID}&provider=stripe`);
+    body.set('cancel_url', config.app.payment.cancelUrl);
+    appendMetadata(body, params.metadata);
+
+    return stripePost<StripeCheckoutSession>('/checkout/sessions', body);
+  }
+
+  async handleWebhook(payload: string | Record<string, any>, signature: string): Promise<WebhookVerification> {
     try {
-      const event = await this.stripe.webhooks.constructEventAsync(
-        payload,
+      const payloadText = typeof payload === 'string' ? payload : JSON.stringify(payload);
+      const isValid = await verifyStripeSignature(
+        payloadText,
         signature,
         config.payment.providers.stripe.webhookSecret
       );
-      console.log(event, 'event')
-      switch (event.type) {
-        case 'checkout.session.completed': {
-          const session = event.data.object as Stripe.Checkout.Session;
-          if (session.mode === 'subscription') {
-            return this.handleSubscriptionCreated(session);
-          } else {
-            return this.handleOneTimePayment(session);
-          }
-        }
 
-        case 'customer.subscription.updated': {
-          // 处理订阅更新事件（包括计划变更、续订等）
-          const subscription = event.data.object as Stripe.Subscription;
-          return this.handleSubscriptionUpdated(subscription);
-        }
-
-        case 'customer.subscription.deleted': {
-          const subscription = event.data.object as Stripe.Subscription;
-          return this.handleSubscriptionDeleted(subscription);
-        }
+      if (!isValid) {
+        return { success: false };
       }
 
-      return { success: true };
+      const event = JSON.parse(payloadText) as StripeWebhookEvent;
+
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object as StripeCheckoutSession;
+          if (session.mode === 'subscription') {
+            return this.handleSubscriptionCreated(session);
+          }
+          return this.handleOneTimePayment(session);
+        }
+
+        case 'customer.subscription.updated':
+          return this.handleSubscriptionUpdated(event.data.object as StripeSubscription);
+
+        case 'customer.subscription.deleted':
+          return this.handleSubscriptionDeleted(event.data.object as StripeSubscription);
+
+        default:
+          return { success: true };
+      }
     } catch (err) {
       console.error('Error verifying webhook:', err);
       return { success: false };
     }
   }
 
-  private async handleSubscriptionCreated(session: Stripe.Checkout.Session): Promise<WebhookVerification> {
-    if (!session.subscription || !session.metadata?.orderId) return { success: false };
+  private async handleSubscriptionCreated(session: StripeCheckoutSession): Promise<WebhookVerification> {
+    if (!session.subscription || !session.metadata?.orderId) {
+      return { success: false };
+    }
 
-    const subscription = await this.stripe.subscriptions.retrieve(session.subscription as string, {
-      expand: ['latest_invoice']
-    });    
-    // 使用 Stripe 的订阅周期（Unix时间戳转UTC）
+    const subscriptionId = getObjectId(session.subscription);
+    const subscription = await stripeRequest<StripeSubscription>(`/subscriptions/${encodeURIComponent(subscriptionId)}`);
     const subscriptionItem = subscription.items.data[0];
     const periodStart = new Date(subscriptionItem.current_period_start * 1000);
     const periodEnd = new Date(subscriptionItem.current_period_end * 1000);
-    
+
     console.log(`Stripe subscription created - Period: ${periodStart.toISOString()} to ${periodEnd.toISOString()}`);
 
-    // 更新订单状态
     await db.update(order)
       .set({ status: orderStatus.PAID })
       .where(eq(order.id, session.metadata.orderId));
 
-    // 创建订阅记录
-    await db.insert(userSubscription).values({
-      id: randomUUID(),
-      userId: session.metadata.userId,
-      planId: session.metadata.planId,
-      status: subscriptionStatus.ACTIVE,
-      paymentType: paymentTypes.RECURRING,
-      stripeCustomerId: session.customer as string,
-      stripeSubscriptionId: subscription.id,
-      periodStart: periodStart,
-      periodEnd: periodEnd,
-      cancelAtPeriodEnd: false,
-      metadata: JSON.stringify({
-        sessionId: session.id
-      })
+    const existingSubscription = await db.query.subscription.findFirst({
+      where: eq(userSubscription.stripeSubscriptionId, subscription.id),
     });
+
+    if (existingSubscription) {
+      await db
+        .update(userSubscription)
+        .set({
+          userId: session.metadata.userId,
+          planId: session.metadata.planId,
+          status: subscriptionStatus.ACTIVE,
+          paymentType: paymentTypes.RECURRING,
+          stripeCustomerId: getObjectId(session.customer),
+          periodStart,
+          periodEnd,
+          cancelAtPeriodEnd: false,
+          updatedAt: new Date(),
+        })
+        .where(eq(userSubscription.id, existingSubscription.id));
+    } else {
+      await db.insert(userSubscription).values({
+        id: crypto.randomUUID(),
+        userId: session.metadata.userId,
+        planId: session.metadata.planId,
+        status: subscriptionStatus.ACTIVE,
+        paymentType: paymentTypes.RECURRING,
+        stripeCustomerId: getObjectId(session.customer),
+        stripeSubscriptionId: subscription.id,
+        periodStart,
+        periodEnd,
+        cancelAtPeriodEnd: false,
+        metadata: JSON.stringify({
+          sessionId: session.id,
+        }),
+      });
+    }
 
     await this.grantSubscriptionCredits({
       userId: session.metadata.userId,
@@ -193,7 +370,7 @@ export class StripeProvider implements PaymentProvider {
     periodStart: Date;
     periodEnd: Date;
   }): Promise<void> {
-    const plan = config.payment.plans[params.planId as keyof typeof config.payment.plans] as PaymentPlan;
+    const plan = getPlan(params.planId);
     const credits = plan.credits ?? 0;
 
     if (credits <= 0) {
@@ -226,25 +403,25 @@ export class StripeProvider implements PaymentProvider {
         provider: 'stripe',
         periodStart: params.periodStart.toISOString(),
         periodEnd: params.periodEnd.toISOString(),
-      }
+      },
     });
   }
 
-  private async handleOneTimePayment(session: Stripe.Checkout.Session): Promise<WebhookVerification> {
-    if (!session.metadata?.orderId) return { success: false };
+  private async handleOneTimePayment(session: StripeCheckoutSession): Promise<WebhookVerification> {
+    if (!session.metadata?.orderId) {
+      return { success: false };
+    }
 
     const now = utcNow();
-    const plan = config.payment.plans[session.metadata.planId as keyof typeof config.payment.plans] as PaymentPlan;
-    
-    // Update order status first
+    const plan = getPlan(session.metadata.planId);
+
     await db.update(order)
       .set({ status: orderStatus.PAID })
       .where(eq(order.id, session.metadata.orderId));
 
-    // Handle credit pack purchase
     if (plan.duration.type === 'credits' && plan.credits) {
       console.log(`Stripe credit pack purchase - Adding ${plan.credits} credits to user ${session.metadata.userId}`);
-      
+
       await creditService.addCredits({
         userId: session.metadata.userId,
         amount: plan.credits,
@@ -254,197 +431,113 @@ export class StripeProvider implements PaymentProvider {
         metadata: {
           sessionId: session.id,
           planId: session.metadata.planId,
-          provider: 'stripe'
-        }
+          provider: 'stripe',
+        },
       });
 
       return { success: true, orderId: session.metadata.orderId };
     }
-    
-    // Handle regular one-time subscription payment
+
     const periodEnd = new Date(now);
     const months = plan.duration.months ?? 1;
-    
+
     if (months >= 9999) {
-      // Lifetime subscription: set to 100 years
       periodEnd.setFullYear(periodEnd.getFullYear() + 100);
     } else {
-      // Regular subscription: add months
       periodEnd.setMonth(periodEnd.getMonth() + months);
     }
-    
+
     console.log(`Stripe one-time payment - Period: ${now.toISOString()} to ${periodEnd.toISOString()}`);
 
-    // Create subscription record
     await db.insert(userSubscription).values({
-      id: randomUUID(),
+      id: crypto.randomUUID(),
       userId: session.metadata.userId,
       planId: session.metadata.planId,
       status: subscriptionStatus.ACTIVE,
       paymentType: paymentTypes.ONE_TIME,
-      stripeCustomerId: session.customer as string,
+      stripeCustomerId: getObjectId(session.customer),
       periodStart: now,
-      periodEnd: periodEnd,
+      periodEnd,
       cancelAtPeriodEnd: true,
       metadata: JSON.stringify({
         sessionId: session.id,
-        isLifetime: months >= 9999
-      })
+        isLifetime: months >= 9999,
+      }),
     });
 
     return { success: true, orderId: session.metadata.orderId };
   }
 
-  private async handleSubscriptionUpdated(stripeSubscription: Stripe.Subscription): Promise<WebhookVerification> {
-    // 获取 Stripe 客户 ID
-    const stripeCustomerId = stripeSubscription.customer as string;
-    
-    // 通过 Stripe 客户 ID 查找订阅记录，而不是通过 subscription ID
-    const existingSubscription = await db.query.subscription.findFirst({
-      where: eq(userSubscription.stripeCustomerId, stripeCustomerId)
-    });
-    console.log(existingSubscription, 'existingSubscription')
-    if (!existingSubscription) {
-      console.error(`找不到对应的订阅记录，Stripe 客户 ID: ${stripeCustomerId}`);
+  private async handleSubscriptionUpdated(stripeSubscription: StripeSubscription): Promise<WebhookVerification> {
+    const updatedSubscription = await syncStripeSubscriptionState(stripeSubscription);
+
+    if (!updatedSubscription) {
       return { success: false };
     }
 
-    // 使用 Stripe 的订阅周期（Unix时间戳转UTC）
-    const subscriptionItem = stripeSubscription.items.data[0];
-    const periodStart = new Date(subscriptionItem.current_period_start * 1000);
-    const periodEnd = new Date(subscriptionItem.current_period_end * 1000);
-    
-    console.log(`Stripe subscription updated - Period: ${periodStart.toISOString()} to ${periodEnd.toISOString()}`);
-    
-    // 获取 price ID，用于确定当前计划
-    const priceId = subscriptionItem.price.id;
-    
-    // 查找对应的计划 ID
-    let newPlanId = existingSubscription.planId; // 默认保持原计划
-    
-    
-    // 遍历所有计划，查找匹配当前 price ID 的计划
-    for (const [planId, planDetails] of Object.entries(config.payment.plans)) {
-      if (planDetails.provider === 'stripe' && planDetails.stripePriceId === priceId) {
-        newPlanId = planId;
-        break;
-      }
-    }
+    return { success: true };
+  }
 
-    console.log(newPlanId, 'newPlanId')
-    // 更新订阅记录
-    await db.update(userSubscription)
-      .set({
-        status: this.mapStripeStatus(stripeSubscription.status),
-        planId: newPlanId, // 更新计划 ID
-        stripeSubscriptionId: stripeSubscription.id, // 更新为新的订阅 ID
-        periodStart: periodStart,
-        periodEnd: periodEnd,
-        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
-        updatedAt: new Date()
-      })
-      .where(eq(userSubscription.stripeCustomerId, stripeCustomerId));
+  private async handleSubscriptionDeleted(stripeSubscription: StripeSubscription): Promise<WebhookVerification> {
+    const updatedSubscription = await syncStripeSubscriptionState({
+      ...stripeSubscription,
+      status: stripeSubscription.status || 'canceled',
+      cancel_at_period_end: true,
+    });
+
+    if (!updatedSubscription) {
+      return { success: false };
+    }
 
     return { success: true };
   }
 
-  private async handleSubscriptionDeleted(stripeSubscription: Stripe.Subscription): Promise<WebhookVerification> {
-    await db.update(userSubscription)
-      .set({
-        status: subscriptionStatus.CANCELED,
-        updatedAt: new Date()
-      })
-      .where(eq(userSubscription.stripeSubscriptionId, stripeSubscription.id));
-
-    return { success: true };
-  }
-
-  private mapStripeStatus(status: string): string {
-    switch (status) {
-      case 'active':
-        return subscriptionStatus.ACTIVE;        // 活跃订阅
-      case 'canceled':
-        return subscriptionStatus.CANCELED;      // 用户主动取消
-      case 'past_due':
-        return subscriptionStatus.EXPIRED;       // 付款逾期 → 统一为过期
-      case 'unpaid':
-        return subscriptionStatus.EXPIRED;       // 付款失败 → 统一为过期
-      case 'trialing':
-        return subscriptionStatus.TRIALING;      // 试用期
-      case 'incomplete_expired':
-        return subscriptionStatus.EXPIRED;       // 不完整订阅过期
-      default:
-        return subscriptionStatus.ACTIVE;
-    }
-  }
-
-  private async getOrCreateCustomer(userId: string): Promise<Stripe.Customer> {
-    // 1. 先从数据库中查找用户
+  private async getOrCreateCustomer(userId: string): Promise<StripeCustomer> {
     const userRecord = await db.query.user.findFirst({
-      where: eq(user.id, userId)
+      where: eq(user.id, userId),
     });
 
     if (!userRecord) {
       throw new Error('User not found');
     }
 
-    // 2. 如果用户已有 Stripe Customer ID，直接返回
     if (userRecord.stripeCustomerId) {
       try {
-        const customer = await this.stripe.customers.retrieve(userRecord.stripeCustomerId);
+        const customer = await stripeRequest<StripeCustomer>(
+          `/customers/${encodeURIComponent(userRecord.stripeCustomerId)}`
+        );
         if (!customer.deleted) {
-          return customer as Stripe.Customer;
+          return customer;
         }
-        // 如果客户已被删除，继续创建新客户
       } catch (error) {
         console.error('Error retrieving Stripe customer:', error);
-        // 如果获取失败（比如客户被删除），继续创建新客户
       }
     }
 
-    // 3. 创建新的 Stripe Customer
-    const customer = await this.stripe.customers.create({
-      email: userRecord.email,
-      name: userRecord.name || undefined,
-      phone: userRecord.phoneNumber || undefined,
-      metadata: {
-        userId: userId
-      }
-    });
+    const body = new URLSearchParams();
+    body.set('email', userRecord.email);
+    if (userRecord.name) {
+      body.set('name', userRecord.name);
+    }
+    if (userRecord.phoneNumber) {
+      body.set('phone', userRecord.phoneNumber);
+    }
+    body.set('metadata[userId]', userId);
 
-    // 4. 更新用户记录
+    const customer = await stripePost<StripeCustomer>('/customers', body);
+
     await db.update(user)
-      .set({ 
+      .set({
         stripeCustomerId: customer.id,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(user.id, userId));
 
     return customer;
   }
 
-  /**
-   * 创建 Stripe 客户门户会话
-   * @param customerId Stripe 客户 ID
-   * @param returnUrl 完成后返回的 URL
-   * @returns 门户会话对象，包含重定向 URL
-   */
-  async createCustomerPortal(customerId: string, returnUrl: string) {
-    const portalSession = await this.stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: returnUrl,
-    });
-    
-    return portalSession;
-  }
-
-  /**
-   * 关闭订单 (目前Stripe不支持)
-   * @param orderId 订单ID
-   * @returns 是否成功关闭
-   */
   async closeOrder(orderId: string): Promise<boolean> {
-    console.warn('Stripe does not support canceling orders via API. This is a no-op.');
+    console.warn(`Stripe order close is a no-op: ${orderId}`);
     return false;
   }
-} 
+}

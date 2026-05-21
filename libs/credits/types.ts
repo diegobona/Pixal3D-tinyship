@@ -40,39 +40,13 @@ export interface ConsumeCreditsResult {
   error?: string;
 }
 
-/**
- * Options for querying credit transactions
- */
-export interface GetTransactionsOptions {
-  limit?: number;
-  offset?: number;
-  page?: number;
-  type?: CreditTransactionType;
-}
-
-/**
- * Options for querying all users' credit transactions (admin)
- */
-export interface GetAllTransactionsOptions {
-  page?: number;
-  limit?: number;
-  searchField?: string;
-  searchValue?: string;
-  type?: CreditTransactionType;
-  userId?: string;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-}
-
-/**
- * Paginated result for credit transactions
- */
-export interface GetTransactionsPaginatedResult {
-  transactions: import('@libs/database/schema/credit-transaction').CreditTransaction[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+export interface RevokeCreditsParams {
+  userId: string;
+  amount: number;
+  transactionId?: string;
+  orderId?: string | null;
+  description?: string;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -97,4 +71,3 @@ export interface CalculateConsumptionParams {
   /** Operation type for fixed consumption mode: 'aiChat' | 'aiImage' */
   type?: 'aiChat' | 'aiImage';
 }
-

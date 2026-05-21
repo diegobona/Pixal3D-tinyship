@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
-import { config } from '@config';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(config.payment.providers.stripe.secretKey, {
-  apiVersion: '2025-04-30.basil',
-});
+import { StripeProvider } from '@libs/payment/providers/stripe';
 
 export async function GET(request: Request) {
   try {
@@ -15,21 +10,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Session ID is required' }, { status: 400 });
     }
 
-    // 1. 验证会话是否存在且有效
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    
-    if (!session || !session.payment_status) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 400 });
-    }
-    console.log('the payment', session.payment_status);
-    // 2. 验证支付状态
-    if (session.payment_status !== 'paid') {
+    const stripeProvider = new StripeProvider();
+    const verification = await stripeProvider.verifyCheckoutSession(sessionId);
+
+    if (!verification.success) {
       return NextResponse.json({ error: 'Payment not completed' }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, orderId: verification.orderId });
   } catch (error) {
     console.error('Session verification failed:', error);
     return NextResponse.json({ error: 'Session verification failed' }, { status: 500 });
   }
-} 
+}

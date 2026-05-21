@@ -1,13 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { GeistSans } from 'geist/font/sans';
 
 import "../globals.css";
 import { i18n } from '../i18n-config';
 import { use } from 'react';
-import { Toaster } from "@libs/react-shared/ui/sonner"
 import { translations } from "@libs/i18n";
-import { ThemeProvider } from '@libs/react-shared/hooks/use-theme';
-import { ThemeScript } from "@libs/react-shared/components/theme-script";
 import { SharedAppWrapper } from "@/components/shared-app-wrapper";
 
 
@@ -90,17 +86,11 @@ export default function RootLayout({
   const { lang } = use(params);
   
   return (
-    <html lang={lang} suppressHydrationWarning>
-      <head>
-        <ThemeScript />
-      </head>
-      <body className={`${GeistSans.className} antialiased`}>
-        <ThemeProvider>
-          <SharedAppWrapper>
-            {children}
-            <Toaster />
-          </SharedAppWrapper>
-        </ThemeProvider>
+    <html lang={lang} className="dark" suppressHydrationWarning>
+      <body className="antialiased">
+        <SharedAppWrapper>
+          {children}
+        </SharedAppWrapper>
       </body>
     </html>
   );

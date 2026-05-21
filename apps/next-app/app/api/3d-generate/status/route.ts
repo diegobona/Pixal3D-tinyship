@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query3DTask } from '@libs/ai';
+import { query3DTask } from '@libs/ai/3d';
 import {
   get3DGenerationRecord,
   mark3DGenerationFailed,

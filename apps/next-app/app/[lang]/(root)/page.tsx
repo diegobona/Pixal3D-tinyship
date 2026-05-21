@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ImagePlus,
-  Loader2,
-  WandSparkles,
-  X,
-} from "lucide-react";
-import { toast } from "sonner";
+import { notify as toast } from "@/lib/notify";
 import { Button } from "@libs/react-shared/ui/button";
 import { Input } from "@libs/react-shared/ui/input";
 import { useTranslation } from "@/hooks/use-translation";
@@ -410,7 +404,7 @@ export default function Home() {
                       }}
                       aria-label={t.pixal3d.generator.removeImage}
                     >
-                      <X className="h-4 w-4" />
+                      <span aria-hidden="true">x</span>
                     </button>
                   </div>
                   <div>
@@ -420,7 +414,7 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  <ImagePlus className="h-16 w-16 text-[#aeb6ca]" strokeWidth={1.8} />
+                  <span aria-hidden="true" className="text-6xl font-light text-[#aeb6ca]">+</span>
                   <p className="mt-9 text-3xl font-extrabold text-[#b7bdce]">{t.pixal3d.generator.uploadButton}</p>
                   <p className="mt-5 text-xl font-medium text-[#757f9b]">{t.pixal3d.generator.dragDropPaste}</p>
                   <Button
@@ -428,7 +422,7 @@ export default function Home() {
                     className="mt-20 h-16 w-full max-w-[390px] rounded-full border border-[#313b59] bg-[#141b31] text-2xl font-bold text-[#dbe1f2] hover:bg-[#1a2440]"
                     disabled={isReadingFile}
                   >
-                    {isReadingFile ? <Loader2 className="h-6 w-6 animate-spin" /> : null}
+                    {isReadingFile ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : null}
                     {t.pixal3d.generator.selectFileButton}
                   </Button>
                   <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
@@ -458,7 +452,7 @@ export default function Home() {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="inline-flex h-12 items-center gap-3 rounded-full bg-[#48bdff] px-6 text-lg font-extrabold text-[#051021]">
                   {t.pixal3d.generator.stylePreset}
-                  <X className="h-4 w-4" />
+                  <span aria-hidden="true">x</span>
                 </div>
                 <div className="inline-flex h-12 items-center gap-3 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-sm font-semibold text-[#aeb6ca]">
                   <span className="h-4 w-4 rounded-sm bg-[#123e65]" />
@@ -485,9 +479,9 @@ export default function Home() {
                   onClick={handleGenerate}
                 >
                   {taskStatus === "processing" ? (
-                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#051021]/30 border-t-[#051021]" />
                   ) : (
-                    <WandSparkles className="h-6 w-6" />
+                    <span aria-hidden="true" className="text-2xl leading-none">+</span>
                   )}
                   {taskStatus === "processing" ? t.pixal3d.generator.generatingButton : t.pixal3d.generator.generateButton}
                 </Button>
@@ -500,7 +494,7 @@ export default function Home() {
                   disabled={isOpeningHfTrial}
                   onClick={handleOpenHfTrial}
                 >
-                  {isOpeningHfTrial ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+                  {isOpeningHfTrial ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : null}
                   {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
                 </Button>
               </div>
@@ -531,7 +525,7 @@ export default function Home() {
                   className="h-10 rounded-full px-4 text-[#aeb6ca] hover:bg-white/10 hover:text-white"
                   onClick={closeHfTrial}
                 >
-                  <X className="h-4 w-4" />
+                  <span aria-hidden="true">x</span>
                   {t.pixal3d.generator.hfTrialClose}
                 </Button>
               </div>

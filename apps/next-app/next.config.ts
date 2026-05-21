@@ -13,27 +13,14 @@ const libsDir = resolve(rootDir, 'libs');
 const useStandaloneOutput = process.platform !== 'win32' || process.env.NEXT_OUTPUT_STANDALONE === '1';
 const defaultLocale = 'en';
 const defaultLocalePaths = [
-  'ai',
   'blog',
   'blog/:path*',
-  'cellphone',
   'dashboard',
-  'dashboard/:path*',
-  'forgot-password',
-  'image-generate',
   'payment-cancel',
   'payment-success',
-  'premium-features',
   'pricing',
-  'reset-password',
   'signin',
   'signup',
-  'test-validator-nextjs',
-  'upload',
-  'video-generate',
-  'wechat',
-  'admin',
-  'admin/:path*',
 ];
 
 /** @type {import('next').NextConfig} */
@@ -89,9 +76,6 @@ const nextConfig: NextConfig= {
     dangerouslyAllowSVG: true,
     domains: [],
   },
-  // https://github.com/vercel/next.js/issues/50042
-  // ali-oss uses urllib which requires proxy-agent (Node.js only)
-  serverExternalPackages: ['mjml', 'handlebars', 'ali-oss', 'urllib'],
   // Keep Docker/Linux standalone output, while avoiding Windows local symlink EPERM.
   output: useStandaloneOutput ? 'standalone' : undefined,
   experimental: {

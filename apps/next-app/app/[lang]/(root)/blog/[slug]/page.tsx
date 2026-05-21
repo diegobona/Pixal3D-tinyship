@@ -6,8 +6,6 @@ import { blogPostStatus } from "@libs/database/schema/blog-post";
 import { eq, and } from "drizzle-orm";
 import { translations } from "@libs/i18n";
 import type { Metadata } from "next";
-import ReactMarkdown from "react-markdown";
-import { ChevronLeft } from "lucide-react";
 
 type Props = {
   params: Promise<{ lang: string; slug: string }>;
@@ -70,7 +68,7 @@ export default async function BlogDetailPage({ params }: Props) {
           href={`/${lang}/blog`}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <span aria-hidden="true">&lt;</span>
           {t.blog.backToBlog}
         </Link>
 
@@ -102,8 +100,8 @@ export default async function BlogDetailPage({ params }: Props) {
           )}
         </header>
 
-        <div className="prose dark:prose-invert max-w-none">
-          <ReactMarkdown>{post.content}</ReactMarkdown>
+        <div className="whitespace-pre-wrap text-base leading-8 text-foreground/90">
+          {post.content}
         </div>
 
         <footer className="mt-12 pt-8 border-t border-border">
@@ -111,7 +109,7 @@ export default async function BlogDetailPage({ params }: Props) {
             href={`/${lang}/blog`}
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <span aria-hidden="true">&lt;</span>
             {t.blog.backToBlog}
           </Link>
         </footer>

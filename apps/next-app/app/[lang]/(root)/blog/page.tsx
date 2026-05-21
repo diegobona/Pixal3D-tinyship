@@ -6,7 +6,6 @@ import { eq, desc, count } from "drizzle-orm";
 import { translations } from "@libs/i18n";
 import type { Metadata } from "next";
 import { Button } from "@libs/react-shared/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE = 12;
 
@@ -135,7 +134,7 @@ export default async function BlogListPage({ params, searchParams }: Props) {
                       href={page <= 1 ? "#" : `/${lang}/blog?page=${page - 1}`}
                       className="flex items-center gap-1"
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <span aria-hidden="true">&lt;</span>
                       {t.actions.previous}
                     </Link>
                   </Button>
@@ -153,7 +152,7 @@ export default async function BlogListPage({ params, searchParams }: Props) {
                       className="flex items-center gap-1"
                     >
                       {t.actions.next}
-                      <ChevronRight className="h-4 w-4" />
+                      <span aria-hidden="true">&gt;</span>
                     </Link>
                   </Button>
                 </div>

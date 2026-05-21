@@ -4,9 +4,9 @@ import { createHash, randomUUID } from 'node:crypto';
 import {
   getFreeTrialUsage,
   reserveFreeTrial,
-  selectLeastBusyHfPixal3DInstance,
   type FreeTrialIdentity,
-} from '@libs/ai';
+} from '@libs/ai/free-trial-store';
+import { selectLeastBusyHfPixal3DInstance } from '@libs/ai/hf-pixal3d-instance';
 import { auth } from '@libs/auth';
 
 export const dynamic = 'force-dynamic';

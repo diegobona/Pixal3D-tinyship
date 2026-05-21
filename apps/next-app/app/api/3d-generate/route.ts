@@ -4,7 +4,7 @@ import {
   create3DTask,
   type ThreeDProviderName,
   type ThreeDQuality,
-} from '@libs/ai';
+} from '@libs/ai/3d';
 import {
   create3DGenerationRecord,
 } from '@libs/ai/3d-task-store';

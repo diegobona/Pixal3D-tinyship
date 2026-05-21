@@ -1,10 +1,29 @@
-'use client';
+"use client";
 
-import { useParams, useRouter, usePathname } from 'next/navigation';
-import { useCallback } from 'react';
-import { translations, type SupportedLocale, locales, type Translations } from '@libs/i18n';
-import { createNextTranslationFunction } from '@libs/validators';
-import { config } from '@config';
+import { useCallback } from "react";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import { config } from "@config";
+import { locales, translations, type SupportedLocale, type Translations } from "@libs/i18n";
+
+function createTranslationFunction(dictionary: Translations) {
+  return (key: string, params?: Record<string, unknown>) => {
+    const value = key.split(".").reduce<unknown>((obj, path) => {
+      if (obj && typeof obj === "object" && path in obj) {
+        return (obj as Record<string, unknown>)[path];
+      }
+      return undefined;
+    }, dictionary);
+
+    if (!params || typeof value !== "string") {
+      return value;
+    }
+
+    return Object.entries(params).reduce(
+      (message, [paramKey, paramValue]) => message.replace(`{${paramKey}}`, String(paramValue)),
+      value
+    );
+  };
+}
 
 export function useTranslation() {
   const params = useParams();
@@ -12,31 +31,26 @@ export function useTranslation() {
   const pathname = usePathname();
   const locale = (params?.lang as SupportedLocale) || config.app.i18n.defaultLocale;
   const t = translations[locale] as Translations;
+  const tWithParams = createTranslationFunction(t);
 
-  // 创建支持参数插值的翻译函数
-  const tWithParams = createNextTranslationFunction(t);
-  const localizedPath = useCallback((path: string) =>
-    locale === config.app.i18n.defaultLocale ? path : `/${locale}${path}`,
-  [locale]);
+  const localizedPath = useCallback(
+    (path: string) => (locale === config.app.i18n.defaultLocale ? path : `/${locale}${path}`),
+    [locale]
+  );
 
   const changeLocale = (newLocale: SupportedLocale) => {
-    // Get the current path without the locale prefix
-    const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/';
-    
-    // Navigate to the new locale path
+    const pathWithoutLocale = pathname.replace(`/${locale}`, "") || "/";
     router.push(
       newLocale === config.app.i18n.defaultLocale
         ? pathWithoutLocale
-        : `/${newLocale}${pathWithoutLocale === '/' ? '' : pathWithoutLocale}`
+        : `/${newLocale}${pathWithoutLocale === "/" ? "" : pathWithoutLocale}`
     );
-    
-    // Store the preference
     document.cookie = `${config.app.i18n.cookieKey}=${newLocale}; path=/; max-age=31536000`;
   };
 
   return {
     t,
-    tWithParams, // 新增：支持参数插值的翻译函数
+    tWithParams,
     locale,
     locales,
     defaultLocale: config.app.i18n.defaultLocale,
@@ -44,4 +58,4 @@ export function useTranslation() {
     localizedPath,
     isDefaultLocale: locale === config.app.i18n.defaultLocale,
   } as const;
-} 
+}

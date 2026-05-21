@@ -1,24 +1,16 @@
 import { db } from '@libs/database';
-import { user, creditTransaction, creditTransactionTypes } from '@libs/database/schema';
-import { eq, desc, asc, and, or, like, sql, count } from 'drizzle-orm';
-import type { 
-  AddCreditsParams, 
-  ConsumeCreditsParams, 
+import { user } from '@libs/database/schema/user';
+import { creditTransaction, creditTransactionTypes } from '@libs/database/schema/credit-transaction';
+import { eq, sql } from 'drizzle-orm';
+import type {
+  AddCreditsParams,
+  ConsumeCreditsParams,
   ConsumeCreditsResult,
-  GetTransactionsOptions,
-  GetAllTransactionsOptions,
-  GetTransactionsPaginatedResult,
-  CreditTransactionType
+  RevokeCreditsParams,
 } from './types';
 import type { CreditTransaction } from '@libs/database/schema/credit-transaction';
 
-/**
- * Credit Service - Manages user credit balances and transactions
- */
 export class CreditService {
-  /**
-   * Get the current credit balance for a user
-   */
   async getBalance(userId: string): Promise<number> {
     const result = await db
       .select({ creditBalance: user.creditBalance })
@@ -26,17 +18,9 @@ export class CreditService {
       .where(eq(user.id, userId))
       .limit(1);
 
-    if (!result.length) {
-      return 0;
-    }
-
-    return parseFloat(result[0].creditBalance) || 0;
+    return parseFloat(result[0]?.creditBalance ?? '0') || 0;
   }
 
-  /**
-   * Add credits to a user's account
-   * Used for purchases, bonuses, refunds, and adjustments
-   */
   async addCredits(params: AddCreditsParams): Promise<CreditTransaction> {
     const { userId, amount, type, orderId, description, metadata } = params;
 
@@ -44,14 +28,12 @@ export class CreditService {
       throw new Error('Amount must be positive when adding credits');
     }
 
-    // Use transaction to ensure atomicity
-    const result = await db.transaction(async (tx) => {
-      // Update user balance
+    return db.transaction(async (tx) => {
       const [updatedUser] = await tx
         .update(user)
         .set({
           creditBalance: sql`${user.creditBalance} + ${amount}`,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(user.id, userId))
         .returning({ creditBalance: user.creditBalance });
@@ -60,41 +42,24 @@ export class CreditService {
         throw new Error(`User not found: ${userId}`);
       }
 
-      const newBalance = parseFloat(updatedUser.creditBalance);
-
-      // Create transaction record
-      const transactionId = `txn_${crypto.randomUUID()}`;
       const [transaction] = await tx
         .insert(creditTransaction)
         .values({
-          id: transactionId,
+          id: `txn_${crypto.randomUUID()}`,
           userId,
           type,
           amount: amount.toString(),
-          balance: newBalance.toString(),
+          balance: (parseFloat(updatedUser.creditBalance) || 0).toString(),
           orderId: orderId || null,
           description: description || `${type} credits`,
-          metadata: metadata || null
+          metadata: metadata || null,
         })
         .returning();
 
       return transaction;
     });
-
-    return result;
   }
 
-  /**
-   * Consume credits from a user's account
-   * Returns success status and new balance
-   * 
-   * Uses atomic conditional update to prevent race conditions:
-   * UPDATE ... SET credit_balance = credit_balance - amount 
-   * WHERE id = userId AND credit_balance >= amount
-   * 
-   * This ensures that concurrent requests cannot both deduct credits
-   * if the combined total would exceed the available balance.
-   */
   async consumeCredits(params: ConsumeCreditsParams): Promise<ConsumeCreditsResult> {
     const { userId, amount, description, metadata } = params;
 
@@ -102,301 +67,131 @@ export class CreditService {
       return {
         success: false,
         newBalance: await this.getBalance(userId),
-        error: 'Amount must be positive when consuming credits'
+        error: 'Amount must be positive when consuming credits',
       };
     }
 
     try {
-      const result = await db.transaction(async (tx) => {
-        // Atomic conditional update: only deduct if balance is sufficient
-        // This prevents race conditions by combining check and update in one SQL statement
-        const updateResult = await tx
+      return await db.transaction(async (tx) => {
+        const [updatedUser] = await tx
           .update(user)
           .set({
             creditBalance: sql`${user.creditBalance} - ${amount}`,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           })
-          .where(
-            and(
-              eq(user.id, userId),
-              sql`${user.creditBalance} >= ${amount}`
-            )
-          )
+          .where(sql`${user.id} = ${userId} AND ${user.creditBalance} >= ${amount}`)
           .returning({ creditBalance: user.creditBalance });
 
-        // If no row was updated, either user doesn't exist or insufficient credits
-        if (updateResult.length === 0) {
-          // Check if user exists to provide accurate error message
-          const [existingUser] = await tx
-            .select({ creditBalance: user.creditBalance })
-            .from(user)
-            .where(eq(user.id, userId))
-            .limit(1);
-
-          if (!existingUser) {
-            throw new Error(`User not found: ${userId}`);
-          }
-
-          // User exists but has insufficient credits
+        if (!updatedUser) {
           return {
             success: false,
-            newBalance: parseFloat(existingUser.creditBalance) || 0,
-            error: 'Insufficient credits'
+            newBalance: await this.getBalance(userId),
+            error: 'Insufficient credits',
           };
         }
 
-        const newBalance = parseFloat(updateResult[0].creditBalance);
-
-        // Create transaction record (negative amount for consumption)
+        const newBalance = parseFloat(updatedUser.creditBalance) || 0;
         const transactionId = `txn_${crypto.randomUUID()}`;
+
         await tx.insert(creditTransaction).values({
           id: transactionId,
           userId,
           type: creditTransactionTypes.CONSUMPTION,
-          amount: (-amount).toString(),  // Negative for consumption
+          amount: (-amount).toString(),
           balance: newBalance.toString(),
           description: description || 'Credits consumed',
-          metadata: metadata || null
+          metadata: metadata || null,
         });
 
         return {
           success: true,
           newBalance,
-          transactionId
+          transactionId,
         };
       });
-
-      return result;
     } catch (error) {
       console.error('Error consuming credits:', error);
       return {
         success: false,
         newBalance: await this.getBalance(userId),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
-  /**
-   * Check if user has enough credits for an operation
-   */
-  async hasEnoughCredits(userId: string, amount: number): Promise<boolean> {
-    const balance = await this.getBalance(userId);
-    return balance >= amount;
-  }
+  async revokeCredits(params: RevokeCreditsParams): Promise<CreditTransaction | null> {
+    const { userId, amount, transactionId, orderId, description, metadata } = params;
 
-  /**
-   * Get credit transaction history for a user (simple version)
-   */
-  async getTransactions(
-    userId: string, 
-    options: GetTransactionsOptions = {}
-  ): Promise<CreditTransaction[]> {
-    const { limit = 50, offset = 0, type } = options;
+    if (amount <= 0) {
+      return null;
+    }
 
-    let query = db
-      .select()
-      .from(creditTransaction)
-      .where(
-        type 
-          ? and(
-              eq(creditTransaction.userId, userId),
-              eq(creditTransaction.type, type)
-            )
-          : eq(creditTransaction.userId, userId)
-      )
-      .orderBy(desc(creditTransaction.createdAt))
-      .limit(limit)
-      .offset(offset);
+    return db.transaction(async (tx) => {
+      const [currentUser] = await tx
+        .select({ creditBalance: user.creditBalance })
+        .from(user)
+        .where(eq(user.id, userId))
+        .limit(1);
 
-    return query;
-  }
-
-  /**
-   * Get credit transaction history with pagination info
-   */
-  async getTransactionsPaginated(
-    userId: string, 
-    options: GetTransactionsOptions = {}
-  ): Promise<GetTransactionsPaginatedResult> {
-    const { page = 1, limit = 10, type } = options;
-    const offset = (page - 1) * limit;
-
-    const whereCondition = type 
-      ? and(
-          eq(creditTransaction.userId, userId),
-          eq(creditTransaction.type, type)
-        )
-      : eq(creditTransaction.userId, userId);
-
-    // Get total count
-    const countResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(creditTransaction)
-      .where(whereCondition);
-    
-    const total = countResult[0]?.count || 0;
-
-    // Get paginated transactions
-    const transactions = await db
-      .select()
-      .from(creditTransaction)
-      .where(whereCondition)
-      .orderBy(desc(creditTransaction.createdAt))
-      .limit(limit)
-      .offset(offset);
-
-    return {
-      transactions,
-      total,
-      page,
-      pageSize: limit,
-      totalPages: Math.ceil(total / limit)
-    };
-  }
-
-  /**
-   * Get all credit transactions across all users (admin only)
-   * Supports pagination, search, filtering, and sorting
-   */
-  async getAllTransactionsPaginated(
-    options: GetAllTransactionsOptions = {}
-  ): Promise<GetTransactionsPaginatedResult & { transactions: Array<CreditTransaction & { userEmail?: string | null; userName?: string | null }> }> {
-    const { 
-      page = 1, 
-      limit = 10, 
-      searchField, 
-      searchValue, 
-      type, 
-      userId,
-      sortBy = 'createdAt',
-      sortDirection = 'desc'
-    } = options;
-    
-    const offset = (page - 1) * limit;
-    
-    // Build where conditions
-    const whereConditions: any[] = [];
-    
-    // Search conditions
-    if (searchValue && searchField) {
-      switch (searchField) {
-        case 'id':
-          whereConditions.push(eq(creditTransaction.id, searchValue));
-          break;
-        case 'userId':
-          whereConditions.push(eq(creditTransaction.userId, searchValue));
-          break;
-        case 'userEmail':
-          whereConditions.push(like(user.email, `%${searchValue}%`));
-          break;
-        case 'userName':
-          whereConditions.push(like(user.name, `%${searchValue}%`));
-          break;
-        case 'description':
-          whereConditions.push(like(creditTransaction.description, `%${searchValue}%`));
-          break;
+      if (!currentUser) {
+        throw new Error(`User not found: ${userId}`);
       }
-    }
-    
-    // Filter by transaction type
-    if (type) {
-      whereConditions.push(eq(creditTransaction.type, type));
-    }
-    
-    // Filter by user ID
-    if (userId) {
-      whereConditions.push(eq(creditTransaction.userId, userId));
-    }
-    
-    // Build where clause - only use and() if we have conditions
-    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
-    
-    // Get total count
-    const countQuery = db
-      .select({ count: count() })
-      .from(creditTransaction)
-      .leftJoin(user, eq(creditTransaction.userId, user.id));
-    
-    const countResult = whereClause 
-      ? await countQuery.where(whereClause)
-      : await countQuery;
-    
-    const total = countResult[0]?.count || 0;
-    
-    // Build sorting
-    let orderBy;
-    switch (sortBy) {
-      case 'id':
-        orderBy = sortDirection === 'desc' ? desc(creditTransaction.id) : asc(creditTransaction.id);
-        break;
-      case 'userId':
-        orderBy = sortDirection === 'desc' ? desc(creditTransaction.userId) : asc(creditTransaction.userId);
-        break;
-      case 'userEmail':
-        orderBy = sortDirection === 'desc' ? desc(user.email) : asc(user.email);
-        break;
-      case 'type':
-        orderBy = sortDirection === 'desc' ? desc(creditTransaction.type) : asc(creditTransaction.type);
-        break;
-      case 'amount':
-        orderBy = sortDirection === 'desc' ? desc(creditTransaction.amount) : asc(creditTransaction.amount);
-        break;
-      case 'createdAt':
-      default:
-        orderBy = sortDirection === 'desc' ? desc(creditTransaction.createdAt) : asc(creditTransaction.createdAt);
-        break;
-    }
-    
-    // Build data query
-    const dataQuery = db
-      .select({
-        id: creditTransaction.id,
-        userId: creditTransaction.userId,
-        type: creditTransaction.type,
-        amount: creditTransaction.amount,
-        balance: creditTransaction.balance,
-        orderId: creditTransaction.orderId,
-        description: creditTransaction.description,
-        metadata: creditTransaction.metadata,
-        createdAt: creditTransaction.createdAt,
-        // User info
-        userEmail: user.email,
-        userName: user.name,
-      })
-      .from(creditTransaction)
-      .leftJoin(user, eq(creditTransaction.userId, user.id));
-    
-    // Get paginated transactions with user info
-    const transactions = whereClause
-      ? await dataQuery.where(whereClause).orderBy(orderBy).limit(limit).offset(offset)
-      : await dataQuery.orderBy(orderBy).limit(limit).offset(offset);
-    
-    return {
-      transactions: transactions as any,
-      total,
-      page,
-      pageSize: limit,
-      totalPages: Math.ceil(total / limit)
-    };
+
+      const currentBalance = parseFloat(currentUser.creditBalance) || 0;
+      const revokeAmount = Math.min(amount, currentBalance);
+
+      if (revokeAmount <= 0) {
+        return null;
+      }
+
+      const id = transactionId || `txn_${crypto.randomUUID()}`;
+
+      await tx.insert(creditTransaction).values({
+        id,
+        userId,
+        type: creditTransactionTypes.ADJUSTMENT,
+        amount: (-revokeAmount).toString(),
+        balance: currentBalance.toString(),
+        orderId: orderId || null,
+        description: description || 'Credits revoked',
+        metadata: metadata || null,
+      });
+
+      const [updatedUser] = await tx
+        .update(user)
+        .set({
+          creditBalance: sql`${user.creditBalance} - ${revokeAmount}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(user.id, userId))
+        .returning({ creditBalance: user.creditBalance });
+
+      const [transaction] = await tx
+        .update(creditTransaction)
+        .set({
+          balance: (parseFloat(updatedUser.creditBalance) || 0).toString(),
+        })
+        .where(eq(creditTransaction.id, id))
+        .returning();
+
+      return transaction;
+    });
   }
 
-  /**
-   * Get credit status summary for a user
-   * Includes balance and recent transaction count
-   */
+  async hasEnoughCredits(userId: string, amount: number): Promise<boolean> {
+    return (await this.getBalance(userId)) >= amount;
+  }
+
   async getStatus(userId: string): Promise<{
     balance: number;
     totalPurchased: number;
     totalConsumed: number;
   }> {
     const balance = await this.getBalance(userId);
-
-    // Get aggregated stats
     const stats = await db
       .select({
         type: creditTransaction.type,
-        total: sql<string>`SUM(ABS(${creditTransaction.amount}))`
+        total: sql<string>`SUM(ABS(${creditTransaction.amount}))`,
       })
       .from(creditTransaction)
       .where(eq(creditTransaction.userId, userId))
@@ -417,11 +212,9 @@ export class CreditService {
     return {
       balance,
       totalPurchased,
-      totalConsumed
+      totalConsumed,
     };
   }
 }
 
-// Export singleton instance
 export const creditService = new CreditService();
-
