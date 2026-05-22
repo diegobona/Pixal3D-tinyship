@@ -60,7 +60,10 @@ export default function PricingPage() {
         body: JSON.stringify({ planId: plan.id, provider: "stripe" }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      const data = contentType.includes("application/json")
+        ? await response.json()
+        : { error: await response.text() };
       if (!response.ok) throw new Error(data.error || "Failed to initiate payment");
 
       if (data.paymentUrl) {

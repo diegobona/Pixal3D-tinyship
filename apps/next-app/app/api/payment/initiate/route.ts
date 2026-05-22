@@ -6,8 +6,9 @@ import { order, orderStatus, paymentProviders } from "@libs/database/schema/orde
 import { config } from "@config";
 import { eq } from "drizzle-orm";
 
-// Order expiration time (2 hours)
-const ORDER_EXPIRATION_TIME = 2 * 60 * 60 * 1000;
+function isMissingStripePriceId(priceId?: string) {
+  return !priceId || priceId.includes("replace_me");
+}
 
 export async function POST(req: Request) {
   try {
@@ -16,6 +17,9 @@ export async function POST(req: Request) {
     const session = await auth.api.getSession({
       headers: requestHeaders
     });
+    if (!session?.user?.id) {
+      return Response.json({ error: "Authentication required" }, { status: 401 });
+    }
 
     // 2. Get request parameters
     const { planId, provider = paymentProviders.STRIPE } = await req.json();
@@ -33,10 +37,22 @@ export async function POST(req: Request) {
     if (!plan) {
       return Response.json({ error: 'Invalid plan' }, { status: 400 });
     }
+    const stripePriceId = "stripePriceId" in plan ? plan.stripePriceId : undefined;
+    if (plan.provider !== "stripe" || isMissingStripePriceId(stripePriceId)) {
+      console.error("Stripe price ID is not configured for payment plan", {
+        planId,
+        provider: plan.provider,
+        hasStripePriceId: Boolean(stripePriceId),
+      });
+      return Response.json(
+        { error: "Stripe price ID is not configured for this plan" },
+        { status: 500 }
+      );
+    }
 
     await db.insert(order).values({
       id: orderId,
-      userId: session!.user!.id,
+      userId: session.user.id,
       planId,
       amount: plan.amount.toString(), // Convert to string for numeric field
       currency: plan.currency,
@@ -47,32 +63,6 @@ export async function POST(req: Request) {
       updatedAt: new Date()
     });
     console.log('Order created:', orderId);
-
-    // Set up order expiration handler
-    setTimeout(async () => {
-      try {
-        // Query order status
-        const currentOrder = await db.query.order.findFirst({
-          where: eq(order.id, orderId)
-        });
-
-        // Only process orders that are still in pending status
-        if (currentOrder?.status === orderStatus.PENDING) {
-          // Update order status to canceled
-          await db.update(order)
-            .set({ 
-              status: orderStatus.CANCELED,
-              updatedAt: new Date()
-            })
-            .where(eq(order.id, orderId));
-          
-          console.log(`Order ${orderId} expired and canceled`);
-          
-        }
-      } catch (error) {
-        console.error(`Failed to process expired order ${orderId}:`, error);
-      }
-    }, ORDER_EXPIRATION_TIME);
 
     // 4. Create payment provider instance and initiate payment
     const paymentProvider = createPaymentProvider('stripe');
@@ -86,7 +76,7 @@ export async function POST(req: Request) {
     
     const result = await paymentProvider.createPayment({
       orderId,
-      userId: session!.user!.id,
+      userId: session.user.id,
       planId,
       amount: plan.amount,
       currency: plan.currency,
@@ -107,7 +97,10 @@ export async function POST(req: Request) {
     console.log('Payment initiation result:', result);
     return Response.json(result);
   } catch (error) {
-    console.error('Payment initiation error:', error);
+    console.error('Payment initiation error:', error instanceof Error ? {
+      message: error.message,
+      stack: error.stack,
+    } : error);
     return Response.json(
       { error: 'Failed to initiate payment' },
       { status: 500 }
