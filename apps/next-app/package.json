@@ -7,7 +7,7 @@
     "build": "next build",
     "build:cf": "node ../../scripts/opennext-cloudflare.mjs build",
     "preview:cf": "node ../../scripts/opennext-cloudflare.mjs build && node ../../scripts/opennext-cloudflare.mjs preview --port 7001",
-    "deploy:cf": "node ../../scripts/opennext-cloudflare.mjs build && node ../../scripts/opennext-cloudflare.mjs deploy",
+    "deploy:cf": "node ../../scripts/opennext-cloudflare.mjs build && node ../../scripts/opennext-cloudflare.mjs deploy --keep-vars",
     "start": "NODE_ENV=production next start --port 7001",
     "typecheck": "tsc --noEmit"
   },
