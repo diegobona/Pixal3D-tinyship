@@ -377,7 +377,7 @@ function patchOpenNextPgCloudflareGeneratedDeps() {
   }
 
   const marker = "function patchPgCloudflareWorkerdPackage(buildOpts, outputPath)";
-  const versionMarker = "pixal3d-pg-cloudflare-fallback-v2";
+  const versionMarker = "pixal3d-pg-cloudflare-fallback-v3";
   const source = readFileSync(bundleServerPath, "utf8");
   if (source.includes(versionMarker)) {
     return;
@@ -409,9 +409,7 @@ function patchPgCloudflareWorkerdPackage(buildOpts, outputPath) {
                 packageDirs.push(fullPath);
                 continue;
             }
-            if (entry.name === ".pnpm" || entry.name === "node_modules" || current.includes(\`\${path.sep}.pnpm\${path.sep}\`)) {
-                stack.push(fullPath);
-            }
+            stack.push(fullPath);
         }
     }
     for (const packageDir of packageDirs) {
