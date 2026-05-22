@@ -16,6 +16,7 @@ patchOpenNextWindowsCopy();
 patchOpenNextServerBundleExternals();
 patchOpenNextInstallDepsBinCheck();
 patchOpenNextMinifierBrokenSymlink();
+patchOpenNextMinifierMangle();
 patchPgCloudflareStaticRequire();
 patchNextInstrumentationForCloudflare();
 
@@ -197,6 +198,30 @@ function patchOpenNextMinifierBrokenSymlink() {
 
   if (!source.includes(original)) {
     console.warn("[opennext] Unable to patch minifier broken symlink handling.");
+    return;
+  }
+
+  writeFileSync(minifierPath, source.replace(original, patched), "utf8");
+}
+
+function patchOpenNextMinifierMangle() {
+  let minifierPath;
+  try {
+    minifierPath = require.resolve("@opennextjs/aws/minimize-js.js");
+  } catch {
+    return;
+  }
+
+  const original = "mangle: options.mangle,";
+  const patched = "mangle: false,";
+
+  const source = readFileSync(minifierPath, "utf8");
+  if (source.includes(patched)) {
+    return;
+  }
+
+  if (!source.includes(original)) {
+    console.warn("[opennext] Unable to patch minifier mangle option.");
     return;
   }
 
