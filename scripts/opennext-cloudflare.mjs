@@ -7,6 +7,122 @@ import { delimiter, dirname, join } from "node:path";
 const args = process.argv.slice(2);
 const shimDir = join(tmpdir(), "pixal3d-pnpm-shim");
 const require = createRequire(join(process.cwd(), "package.json"));
+const pgCloudflareDistIndexFallback = `"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CloudflareSocket = void 0;
+const { EventEmitter } = require("events");
+class CloudflareSocket extends EventEmitter {
+  constructor(ssl) {
+    super();
+    this.ssl = ssl;
+    this.writable = false;
+    this.destroyed = false;
+    this._upgrading = false;
+    this._upgraded = false;
+    this._cfSocket = null;
+    this._cfWriter = null;
+    this._cfReader = null;
+  }
+  setNoDelay() {
+    return this;
+  }
+  setKeepAlive() {
+    return this;
+  }
+  ref() {
+    return this;
+  }
+  unref() {
+    return this;
+  }
+  async connect(port, host, connectListener) {
+    try {
+      if (connectListener) {
+        this.once("connect", connectListener);
+      }
+      const { connect } = await import("cloudflare:sockets");
+      const options = this.ssl ? { secureTransport: "starttls" } : {};
+      this._cfSocket = connect(String(host) + ":" + String(port), options);
+      this._cfWriter = this._cfSocket.writable.getWriter();
+      this._addClosedHandler();
+      this._cfReader = this._cfSocket.readable.getReader();
+      if (this.ssl) {
+        this._listenOnce().catch((error) => this.emit("error", error));
+      } else {
+        this._listen().catch((error) => this.emit("error", error));
+      }
+      await this._cfWriter.ready;
+      this.writable = true;
+      this.emit("connect");
+      return this;
+    } catch (error) {
+      this.emit("error", error);
+    }
+  }
+  async _listen() {
+    while (true) {
+      const { done, value } = await this._cfReader.read();
+      if (done) {
+        break;
+      }
+      this.emit("data", Buffer.from(value));
+    }
+  }
+  async _listenOnce() {
+    const { value } = await this._cfReader.read();
+    this.emit("data", Buffer.from(value));
+  }
+  write(data, encoding = "utf8", callback = () => {}) {
+    if (data.length === 0) {
+      callback();
+      return true;
+    }
+    const payload = typeof data === "string" ? Buffer.from(data, encoding) : data;
+    this._cfWriter.write(payload).then(
+      () => callback(),
+      (error) => callback(error),
+    );
+    return true;
+  }
+  end(data = Buffer.alloc(0), encoding = "utf8", callback = () => {}) {
+    this.write(data, encoding, (error) => {
+      this._cfSocket.close();
+      callback(error);
+    });
+    return this;
+  }
+  destroy(reason) {
+    this.destroyed = true;
+    return this.end();
+  }
+  startTls(options) {
+    if (this._upgraded) {
+      this.emit("error", "Cannot call startTls() more than once on a socket");
+      return;
+    }
+    this._cfWriter.releaseLock();
+    this._cfReader.releaseLock();
+    this._upgrading = true;
+    this._cfSocket = this._cfSocket.startTls(options);
+    this._cfWriter = this._cfSocket.writable.getWriter();
+    this._cfReader = this._cfSocket.readable.getReader();
+    this._addClosedHandler();
+    this._listen().catch((error) => this.emit("error", error));
+  }
+  _addClosedHandler() {
+    this._cfSocket.closed.then(() => {
+      if (!this._upgrading) {
+        this._cfSocket = null;
+        this.emit("close");
+      } else {
+        this._upgrading = false;
+        this._upgraded = true;
+      }
+    }).catch((error) => this.emit("error", error));
+  }
+}
+exports.CloudflareSocket = CloudflareSocket;
+`;
 
 if (args[0] === "build") {
   rmSync(join(process.cwd(), ".open-next"), { recursive: true, force: true });
@@ -261,8 +377,9 @@ function patchOpenNextPgCloudflareGeneratedDeps() {
   }
 
   const marker = "function patchPgCloudflareWorkerdPackage(buildOpts, outputPath)";
+  const versionMarker = "pixal3d-pg-cloudflare-fallback-v2";
   const source = readFileSync(bundleServerPath, "utf8");
-  if (source.includes(marker)) {
+  if (source.includes(versionMarker)) {
     return;
   }
 
@@ -271,14 +388,12 @@ function patchOpenNextPgCloudflareGeneratedDeps() {
     patchPgCloudflareWorkerdPackage(buildOpts, outputPath);`;
 
   const helperTarget = "/**\n * Bundle the Open Next server.\n */";
-  const helper = `function patchPgCloudflareWorkerdPackage(buildOpts, outputPath) {
-    const sourceCandidates = [
-        path.join(buildOpts.appPath, "node_modules", "pg-cloudflare", "dist", "index.js"),
-        path.join(buildOpts.monorepoRoot ?? buildOpts.appPath, "node_modules", "pg-cloudflare", "dist", "index.js"),
-    ];
-    const sourceEntry = sourceCandidates.find((candidate) => fs.existsSync(candidate));
+  const helper = `// ${versionMarker}
+function patchPgCloudflareWorkerdPackage(buildOpts, outputPath) {
+    const fallbackEntry = ${JSON.stringify(pgCloudflareDistIndexFallback)};
+    const sourceEntry = findPgCloudflareDistIndex(buildOpts);
     const nodeModulesDir = path.join(outputPath, "node_modules");
-    if (!sourceEntry || !fs.existsSync(nodeModulesDir)) {
+    if (!fs.existsSync(nodeModulesDir)) {
         return;
     }
     const packageDirs = [];
@@ -306,15 +421,74 @@ function patchOpenNextPgCloudflareGeneratedDeps() {
             continue;
         }
         fs.mkdirSync(distDir, { recursive: true });
-        fs.copyFileSync(sourceEntry, targetEntry);
+        if (sourceEntry) {
+            fs.copyFileSync(sourceEntry, targetEntry);
+        }
+        else {
+            fs.writeFileSync(targetEntry, fallbackEntry, "utf8");
+        }
     }
+}
+
+function findPgCloudflareDistIndex(buildOpts) {
+    const nodeModulesDirs = [
+        path.join(buildOpts.appPath, "node_modules"),
+        path.join(buildOpts.monorepoRoot ?? buildOpts.appPath, "node_modules"),
+    ];
+    const directCandidates = nodeModulesDirs.map((nodeModulesDir) => path.join(nodeModulesDir, "pg-cloudflare", "dist", "index.js"));
+    for (const candidate of directCandidates) {
+        if (fs.existsSync(candidate)) {
+            return candidate;
+        }
+    }
+    for (const nodeModulesDir of nodeModulesDirs) {
+        const found = findPgCloudflareDistIndexUnder(path.join(nodeModulesDir, ".pnpm"));
+        if (found) {
+            return found;
+        }
+    }
+}
+
+function findPgCloudflareDistIndexUnder(startDir) {
+    if (!fs.existsSync(startDir)) {
+        return undefined;
+    }
+    const stack = [startDir];
+    while (stack.length > 0) {
+        const current = stack.pop();
+        for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+            const fullPath = path.join(current, entry.name);
+            if (entry.isFile() && entry.name === "index.js" && current.endsWith(\`\${path.sep}pg-cloudflare\${path.sep}dist\`)) {
+                return fullPath;
+            }
+            if (entry.isDirectory()) {
+                stack.push(fullPath);
+            }
+        }
+    }
+    return undefined;
 }
 
 ${helperTarget}`;
 
-  const patched = source.replace(callTarget, callPatched).replace(helperTarget, helper);
+  let patched = source;
+  if (!patched.includes("patchPgCloudflareWorkerdPackage(buildOpts, outputPath);")) {
+    patched = patched.replace(callTarget, callPatched);
+  }
 
-  if (patched === source || !patched.includes(marker)) {
+  if (patched.includes(marker)) {
+    const helperStart = patched.indexOf(marker);
+    const helperEnd = patched.indexOf(helperTarget, helperStart);
+    if (helperStart === -1 || helperEnd === -1) {
+      console.warn("[opennext] Unable to refresh pg-cloudflare generated dependency patch.");
+      return;
+    }
+    patched = `${patched.slice(0, helperStart)}${helper.replace(helperTarget, "")}${patched.slice(helperEnd)}`;
+  } else {
+    patched = patched.replace(helperTarget, helper);
+  }
+
+  if (patched === source || !patched.includes(versionMarker)) {
     console.warn("[opennext] Unable to patch pg-cloudflare generated dependencies.");
     return;
   }
