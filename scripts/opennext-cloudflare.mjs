@@ -17,6 +17,7 @@ patchOpenNextServerBundleExternals();
 patchOpenNextInstallDepsBinCheck();
 patchOpenNextMinifierBrokenSymlink();
 patchPgCloudflareStaticRequire();
+patchNextInstrumentationForCloudflare();
 
 mkdirSync(shimDir, { recursive: true });
 writeFileSync(join(shimDir, "pnpm.cmd"), "@echo off\r\ncorepack pnpm %*\r\n", "utf8");
@@ -225,4 +226,67 @@ function patchPgCloudflareStaticRequire() {
   }
 
   writeFileSync(pgStreamPath, source.replace(original, patched), "utf8");
+}
+
+function patchNextInstrumentationForCloudflare() {
+  const files = [];
+
+  try {
+    files.push(
+      require.resolve(
+        "next/dist/server/lib/router-utils/instrumentation-globals.external.js",
+      ),
+    );
+  } catch {
+    // Ignore if Next changes this internal path.
+  }
+
+  try {
+    files.push(
+      require.resolve(
+        "next/dist/esm/server/lib/router-utils/instrumentation-globals.external.js",
+      ),
+    );
+  } catch {
+    // Ignore if Next changes this internal path.
+  }
+
+  for (const filePath of files) {
+    const source = readFileSync(filePath, "utf8");
+
+    if (source.includes("Skipping instrumentation hook in Cloudflare runtime")) {
+      continue;
+    }
+
+    const cjsOriginal = `if ((0, _iserror.default)(err) && err.code !== 'ENOENT' && err.code !== 'MODULE_NOT_FOUND' && err.code !== 'ERR_MODULE_NOT_FOUND') {
+            throw err;
+        }`;
+    const cjsPatched = `if (typeof WebSocketPair !== "undefined") {
+            console.warn("[next] Skipping instrumentation hook in Cloudflare runtime:", err?.message ?? err);
+            return;
+        }
+        if ((0, _iserror.default)(err) && err.code !== 'ENOENT' && err.code !== 'MODULE_NOT_FOUND' && err.code !== 'ERR_MODULE_NOT_FOUND') {
+            throw err;
+        }`;
+
+    const esmOriginal = `if (isError(err) && err.code !== 'ENOENT' && err.code !== 'MODULE_NOT_FOUND' && err.code !== 'ERR_MODULE_NOT_FOUND') {
+            throw err;
+        }`;
+    const esmPatched = `if (typeof WebSocketPair !== "undefined") {
+            console.warn("[next] Skipping instrumentation hook in Cloudflare runtime:", err?.message ?? err);
+            return;
+        }
+        if (isError(err) && err.code !== 'ENOENT' && err.code !== 'MODULE_NOT_FOUND' && err.code !== 'ERR_MODULE_NOT_FOUND') {
+            throw err;
+        }`;
+
+    const patched = source.replace(cjsOriginal, cjsPatched).replace(esmOriginal, esmPatched);
+
+    if (patched === source) {
+      console.warn("[opennext] Unable to patch Next instrumentation handling.");
+      continue;
+    }
+
+    writeFileSync(filePath, patched, "utf8");
+  }
 }
