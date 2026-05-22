@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { delimiter, join } from "node:path";
+import { delimiter, dirname, join } from "node:path";
 
 const args = process.argv.slice(2);
 const shimDir = join(tmpdir(), "pixal3d-pnpm-shim");
@@ -18,6 +18,7 @@ patchOpenNextInstallDepsBinCheck();
 patchOpenNextMinifierBrokenSymlink();
 patchOpenNextMinifierMangle();
 patchPgCloudflareStaticRequire();
+patchOpenNextPgCloudflareGeneratedDeps();
 patchNextInstrumentationForCloudflare();
 
 mkdirSync(shimDir, { recursive: true });
@@ -107,7 +108,6 @@ function patchOpenNextServerBundleExternals() {
   });
 
   if (patched === source) {
-    console.warn("[opennext] Unable to patch server bundle externals.");
     return;
   }
 
@@ -247,6 +247,79 @@ function patchPgCloudflareStaticRequire() {
   if (!source.includes(staticRequire)) {
     console.warn("[opennext] Unable to patch pg-cloudflare require.");
   }
+}
+
+function patchOpenNextPgCloudflareGeneratedDeps() {
+  let bundleServerPath;
+  try {
+    bundleServerPath = join(
+      dirname(require.resolve("@opennextjs/cloudflare")),
+      "../cli/build/bundle-server.js",
+    );
+  } catch {
+    return;
+  }
+
+  const marker = "function patchPgCloudflareWorkerdPackage(buildOpts, outputPath)";
+  const source = readFileSync(bundleServerPath, "utf8");
+  if (source.includes(marker)) {
+    return;
+  }
+
+  const callTarget = 'const outputPath = path.join(outputDir, "server-functions", "default");';
+  const callPatched = `${callTarget}
+    patchPgCloudflareWorkerdPackage(buildOpts, outputPath);`;
+
+  const helperTarget = "/**\n * Bundle the Open Next server.\n */";
+  const helper = `function patchPgCloudflareWorkerdPackage(buildOpts, outputPath) {
+    const sourceCandidates = [
+        path.join(buildOpts.appPath, "node_modules", "pg-cloudflare", "dist", "index.js"),
+        path.join(buildOpts.monorepoRoot ?? buildOpts.appPath, "node_modules", "pg-cloudflare", "dist", "index.js"),
+    ];
+    const sourceEntry = sourceCandidates.find((candidate) => fs.existsSync(candidate));
+    const nodeModulesDir = path.join(outputPath, "node_modules");
+    if (!sourceEntry || !fs.existsSync(nodeModulesDir)) {
+        return;
+    }
+    const packageDirs = [];
+    const stack = [nodeModulesDir];
+    while (stack.length > 0) {
+        const current = stack.pop();
+        for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+            if (!entry.isDirectory()) {
+                continue;
+            }
+            const fullPath = path.join(current, entry.name);
+            if (entry.name === "pg-cloudflare" && fs.existsSync(path.join(fullPath, "package.json"))) {
+                packageDirs.push(fullPath);
+                continue;
+            }
+            if (entry.name === ".pnpm" || entry.name === "node_modules" || current.includes(\`\${path.sep}.pnpm\${path.sep}\`)) {
+                stack.push(fullPath);
+            }
+        }
+    }
+    for (const packageDir of packageDirs) {
+        const distDir = path.join(packageDir, "dist");
+        const targetEntry = path.join(distDir, "index.js");
+        if (fs.existsSync(targetEntry)) {
+            continue;
+        }
+        fs.mkdirSync(distDir, { recursive: true });
+        fs.copyFileSync(sourceEntry, targetEntry);
+    }
+}
+
+${helperTarget}`;
+
+  const patched = source.replace(callTarget, callPatched).replace(helperTarget, helper);
+
+  if (patched === source || !patched.includes(marker)) {
+    console.warn("[opennext] Unable to patch pg-cloudflare generated dependencies.");
+    return;
+  }
+
+  writeFileSync(bundleServerPath, patched, "utf8");
 }
 
 function patchNextInstrumentationForCloudflare() {
