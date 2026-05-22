@@ -99,11 +99,9 @@ function patchOpenNextServerBundleExternals() {
   const source = readFileSync(serverBundlePath, "utf8");
   const patched = source.replace(/external:\s*\[[^\]]+\],/, (match) => {
     const packages = [...match.matchAll(/"([^"]+)"/g)].map((entry) => entry[1]);
-    const externalPackages = [...new Set(packages.filter((entry) => entry !== "proxy-agent"))];
-
-    if (!externalPackages.includes("pg-cloudflare")) {
-      externalPackages.push("pg-cloudflare");
-    }
+    const externalPackages = [
+      ...new Set(packages.filter((entry) => !["proxy-agent", "pg-cloudflare"].includes(entry))),
+    ];
 
     return `external: [${externalPackages.map((entry) => `"${entry}"`).join(", ")}],`;
   });
@@ -236,21 +234,19 @@ function patchPgCloudflareStaticRequire() {
     return;
   }
 
-  const original = "const { CloudflareSocket } = require('pg-cloudflare')";
-  const patched = `const cloudflareSocketPackage = 'pg-cloudflare'
+  const dynamicRequire = `const cloudflareSocketPackage = 'pg-cloudflare'
     const { CloudflareSocket } = require(cloudflareSocketPackage)`;
+  const staticRequire = "const { CloudflareSocket } = require('pg-cloudflare')";
 
   const source = readFileSync(pgStreamPath, "utf8");
-  if (source.includes(patched)) {
+  if (source.includes(dynamicRequire)) {
+    writeFileSync(pgStreamPath, source.replace(dynamicRequire, staticRequire), "utf8");
     return;
   }
 
-  if (!source.includes(original)) {
+  if (!source.includes(staticRequire)) {
     console.warn("[opennext] Unable to patch pg-cloudflare require.");
-    return;
   }
-
-  writeFileSync(pgStreamPath, source.replace(original, patched), "utf8");
 }
 
 function patchNextInstrumentationForCloudflare() {
