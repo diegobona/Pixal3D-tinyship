@@ -3,8 +3,12 @@ import { createPaymentProvider } from "@libs/payment";
 import { nanoid } from "nanoid";
 import { db } from "@libs/database";
 import { order, orderStatus, paymentProviders } from "@libs/database/schema/order";
+import {
+  subscription,
+  subscriptionStatus,
+} from "@libs/database/schema/subscription";
 import { config } from "@config";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 function isMissingStripePriceId(priceId?: string) {
   return !priceId || priceId.includes("replace_me");
@@ -48,6 +52,33 @@ export async function POST(req: Request) {
         { error: "Stripe price ID is not configured for this plan" },
         { status: 500 }
       );
+    }
+
+    const existingSubscription = await db.query.subscription.findFirst({
+      where: and(
+        eq(subscription.userId, session.user.id),
+        eq(subscription.planId, planId),
+        eq(subscription.status, subscriptionStatus.ACTIVE)
+      ),
+    });
+
+    if (existingSubscription) {
+      const now = new Date();
+
+      if (existingSubscription.periodEnd > now) {
+        return Response.json(
+          { error: "You already have an active subscription for this plan." },
+          { status: 409 }
+        );
+      }
+
+      await db
+        .update(subscription)
+        .set({
+          status: subscriptionStatus.EXPIRED,
+          updatedAt: now,
+        })
+        .where(eq(subscription.id, existingSubscription.id));
     }
 
     await db.insert(order).values({

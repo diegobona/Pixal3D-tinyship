@@ -71,7 +71,7 @@ export default function PricingPage() {
       }
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error("Unable to start checkout. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Unable to start checkout. Please try again.");
     } finally {
       setLoading(null);
     }
