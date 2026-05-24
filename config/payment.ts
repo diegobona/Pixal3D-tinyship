@@ -1,6 +1,13 @@
 import { getEnv, requireEnvForService } from './utils';
 
 const privateOwnership = 'Asset ownership: private';
+const standardGenerationResolution =
+  '3D generation resolution: up to 1024';
+const highGenerationResolution = '3D generation resolution: up to 1536';
+const sampleTextureSize = 'PBR texture size: up to 1K';
+const starterTextureSize = 'PBR texture size: up to 2K';
+const creatorTextureSize = 'PBR texture size: up to 4K';
+const proTextureSize = 'PBR texture size: up to 8K';
 
 export const paymentConfig = {
   providers: {
@@ -35,7 +42,9 @@ export const paymentConfig = {
             '2 downloads per day',
             'Limited queue priority',
             'Asset ownership: shared sample license',
-            'Advanced limits: 1024 resolution, 1024 texture, 100k mesh target',
+            standardGenerationResolution,
+            sampleTextureSize,
+            'No saved model history',
           ],
         },
         'zh-CN': {
@@ -48,7 +57,9 @@ export const paymentConfig = {
             '2 downloads per day',
             'Limited queue priority',
             'Asset ownership: shared sample license',
-            'Advanced limits: 1024 resolution, 1024 texture, 100k mesh target',
+            standardGenerationResolution,
+            sampleTextureSize,
+            'No saved model history',
           ],
         },
       },
@@ -64,7 +75,7 @@ export const paymentConfig = {
       i18n: {
         en: {
           name: 'Starter',
-          description: 'Monthly credits for getting started with image-to-3D.',
+          description: 'A practical starter plan for light image-to-3D work.',
           duration: 'month',
           features: [
             '10,000 monthly credits',
@@ -72,12 +83,14 @@ export const paymentConfig = {
             '20 downloads per day',
             'Standard queue priority',
             privateOwnership,
-            'Advanced limits: 1024 resolution, 1024 texture, 150k mesh target',
+            standardGenerationResolution,
+            starterTextureSize,
+            '30-day model history',
           ],
         },
         'zh-CN': {
           name: 'Starter',
-          description: 'Monthly credits for getting started with image-to-3D.',
+          description: 'A practical starter plan for light image-to-3D work.',
           duration: 'month',
           features: [
             '10,000 monthly credits',
@@ -85,7 +98,9 @@ export const paymentConfig = {
             '20 downloads per day',
             'Standard queue priority',
             privateOwnership,
-            'Advanced limits: 1024 resolution, 1024 texture, 150k mesh target',
+            standardGenerationResolution,
+            starterTextureSize,
+            '30-day model history',
           ],
         },
       },
@@ -102,7 +117,7 @@ export const paymentConfig = {
       i18n: {
         en: {
           name: 'Creator',
-          description: 'Higher texture detail and remeshing for asset creation.',
+          description: 'Best value for regular creators and production-ready assets.',
           duration: 'month',
           features: [
             '30,000 monthly credits',
@@ -110,14 +125,14 @@ export const paymentConfig = {
             'Unlimited downloads per day',
             'Priority queue',
             privateOwnership,
-            'Advanced limits: 1024 resolution, 2048 texture, 200k mesh target',
-            'Remesh enabled',
-            'Saved model history',
+            highGenerationResolution,
+            creatorTextureSize,
+            'Long-term model history',
           ],
         },
         'zh-CN': {
           name: 'Creator',
-          description: 'Higher texture detail and remeshing for asset creation.',
+          description: 'Best value for regular creators and production-ready assets.',
           duration: 'month',
           features: [
             '30,000 monthly credits',
@@ -125,9 +140,9 @@ export const paymentConfig = {
             'Unlimited downloads per day',
             'Priority queue',
             privateOwnership,
-            'Advanced limits: 1024 resolution, 2048 texture, 200k mesh target',
-            'Remesh enabled',
-            'Saved model history',
+            highGenerationResolution,
+            creatorTextureSize,
+            'Long-term model history',
           ],
         },
       },
@@ -143,7 +158,7 @@ export const paymentConfig = {
       i18n: {
         en: {
           name: 'Pro',
-          description: 'Maximum detail settings for high-end GLB output.',
+          description: 'For high-volume teams that need the highest texture detail.',
           duration: 'month',
           features: [
             '100,000 monthly credits',
@@ -151,14 +166,14 @@ export const paymentConfig = {
             'Unlimited downloads per day',
             'Maximum queue priority',
             privateOwnership,
-            'Advanced limits: 1536 resolution, 4096 texture, 300k mesh target',
-            'Remesh enabled',
-            'Team-ready model history',
+            highGenerationResolution,
+            proTextureSize,
+            'Permanent model history',
           ],
         },
         'zh-CN': {
           name: 'Pro',
-          description: 'Maximum detail settings for high-end GLB output.',
+          description: 'For high-volume teams that need the highest texture detail.',
           duration: 'month',
           features: [
             '100,000 monthly credits',
@@ -166,9 +181,9 @@ export const paymentConfig = {
             'Unlimited downloads per day',
             'Maximum queue priority',
             privateOwnership,
-            'Advanced limits: 1536 resolution, 4096 texture, 300k mesh target',
-            'Remesh enabled',
-            'Team-ready model history',
+            highGenerationResolution,
+            proTextureSize,
+            'Permanent model history',
           ],
         },
       },
@@ -184,7 +199,7 @@ export const paymentConfig = {
       i18n: {
         en: {
           name: 'Starter',
-          description: 'Monthly credits for getting started with image-to-3D.',
+          description: 'A practical starter plan for light image-to-3D work.',
           duration: 'year',
           features: [
             '10,000 monthly credits',
@@ -192,12 +207,14 @@ export const paymentConfig = {
             '20 downloads per day',
             'Standard queue priority',
             privateOwnership,
-            'Advanced limits: 1024 resolution, 1024 texture, 150k mesh target',
+            standardGenerationResolution,
+            starterTextureSize,
+            '30-day model history',
           ],
         },
         'zh-CN': {
           name: 'Starter',
-          description: 'Monthly credits for getting started with image-to-3D.',
+          description: 'A practical starter plan for light image-to-3D work.',
           duration: 'year',
           features: [
             '10,000 monthly credits',
@@ -205,7 +222,9 @@ export const paymentConfig = {
             '20 downloads per day',
             'Standard queue priority',
             privateOwnership,
-            'Advanced limits: 1024 resolution, 1024 texture, 150k mesh target',
+            standardGenerationResolution,
+            starterTextureSize,
+            '30-day model history',
           ],
         },
       },
@@ -222,7 +241,7 @@ export const paymentConfig = {
       i18n: {
         en: {
           name: 'Creator',
-          description: 'Higher texture detail and remeshing for asset creation.',
+          description: 'Best value for regular creators and production-ready assets.',
           duration: 'year',
           features: [
             '30,000 monthly credits',
@@ -230,14 +249,14 @@ export const paymentConfig = {
             'Unlimited downloads per day',
             'Priority queue',
             privateOwnership,
-            'Advanced limits: 1024 resolution, 2048 texture, 200k mesh target',
-            'Remesh enabled',
-            'Saved model history',
+            highGenerationResolution,
+            creatorTextureSize,
+            'Long-term model history',
           ],
         },
         'zh-CN': {
           name: 'Creator',
-          description: 'Higher texture detail and remeshing for asset creation.',
+          description: 'Best value for regular creators and production-ready assets.',
           duration: 'year',
           features: [
             '30,000 monthly credits',
@@ -245,9 +264,9 @@ export const paymentConfig = {
             'Unlimited downloads per day',
             'Priority queue',
             privateOwnership,
-            'Advanced limits: 1024 resolution, 2048 texture, 200k mesh target',
-            'Remesh enabled',
-            'Saved model history',
+            highGenerationResolution,
+            creatorTextureSize,
+            'Long-term model history',
           ],
         },
       },
@@ -263,7 +282,7 @@ export const paymentConfig = {
       i18n: {
         en: {
           name: 'Pro',
-          description: 'Maximum detail settings for high-end GLB output.',
+          description: 'For high-volume teams that need the highest texture detail.',
           duration: 'year',
           features: [
             '100,000 monthly credits',
@@ -271,14 +290,14 @@ export const paymentConfig = {
             'Unlimited downloads per day',
             'Maximum queue priority',
             privateOwnership,
-            'Advanced limits: 1536 resolution, 4096 texture, 300k mesh target',
-            'Remesh enabled',
-            'Team-ready model history',
+            highGenerationResolution,
+            proTextureSize,
+            'Permanent model history',
           ],
         },
         'zh-CN': {
           name: 'Pro',
-          description: 'Maximum detail settings for high-end GLB output.',
+          description: 'For high-volume teams that need the highest texture detail.',
           duration: 'year',
           features: [
             '100,000 monthly credits',
@@ -286,9 +305,9 @@ export const paymentConfig = {
             'Unlimited downloads per day',
             'Maximum queue priority',
             privateOwnership,
-            'Advanced limits: 1536 resolution, 4096 texture, 300k mesh target',
-            'Remesh enabled',
-            'Team-ready model history',
+            highGenerationResolution,
+            proTextureSize,
+            'Permanent model history',
           ],
         },
       },
