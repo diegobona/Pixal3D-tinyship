@@ -31,6 +31,8 @@ export {
   create3DTask,
   query3DTask,
   calculate3DCreditCost,
+  isSupported3DModel,
+  isSupported3DProvider,
 } from './3d';
 export {
   extractGradioLiveUrls,
@@ -55,10 +57,13 @@ export type {
   ThreeDGenerationOptions,
   ThreeDGenerationResult,
   ThreeDGenerationStatus,
+  ThreeDDecimationTarget,
   ThreeDProviderName,
   ThreeDQuality,
+  ThreeDResolution,
   ThreeDTask,
   ThreeDTaskStatus,
+  ThreeDTextureSize,
 } from './3d';
 
 // Re-export image config from config folder

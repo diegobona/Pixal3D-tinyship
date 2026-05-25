@@ -6,6 +6,7 @@ import {
   mark3DGenerationRefunded,
   mark3DGenerationSucceeded,
 } from '@libs/ai/3d-task-store';
+import { auth } from '@libs/auth';
 import { creditService } from '@libs/credits';
 
 async function refundIfNeeded(taskId: string) {
@@ -31,11 +32,20 @@ async function refundIfNeeded(taskId: string) {
 
 export async function GET(req: Request) {
   try {
+    const session = await auth.api.getSession({ headers: new Headers(req.headers) });
+    const userId = session?.user?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const taskId = searchParams.get('taskId') || '';
     const record = get3DGenerationRecord(taskId);
 
-    if (!record) {
+    if (!record || record.userId !== userId) {
       return NextResponse.json(
         { error: 'not_found', message: '3D generation task was not found.' },
         { status: 404 }
@@ -46,7 +56,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, data: record });
     }
 
-    const status = query3DTask(record.providerTaskId);
+    const status = await query3DTask(record.provider, record.model, record.providerTaskId);
     if (status.status === 'succeeded' && status.result) {
       const updated = mark3DGenerationSucceeded(taskId, status.result);
       return NextResponse.json({ success: true, data: updated });

@@ -9,6 +9,8 @@ export const creditsConfig = {
       default: 20,
       models: {
         'pixal3d-mock-v1': 5,
+        'fal-ai/pixal3d': 20,
+        'tencentarc/pixal3d': 20,
       },
     } as FixedConsumptionConfig,
   },

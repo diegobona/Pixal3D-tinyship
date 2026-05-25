@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server';
 import {
   calculate3DCreditCost,
   create3DTask,
+  isSupported3DModel,
+  isSupported3DProvider,
   type ThreeDProviderName,
   type ThreeDQuality,
+  type ThreeDResolution,
+  type ThreeDTextureSize,
+  type ThreeDDecimationTarget,
 } from '@libs/ai/3d';
 import {
   create3DGenerationRecord,
@@ -34,9 +39,23 @@ export async function POST(req: Request) {
     const body = await req.json();
     const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl.trim() : '';
     const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
-    const provider = (body.provider || config.ai3d.defaultProvider) as ThreeDProviderName;
+    const requestedProvider = typeof body.provider === 'string' ? body.provider : config.ai3d.defaultProvider;
+    if (!isSupported3DProvider(requestedProvider)) {
+      return NextResponse.json(
+        { error: 'invalid_provider', message: 'Unsupported 3D generation provider.' },
+        { status: 400 }
+      );
+    }
+
+    const provider = requestedProvider as ThreeDProviderName;
     const model = typeof body.model === 'string' ? body.model : undefined;
     const quality = (body.quality || config.ai3d.defaults.quality) as ThreeDQuality;
+    const resolution = body.resolution as ThreeDResolution | undefined;
+    const textureSize = body.textureSize as ThreeDTextureSize | undefined;
+    const decimationTarget = body.decimationTarget as ThreeDDecimationTarget | undefined;
+    const seed = typeof body.seed === 'number' ? body.seed : undefined;
+    const meshScale = typeof body.meshScale === 'number' ? body.meshScale : undefined;
+    const remesh = typeof body.remesh === 'boolean' ? body.remesh : undefined;
 
     if (!imageUrl || !isSupportedImageUrl(imageUrl)) {
       return NextResponse.json(
@@ -48,6 +67,13 @@ export async function POST(req: Request) {
     if (!prompt) {
       return NextResponse.json(
         { error: 'invalid_prompt', message: 'Prompt is required.' },
+        { status: 400 }
+      );
+    }
+
+    if (model && !isSupported3DModel(provider, model)) {
+      return NextResponse.json(
+        { error: 'invalid_model', message: 'Unsupported 3D generation model.' },
         { status: 400 }
       );
     }
@@ -106,7 +132,48 @@ export async function POST(req: Request) {
     consumeTransactionId = consumeResult.transactionId;
     remainingCredits = consumeResult.newBalance;
 
-    const task = create3DTask({ imageUrl, prompt, provider, model, quality });
+    let task;
+    try {
+      task = await create3DTask({
+        imageUrl,
+        prompt,
+        provider,
+        model,
+        quality,
+        resolution,
+        textureSize,
+        decimationTarget,
+        seed,
+        meshScale,
+        remesh,
+      });
+    } catch (taskError) {
+      if (userId && consumeTransactionId && creditCost > 0) {
+        try {
+          await creditService.addCredits({
+            userId,
+            amount: creditCost,
+            type: 'refund',
+            description: 'Refund for failed 3D model generation',
+            metadata: {
+              originalTransactionId: consumeTransactionId,
+              provider,
+              model: model || config.ai3d.defaultModels[provider],
+              error: taskError instanceof Error ? taskError.message : 'Unknown error',
+            },
+          });
+        } catch (refundError) {
+          console.error('CRITICAL: Failed to refund credits after 3D task creation failure:', {
+            userId,
+            amount: creditCost,
+            originalTransactionId: consumeTransactionId,
+            refundError,
+          });
+        }
+      }
+
+      throw taskError;
+    }
     const record = create3DGenerationRecord({
       userId,
       inputImageUrl: imageUrl,

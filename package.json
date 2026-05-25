@@ -57,7 +57,8 @@
     "@types/pg": "8.15.4",
     "drizzle-kit": "0.30.5",
     "turbo": "^1.11.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "4.1.7"
   },
   "dependencies": {
     "better-auth": "1.4.10",
