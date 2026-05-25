@@ -804,6 +804,6 @@ _每次测试运行后更新此表。_
 | # | Test name | Flow |
 |---|-----------|------|
 | 1 | Create Pixal3D task | Sign in -> upload or select a sample image -> click generate -> verify `POST /api/3d-generate` returns a processing task with provider `fal` and model `fal-ai/pixal3d` |
-| 2 | Poll Pixal3D task to GLB | Poll `/api/3d-generate/status?taskId=...` until terminal -> verify success includes a `.glb` model URL, or failure refunds the consumed credits |
+| 2 | Poll Pixal3D task to GLB | Poll `/api/3d-generate/status?taskId=...` until terminal -> verify success includes a `.glb` model URL, or provider runtime failure marks the task failed without automatic refund |
 | 3 | Missing fal key fails safely | Run generation without `FAL_API_KEY` in a local test environment -> verify the API returns an error and any consumed credits are refunded |
 | 4 | Wiro backup remains available | Submit `provider=wiro` with `WIRO_API_KEY` configured -> verify the same API shape returns a processing task and status polling maps Wiro GLB output |

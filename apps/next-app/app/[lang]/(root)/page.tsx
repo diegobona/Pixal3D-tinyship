@@ -57,8 +57,8 @@ interface HfInstanceResponse {
   message?: string;
 }
 
-const POLL_INTERVAL_MS = 1200;
-const POLL_TIMEOUT_MS = 30000;
+const POLL_INTERVAL_MS = 3000;
+const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const FREE_TRIAL_DURATION_SECONDS = 10 * 60;
 const SAMPLE_IMAGES = [
   { name: "Bunny mascot", src: "/samples/pixal3d-bunny.svg" },
@@ -92,6 +92,7 @@ export default function Home() {
   const { t, locale, localizedPath } = useTranslation();
   const [imageDataUrl, setImageDataUrl] = useState("");
   const [imageName, setImageName] = useState("");
+  const [generatedModelUrl, setGeneratedModelUrl] = useState("");
   const [taskStatus, setTaskStatus] = useState<TaskStatus>("idle");
   const [taskMessage, setTaskMessage] = useState(t.pixal3d.generator.status.idle);
   const [isReadingFile, setIsReadingFile] = useState(false);
@@ -168,6 +169,7 @@ export default function Home() {
       });
       setImageDataUrl(dataUrl);
       setImageName(file.name);
+      setGeneratedModelUrl("");
       setTaskStatus("upload-ready");
       setTaskMessage(t.pixal3d.generator.status.ready);
     } catch {
@@ -185,6 +187,7 @@ export default function Home() {
   const useSampleImage = (sample: (typeof SAMPLE_IMAGES)[number]) => {
     setImageDataUrl(`${window.location.origin}${sample.src}`);
     setImageName(sample.name);
+    setGeneratedModelUrl("");
     setTaskStatus("upload-ready");
     setTaskMessage(t.pixal3d.generator.status.ready);
   };
@@ -223,6 +226,7 @@ export default function Home() {
 
     setTaskStatus("processing");
     setTaskMessage(t.pixal3d.generator.status.creating);
+    setGeneratedModelUrl("");
 
     try {
       const response = await fetch("/api/3d-generate", {
@@ -280,7 +284,8 @@ export default function Home() {
         throw new Error(data.message || t.pixal3d.generator.errors.generationFailed);
       }
 
-      await pollTask(data.data.taskId);
+      const modelUrl = await pollTask(data.data.taskId);
+      setGeneratedModelUrl(modelUrl);
       setTaskStatus("succeeded");
       setTaskMessage(t.pixal3d.generator.status.succeeded);
       toast.success(t.pixal3d.generator.status.succeeded);
@@ -399,6 +404,7 @@ export default function Home() {
                         event.stopPropagation();
                         setImageDataUrl("");
                         setImageName("");
+                        setGeneratedModelUrl("");
                         setTaskStatus("idle");
                         setTaskMessage(t.pixal3d.generator.status.idle);
                       }}
@@ -500,6 +506,41 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {generatedModelUrl && taskStatus === "succeeded" && (
+            <div
+              data-testid="pixal3d-result-panel"
+              className="mt-7 w-full max-w-[1420px] rounded-lg border border-[#2d875f] bg-[#071d24]/92 px-5 py-4 shadow-[0_22px_80px_rgba(0,240,138,0.12)]"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-extrabold text-white">{t.pixal3d.generator.resultTitle}</h2>
+                  <p className="mt-1 max-w-3xl break-all text-sm leading-6 text-[#aeb6ca]">{generatedModelUrl}</p>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    asChild
+                    type="button"
+                    className="h-11 rounded-full bg-[#48bdff] px-5 text-sm font-extrabold text-[#051021] hover:bg-[#71ccff]"
+                  >
+                    <a href={generatedModelUrl} target="_blank" rel="noreferrer">
+                      {t.pixal3d.generator.openModelButton}
+                    </a>
+                  </Button>
+                  <Button
+                    asChild
+                    type="button"
+                    variant="outline"
+                    className="h-11 rounded-full border-[#48bdff]/55 bg-[#0b1328] px-5 text-sm font-extrabold text-[#dbe1f2] hover:border-[#48bdff] hover:bg-[#132448] hover:text-white"
+                  >
+                    <a href={generatedModelUrl} download>
+                      {t.pixal3d.generator.downloadModelButton}
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {hfTrialUrl && (
             <div

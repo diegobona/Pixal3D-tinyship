@@ -64,6 +64,9 @@ export const en: Locale = {
       hfTrialClose: "Close",
       generateButton: "Generate Model",
       generatingButton: "Building model...",
+      resultTitle: "3D model is ready",
+      openModelButton: "Open GLB",
+      downloadModelButton: "Download GLB",
       status: {
         idle: "Upload an image to start.",
         ready: "Image ready. Generate your model.",

@@ -20,7 +20,9 @@ The fal request uses JSON and maps `imageUrl` to `image_url`. The completed resu
 - Optional credential for signature-based Wiro projects: `WIRO_API_SECRET`
 - Optional override: `WIRO_BASE_URL`
 
-The shared implementation lives in `libs/ai/3d.ts`. App API routes remain thin adapters that validate auth/input, consume credits, call the shared provider, create an in-memory task record, and refund credits if provider task creation or final processing fails.
+The shared implementation lives in `libs/ai/3d.ts`. App API routes remain thin adapters that validate auth/input, consume credits, call the shared provider, and create an in-memory task record.
+
+Credits are refunded automatically only when provider task creation fails before the provider accepts execution, for example a missing API key or submit-time validation error. Once fal/Wiro has accepted a task and polling later reports a provider/runtime failure, the site marks the task as failed but does not automatically refund credits because the upstream provider may already have billed the request.
 
 ## Request Mapping
 

@@ -88,7 +88,7 @@ describe('Next Pixal3D status API route', () => {
     expect(query3DTaskMock).not.toHaveBeenCalled();
   });
 
-  test('refunds once when provider polling returns a failure', async () => {
+  test('does not refund when provider polling returns a failure after execution started', async () => {
     getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
     const record = {
       id: 'task_123',
@@ -124,17 +124,7 @@ describe('Next Pixal3D status API route', () => {
         errorMessage: 'Provider failed',
       },
     });
-    expect(addCreditsMock).toHaveBeenCalledWith(expect.objectContaining({
-      userId: 'user_123',
-      amount: 20,
-      type: 'refund',
-      metadata: expect.objectContaining({
-        originalTransactionId: 'tx_123',
-        provider: 'fal',
-        model: 'fal-ai/pixal3d',
-        taskId: 'task_123',
-      }),
-    }));
-    expect(mark3DGenerationRefundedMock).toHaveBeenCalledWith('task_123');
+    expect(addCreditsMock).not.toHaveBeenCalled();
+    expect(mark3DGenerationRefundedMock).not.toHaveBeenCalled();
   });
 });
