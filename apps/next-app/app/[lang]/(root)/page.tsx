@@ -2,6 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { notify as toast } from "@/lib/notify";
+import { GlbPreviewDialog } from "@/components/glb-preview-dialog";
+import {
+  PIXAL3D_PROGRESS_STEPS,
+  createPixal3DProgressPlan,
+  getPixal3DProgressSnapshot,
+  type Pixal3DProgressPlanStep,
+  type Pixal3DProgressSnapshot,
+  type Pixal3DProgressStepKey,
+  type Pixal3DProgressStatus,
+} from "@/lib/pixal3d-progress";
 import { Button } from "@libs/react-shared/ui/button";
 import { Input } from "@libs/react-shared/ui/input";
 import { useTranslation } from "@/hooks/use-translation";
@@ -152,6 +162,10 @@ export default function Home() {
   const [imageDataUrl, setImageDataUrl] = useState("");
   const [imageName, setImageName] = useState("");
   const [generatedModelUrl, setGeneratedModelUrl] = useState("");
+  const [isGlbPreviewOpen, setIsGlbPreviewOpen] = useState(false);
+  const [progressPlan, setProgressPlan] = useState<Pixal3DProgressPlanStep[]>(() => createPixal3DProgressPlan());
+  const [progressStartedAt, setProgressStartedAt] = useState<number | null>(null);
+  const [progressSnapshot, setProgressSnapshot] = useState<Pixal3DProgressSnapshot | null>(null);
   const [settings, setSettings] = useState<Pixal3DSettings>(DEFAULT_PIXAL3D_SETTINGS);
   const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false);
   const [taskStatus, setTaskStatus] = useState<TaskStatus>("idle");
@@ -168,6 +182,9 @@ export default function Home() {
   const canGenerate = useMemo(() => {
     return Boolean(imageDataUrl && taskStatus !== "processing" && !isReadingFile);
   }, [imageDataUrl, taskStatus, isReadingFile]);
+
+  const progressStepLabels = t.pixal3d.generator.progress.steps as Record<Pixal3DProgressStepKey, string>;
+  const showGenerationProgress = Boolean(progressSnapshot && taskStatus !== "idle" && taskStatus !== "upload-ready");
 
   useEffect(() => {
     setTaskMessage(t.pixal3d.generator.status.idle);
@@ -195,6 +212,23 @@ export default function Home() {
       window.clearInterval(timer);
     };
   }, [hfTrialEndsAt, hfTrialUrl, t.pixal3d.generator.freeTrialExpired]);
+
+  useEffect(() => {
+    if (taskStatus !== "processing" || !progressStartedAt) return;
+
+    const updateProgress = () => {
+      setProgressSnapshot(
+        getPixal3DProgressSnapshot(progressPlan, Date.now() - progressStartedAt, "processing")
+      );
+    };
+
+    updateProgress();
+    const timer = window.setInterval(updateProgress, 600);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [progressPlan, progressStartedAt, taskStatus]);
 
   const closeHfTrial = () => {
     setHfTrialUrl("");
@@ -231,6 +265,9 @@ export default function Home() {
       setImageDataUrl(dataUrl);
       setImageName(file.name);
       setGeneratedModelUrl("");
+      setIsGlbPreviewOpen(false);
+      setProgressSnapshot(null);
+      setProgressStartedAt(null);
       setTaskStatus("upload-ready");
       setTaskMessage(t.pixal3d.generator.status.ready);
     } catch {
@@ -249,6 +286,9 @@ export default function Home() {
     setImageDataUrl(`${window.location.origin}${sample.src}`);
     setImageName(sample.name);
     setGeneratedModelUrl("");
+    setIsGlbPreviewOpen(false);
+    setProgressSnapshot(null);
+    setProgressStartedAt(null);
     setTaskStatus("upload-ready");
     setTaskMessage(t.pixal3d.generator.status.ready);
   };
@@ -264,6 +304,14 @@ export default function Home() {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return;
     updateSetting(key, parsed as never);
+  };
+
+  const completeProgress = (
+    plan: Pixal3DProgressPlanStep[],
+    startedAt: number,
+    status: Pixal3DProgressStatus
+  ) => {
+    setProgressSnapshot(getPixal3DProgressSnapshot(plan, Date.now() - startedAt, status));
   };
 
   const pollTask = async (taskId: string) => {
@@ -301,6 +349,12 @@ export default function Home() {
     setTaskStatus("processing");
     setTaskMessage(t.pixal3d.generator.status.creating);
     setGeneratedModelUrl("");
+    setIsGlbPreviewOpen(false);
+    const nextProgressPlan = createPixal3DProgressPlan();
+    const nextProgressStartedAt = Date.now();
+    setProgressPlan(nextProgressPlan);
+    setProgressStartedAt(nextProgressStartedAt);
+    setProgressSnapshot(getPixal3DProgressSnapshot(nextProgressPlan, 0, "processing"));
 
     try {
       const response = await fetch("/api/3d-generate", {
@@ -328,6 +382,7 @@ export default function Home() {
           });
           setTaskStatus("failed");
           setTaskMessage(t.pixal3d.generator.errors.trialUsed);
+          completeProgress(nextProgressPlan, nextProgressStartedAt, "failed");
           return;
         }
         if (response.status === 402) {
@@ -341,6 +396,7 @@ export default function Home() {
           });
           setTaskStatus("failed");
           setTaskMessage(t.pixal3d.generator.errors.insufficientCredits);
+          completeProgress(nextProgressPlan, nextProgressStartedAt, "failed");
           return;
         }
         if (response.status === 401) {
@@ -354,6 +410,7 @@ export default function Home() {
           });
           setTaskStatus("failed");
           setTaskMessage(t.pixal3d.generator.errors.signInRequired);
+          completeProgress(nextProgressPlan, nextProgressStartedAt, "failed");
           return;
         }
         throw new Error(data.message || t.pixal3d.generator.errors.generationFailed);
@@ -361,6 +418,8 @@ export default function Home() {
 
       const modelUrl = await pollTask(data.data.taskId);
       setGeneratedModelUrl(modelUrl);
+      completeProgress(nextProgressPlan, nextProgressStartedAt, "succeeded");
+      setIsGlbPreviewOpen(true);
       setTaskStatus("succeeded");
       setTaskMessage(t.pixal3d.generator.status.succeeded);
       toast.success(t.pixal3d.generator.status.succeeded);
@@ -368,6 +427,7 @@ export default function Home() {
       const message = error instanceof Error ? error.message : t.pixal3d.generator.errors.generationFailed;
       setTaskStatus("failed");
       setTaskMessage(message);
+      completeProgress(nextProgressPlan, nextProgressStartedAt, "failed");
       toast.error(t.pixal3d.generator.errors.generationFailed, { description: message });
     }
   };
@@ -480,6 +540,7 @@ export default function Home() {
                         setImageDataUrl("");
                         setImageName("");
                         setGeneratedModelUrl("");
+                        setIsGlbPreviewOpen(false);
                         setTaskStatus("idle");
                         setTaskMessage(t.pixal3d.generator.status.idle);
                       }}
@@ -680,6 +741,94 @@ export default function Home() {
             </div>
           </div>
 
+          {showGenerationProgress && progressSnapshot && (
+            <div
+              data-testid="pixal3d-generation-progress"
+              className={`mt-7 w-full max-w-[1420px] rounded-lg border px-5 py-5 shadow-[0_24px_90px_rgba(0,0,0,0.18)] ${
+                progressSnapshot.status === "failed"
+                  ? "border-[#ff6b6b]/60 bg-[#1e0f1a]/90"
+                  : "border-[#25314f] bg-[#080f24]/92"
+              }`}
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-[#7fdaff]">
+                    {t.pixal3d.generator.progress.title}
+                  </p>
+                  <h2 className={`mt-2 text-2xl font-extrabold ${
+                    progressSnapshot.status === "failed" ? "text-[#ff9b9b]" : "text-[#8ea2ff]"
+                  }`}>
+                    {progressSnapshot.status === "succeeded"
+                      ? t.pixal3d.generator.progress.completedTitle
+                      : progressSnapshot.status === "failed"
+                        ? t.pixal3d.generator.progress.failedTitle
+                        : progressStepLabels[progressSnapshot.currentStepKey]}
+                  </h2>
+                </div>
+                <div className="text-lg font-bold text-[#aeb6ca]">
+                  {progressSnapshot.status === "succeeded"
+                    ? `${PIXAL3D_PROGRESS_STEPS.length}/${PIXAL3D_PROGRESS_STEPS.length}`
+                    : `${progressSnapshot.currentStepIndex + 1}/${PIXAL3D_PROGRESS_STEPS.length}`}
+                </div>
+              </div>
+
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#1a2235]">
+                <div
+                  className={`h-full rounded-full transition-[width] duration-500 ${
+                    progressSnapshot.status === "failed"
+                      ? "bg-[#ff6b6b]"
+                      : "bg-gradient-to-r from-[#8ea2ff] via-[#48bdff] to-[#00f08a]"
+                  }`}
+                  style={{ width: `${progressSnapshot.percent}%` }}
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs font-bold text-[#828aa4]">
+                <span>{progressSnapshot.percent}%</span>
+                <span>{taskMessage}</span>
+              </div>
+
+              <div className="mt-5 border-t border-[#25314f] pt-4">
+                <div className="grid gap-3 md:grid-cols-2">
+                  {PIXAL3D_PROGRESS_STEPS.map((step, index) => {
+                    const isCompleted = progressSnapshot.status === "succeeded" || index < progressSnapshot.completedStepCount;
+                    const isCurrent = progressSnapshot.status === "processing" && index === progressSnapshot.currentStepIndex;
+                    const isFailed = progressSnapshot.status === "failed" && index === progressSnapshot.currentStepIndex;
+
+                    return (
+                      <div
+                        key={step.key}
+                        className={`flex items-center gap-3 rounded-md border px-3 py-2 text-sm font-semibold ${
+                          isFailed
+                            ? "border-[#ff6b6b]/55 bg-[#321725] text-[#ffd1d1]"
+                            : isCurrent
+                              ? "border-[#48bdff]/55 bg-[#10264b] text-white"
+                              : isCompleted
+                                ? "border-[#2d875f]/45 bg-[#08251d] text-[#8df5c2]"
+                                : "border-[#25314f] bg-[#0b1426] text-[#828aa4]"
+                        }`}
+                      >
+                        <span
+                          className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${
+                            isFailed
+                              ? "bg-[#ff6b6b] text-[#1e0f1a]"
+                              : isCompleted
+                                ? "bg-[#00f08a] text-[#051021]"
+                                : isCurrent
+                                  ? "bg-[#48bdff] text-[#051021]"
+                                  : "bg-[#1a2235] text-[#aeb6ca]"
+                          }`}
+                        >
+                          {isFailed ? "!" : isCompleted ? "OK" : index + 1}
+                        </span>
+                        <span>{progressStepLabels[step.key]}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
           {generatedModelUrl && taskStatus === "succeeded" && (
             <div
               data-testid="pixal3d-result-panel"
@@ -692,9 +841,18 @@ export default function Home() {
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button
+                    type="button"
+                    data-testid="pixal3d-preview-model-button"
+                    className="h-11 rounded-full bg-[#48bdff] px-5 text-sm font-extrabold text-[#051021] hover:bg-[#71ccff]"
+                    onClick={() => setIsGlbPreviewOpen(true)}
+                  >
+                    {t.pixal3d.generator.previewModelButton}
+                  </Button>
+                  <Button
                     asChild
                     type="button"
-                    className="h-11 rounded-full bg-[#48bdff] px-5 text-sm font-extrabold text-[#051021] hover:bg-[#71ccff]"
+                    variant="outline"
+                    className="h-11 rounded-full border-[#48bdff]/55 bg-[#0b1328] px-5 text-sm font-extrabold text-[#dbe1f2] hover:border-[#48bdff] hover:bg-[#132448] hover:text-white"
                   >
                     <a href={generatedModelUrl} target="_blank" rel="noreferrer">
                       {t.pixal3d.generator.openModelButton}
@@ -713,6 +871,17 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          )}
+
+          {generatedModelUrl && (
+            <GlbPreviewDialog
+              open={isGlbPreviewOpen}
+              modelUrl={generatedModelUrl}
+              title={t.pixal3d.generator.previewTitle}
+              closeLabel={t.pixal3d.generator.closePreviewButton}
+              downloadLabel={t.pixal3d.generator.downloadModelButton}
+              onClose={() => setIsGlbPreviewOpen(false)}
+            />
           )}
 
           {hfTrialUrl && (

@@ -65,6 +65,9 @@ export const en: Locale = {
       generateButton: "Generate Model",
       generatingButton: "Building model...",
       resultTitle: "3D model is ready",
+      previewTitle: "Preview 3D Model",
+      previewModelButton: "Preview GLB",
+      closePreviewButton: "Close preview",
       openModelButton: "Open GLB",
       downloadModelButton: "Download GLB",
       settings: {
@@ -100,6 +103,21 @@ export const en: Locale = {
         creating: "Creating 3D task...",
         processing: "Building the GLB...",
         succeeded: "3D model is ready."
+      },
+      progress: {
+        title: "Generation progress",
+        completedTitle: "3D model is ready",
+        failedTitle: "Generation stopped",
+        steps: {
+          submitting: "Submitting request",
+          waitingForRunner: "Waiting for runner",
+          preparingImage: "Preparing image",
+          samplingSparseStructure: "Sampling sparse structure",
+          samplingShapeSLat: "Sampling shape SLat",
+          samplingTextureSLat: "Sampling texture SLat",
+          buildingMesh: "Building mesh and GLB",
+          finalizingPreview: "Finalizing preview"
+        }
       },
       errors: {
         unsupportedImage: "Please upload a JPG, PNG, WebP, or BMP image.",
