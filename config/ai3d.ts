@@ -18,7 +18,7 @@ export const ai3dConfig = {
   qualityOptions: ['draft', 'standard', 'high'] as const,
   generationOptions: {
     resolutions: [1024, 1536] as const,
-    textureSizes: [1024, 2048, 4096] as const,
+    textureSizes: [1024, 2048, 4096, 8192] as const,
     decimationTargets: [100000, 150000, 200000, 300000] as const,
   },
   defaults: {

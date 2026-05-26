@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { notify as toast } from "@/lib/notify";
 import { GlbPreviewDialog } from "@/components/glb-preview-dialog";
 import {
   PIXAL3D_PROGRESS_STEPS,
@@ -12,13 +11,28 @@ import {
   type Pixal3DProgressStepKey,
   type Pixal3DProgressStatus,
 } from "@/lib/pixal3d-progress";
+import {
+  get3DPlanEntitlement,
+  type ThreeDPlanEntitlement,
+} from "@libs/ai/3d-entitlements";
 import { Button } from "@libs/react-shared/ui/button";
 import { Input } from "@libs/react-shared/ui/input";
 import { useTranslation } from "@/hooks/use-translation";
 
 type TaskStatus = "idle" | "upload-ready" | "processing" | "succeeded" | "failed";
 type ResolutionOption = 1024 | 1536;
-type TextureSizeOption = 1024 | 2048 | 4096;
+type TextureSizeOption = 1024 | 2048 | 4096 | 8192;
+type PageNoticeType = "error" | "info" | "success";
+
+interface PageNotice {
+  type: PageNoticeType;
+  title: string;
+  description?: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+}
 
 interface Pixal3DSettings {
   resolution: ResolutionOption;
@@ -94,13 +108,16 @@ interface CreditStatusResponse {
   credits?: {
     balance?: number;
   };
+  subscription?: {
+    planId?: string;
+  } | null;
 }
 
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const FREE_TRIAL_DURATION_SECONDS = 10 * 60;
 const RESOLUTION_OPTIONS: ResolutionOption[] = [1024, 1536];
-const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096];
+const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096, 8192];
 const RESOLUTION_CREDIT_COST: Record<ResolutionOption, number> = {
   1024: 1100,
   1536: 1600,
@@ -189,10 +206,16 @@ export default function Home() {
   const [hfTrialEndsAt, setHfTrialEndsAt] = useState<number | null>(null);
   const [isOpeningHfTrial, setIsOpeningHfTrial] = useState(false);
   const [creditBalance, setCreditBalance] = useState(0);
+  const [subscriptionPlanId, setSubscriptionPlanId] = useState<string | null>(null);
+  const [pageNotice, setPageNotice] = useState<PageNotice | null>(null);
   const hfTrialPanelRef = useRef<HTMLDivElement | null>(null);
 
   const requiredCredits = RESOLUTION_CREDIT_COST[settings.resolution];
   const hasEnoughCredits = creditBalance >= requiredCredits;
+  const planEntitlement = useMemo<ThreeDPlanEntitlement | null>(
+    () => get3DPlanEntitlement(subscriptionPlanId),
+    [subscriptionPlanId]
+  );
   const canEditGenerationSettings = taskStatus !== "processing";
   const canGenerate = useMemo(() => {
     return Boolean(imageDataUrl && hasEnoughCredits && taskStatus !== "processing" && !isReadingFile);
@@ -205,6 +228,18 @@ export default function Home() {
     setTaskMessage(t.pixal3d.generator.status.idle);
   }, [t.pixal3d.generator.status.idle]);
 
+  const showPageNotice = (
+    type: PageNoticeType,
+    title: string,
+    options?: Omit<PageNotice, "type" | "title">
+  ) => {
+    setPageNotice({ type, title, ...options });
+  };
+
+  const clearPageNotice = () => {
+    setPageNotice(null);
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -212,14 +247,23 @@ export default function Home() {
       try {
         const response = await fetch("/api/credits/status", { cache: "no-store" });
         if (!response.ok) {
-          if (isMounted) setCreditBalance(0);
+          if (isMounted) {
+            setCreditBalance(0);
+            setSubscriptionPlanId(null);
+          }
           return;
         }
 
         const data = (await response.json()) as CreditStatusResponse;
-        if (isMounted) setCreditBalance(Number(data.credits?.balance || 0));
+        if (isMounted) {
+          setCreditBalance(Number(data.credits?.balance || 0));
+          setSubscriptionPlanId(data.subscription?.planId || null);
+        }
       } catch {
-        if (isMounted) setCreditBalance(0);
+        if (isMounted) {
+          setCreditBalance(0);
+          setSubscriptionPlanId(null);
+        }
       }
     };
 
@@ -229,6 +273,20 @@ export default function Home() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!planEntitlement) return;
+
+    setSettings((current) => ({
+      ...current,
+      resolution: current.resolution > planEntitlement.maxResolution
+        ? planEntitlement.maxResolution
+        : current.resolution,
+      textureSize: current.textureSize > planEntitlement.maxTextureSize
+        ? planEntitlement.maxTextureSize
+        : current.textureSize,
+    }));
+  }, [planEntitlement]);
 
   useEffect(() => {
     if (!hfTrialEndsAt || !hfTrialUrl) return;
@@ -241,7 +299,7 @@ export default function Home() {
         setHfTrialUrl("");
         setHfTrialQueueSize(null);
         setHfTrialEndsAt(null);
-        toast.info(t.pixal3d.generator.freeTrialExpired);
+        showPageNotice("info", t.pixal3d.generator.freeTrialExpired);
       }
     };
 
@@ -286,15 +344,16 @@ export default function Home() {
   const readFileAsDataUrl = async (file: File) => {
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/bmp"];
     if (!allowed.includes(file.type)) {
-      toast.error(t.pixal3d.generator.errors.unsupportedImage);
+      showPageNotice("error", t.pixal3d.generator.errors.unsupportedImage);
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      toast.error(t.pixal3d.generator.errors.imageTooLarge);
+      showPageNotice("error", t.pixal3d.generator.errors.imageTooLarge);
       return;
     }
 
     setIsReadingFile(true);
+    clearPageNotice();
     try {
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -311,7 +370,7 @@ export default function Home() {
       setTaskStatus("upload-ready");
       setTaskMessage(t.pixal3d.generator.status.ready);
     } catch {
-      toast.error(t.pixal3d.generator.errors.uploadFailed);
+      showPageNotice("error", t.pixal3d.generator.errors.uploadFailed);
     } finally {
       setIsReadingFile(false);
     }
@@ -323,6 +382,7 @@ export default function Home() {
   };
 
   const useSampleImage = (sample: (typeof SAMPLE_IMAGES)[number]) => {
+    clearPageNotice();
     setImageDataUrl(`${window.location.origin}${sample.src}`);
     setImageName(sample.name);
     setGeneratedModelUrl("");
@@ -393,7 +453,7 @@ export default function Home() {
 
   const handleGenerate = async () => {
     if (!hasEnoughCredits) {
-      toast.error(t.pixal3d.generator.errors.insufficientCredits, {
+      showPageNotice("error", t.pixal3d.generator.errors.insufficientCredits, {
         description: t.pixal3d.generator.errors.insufficientCreditsDescription
           .replace("{required}", String(requiredCredits))
           .replace("{balance}", String(creditBalance)),
@@ -402,10 +462,11 @@ export default function Home() {
     }
 
     if (!imageDataUrl) {
-      toast.error(t.pixal3d.generator.errors.imageRequired);
+      showPageNotice("error", t.pixal3d.generator.errors.imageRequired);
       return;
     }
 
+    clearPageNotice();
     setTaskStatus("processing");
     setTaskMessage(t.pixal3d.generator.status.creating);
     setGeneratedModelUrl("");
@@ -431,7 +492,7 @@ export default function Home() {
 
       if (!response.ok || !data.success || !data.data?.taskId) {
         if (response.status === 403 && data.error === "trial_used") {
-          toast.error(t.pixal3d.generator.errors.trialUsed, {
+          showPageNotice("error", t.pixal3d.generator.errors.trialUsed, {
             description: t.pixal3d.generator.errors.trialUsedDescription,
             action: {
               label: t.actions.createAccount,
@@ -446,7 +507,7 @@ export default function Home() {
           return;
         }
         if (response.status === 402) {
-          toast.error(t.pixal3d.generator.errors.insufficientCredits, {
+          showPageNotice("error", t.pixal3d.generator.errors.insufficientCredits, {
             action: {
               label: t.common.viewPlans,
               onClick: () => {
@@ -460,7 +521,7 @@ export default function Home() {
           return;
         }
         if (response.status === 401) {
-          toast.error(t.pixal3d.generator.errors.signInRequired, {
+          showPageNotice("error", t.pixal3d.generator.errors.signInRequired, {
             action: {
               label: t.common.login,
               onClick: () => {
@@ -487,12 +548,13 @@ export default function Home() {
       setTaskStatus("failed");
       setTaskMessage(message);
       completeProgress(nextProgressPlan, nextProgressStartedAt, "failed");
-      toast.error(t.pixal3d.generator.errors.generationFailed, { description: message });
+      showPageNotice("error", t.pixal3d.generator.errors.generationFailed, { description: message });
     }
   };
 
   const handleOpenHfTrial = async () => {
     setIsOpeningHfTrial(true);
+    clearPageNotice();
 
     try {
       const response = await fetch("/api/hf-pixal3d-instance", {
@@ -502,7 +564,7 @@ export default function Home() {
       const data = (await response.json()) as HfInstanceResponse;
 
       if (response.status === 429 && data.error === "free_trial_limit_reached") {
-        toast.error(t.pixal3d.generator.errors.freeTrialLimitReached, {
+        showPageNotice("error", t.pixal3d.generator.errors.freeTrialLimitReached, {
           action: {
             label: t.common.viewPlans,
             onClick: () => {
@@ -521,7 +583,6 @@ export default function Home() {
       setHfTrialQueueSize(data.data.selected.queueSize);
       setHfTrialSecondsLeft(FREE_TRIAL_DURATION_SECONDS);
       setHfTrialEndsAt(Date.now() + FREE_TRIAL_DURATION_SECONDS * 1000);
-      toast.success(t.pixal3d.generator.freeTrialSelected);
       window.setTimeout(() => {
         hfTrialPanelRef.current?.scrollIntoView({
           behavior: "smooth",
@@ -530,7 +591,7 @@ export default function Home() {
       }, 100);
     } catch (error) {
       const message = error instanceof Error ? error.message : t.pixal3d.generator.errors.freeTrialBusy;
-      toast.error(t.pixal3d.generator.errors.freeTrialBusy, { description: message });
+      showPageNotice("error", t.pixal3d.generator.errors.freeTrialBusy, { description: message });
     } finally {
       setIsOpeningHfTrial(false);
     }
@@ -664,7 +725,13 @@ export default function Home() {
                       className="h-12 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-base font-bold text-[#dbe1f2] outline-none transition hover:border-[#48bdff] focus:border-[#48bdff] disabled:opacity-60"
                     >
                       {RESOLUTION_OPTIONS.map((option) => (
-                        <option key={option} value={option}>{option}</option>
+                        <option
+                          key={option}
+                          value={option}
+                          disabled={Boolean(planEntitlement && option > planEntitlement.maxResolution)}
+                        >
+                          {option}
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -678,7 +745,13 @@ export default function Home() {
                       className="h-12 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-base font-bold text-[#dbe1f2] outline-none transition hover:border-[#48bdff] focus:border-[#48bdff] disabled:opacity-60"
                     >
                       {TEXTURE_SIZE_OPTIONS.map((option) => (
-                        <option key={option} value={option}>{option}</option>
+                        <option
+                          key={option}
+                          value={option}
+                          disabled={Boolean(planEntitlement && option > planEntitlement.maxTextureSize)}
+                        >
+                          {option}
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -809,6 +882,47 @@ export default function Home() {
               )}
             </div>
           </div>
+
+          {pageNotice && (
+            <div
+              data-testid="pixal3d-page-notice"
+              role="status"
+              className={`mt-5 flex w-full max-w-[1420px] flex-col gap-3 rounded-lg border px-5 py-4 text-sm font-semibold leading-6 shadow-[0_18px_60px_rgba(0,0,0,0.16)] sm:flex-row sm:items-center sm:justify-between ${
+                pageNotice.type === "error"
+                  ? "border-[#ff6b6b]/55 bg-[#220f1d]/88 text-[#ffb8b8]"
+                  : pageNotice.type === "success"
+                    ? "border-[#2d875f]/55 bg-[#08251d]/88 text-[#8df5c2]"
+                    : "border-[#48bdff]/45 bg-[#0a1430]/88 text-[#b8dfff]"
+              }`}
+            >
+              <div className="min-w-0">
+                <p className="text-base font-extrabold">{pageNotice.title}</p>
+                {pageNotice.description ? (
+                  <p className="mt-1 text-sm font-medium opacity-90">{pageNotice.description}</p>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                {pageNotice.action ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-9 rounded-full bg-[#ffb8b8] px-4 text-sm font-extrabold text-[#220f1d] hover:bg-[#ffd1d1]"
+                    onClick={pageNotice.action.onClick}
+                  >
+                    {pageNotice.action.label}
+                  </Button>
+                ) : null}
+                <button
+                  type="button"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-current/25 text-base font-extrabold opacity-80 transition hover:opacity-100"
+                  onClick={clearPageNotice}
+                  aria-label="Dismiss message"
+                >
+                  x
+                </button>
+              </div>
+            </div>
+          )}
 
           {showGenerationProgress && progressSnapshot && (
             <div

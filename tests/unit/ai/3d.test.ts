@@ -219,6 +219,27 @@ describe('fal.ai Pixal3D provider', () => {
     });
   });
 
+  test('maps the 8192 UI texture option to the current fal 4096 texture payload', async () => {
+    vi.stubEnv('FAL_API_KEY', 'test-fal-key');
+
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      request_id: 'fal-request-8192',
+    })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { create3DTask } = await import('@libs/ai/3d');
+    await create3DTask({
+      imageUrl: 'https://example.com/input.png',
+      prompt: 'unused by Pixal3D',
+      textureSize: 8192,
+    });
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      texture_size: 4096,
+    });
+  });
+
   test('accepts official FAL_KEY when FAL_API_KEY is not configured', async () => {
     vi.stubEnv('FAL_KEY', 'official-fal-key');
 

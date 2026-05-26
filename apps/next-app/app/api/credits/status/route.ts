@@ -37,6 +37,11 @@ export async function GET(request: Request) {
         totalConsumed: creditStatus.totalConsumed
       },
       hasSubscription: !!subscription,
+      subscription: subscription
+        ? {
+            planId: subscription.planId,
+          }
+        : null,
       // User can access features if they have subscription OR credits
       canAccess: !!subscription || creditStatus.balance > 0
     });
@@ -48,4 +53,3 @@ export async function GET(request: Request) {
     );
   }
 }
-

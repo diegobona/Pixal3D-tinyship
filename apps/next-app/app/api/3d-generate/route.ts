@@ -13,8 +13,13 @@ import {
 import {
   create3DGenerationRecord,
 } from '@libs/ai/3d-task-store';
+import {
+  check3DGenerationPlanLimit,
+  get3DPlanEntitlement,
+} from '@libs/ai/3d-entitlements';
 import { auth } from '@libs/auth';
 import { creditService, TransactionTypeCode } from '@libs/credits';
+import { checkSubscriptionStatus } from '@libs/database/utils/subscription';
 import { config } from '@config';
 
 export const maxDuration = 60;
@@ -64,6 +69,8 @@ export async function POST(req: Request) {
     const quality = (body.quality || config.ai3d.defaults.quality) as ThreeDQuality;
     const resolution = body.resolution as ThreeDResolution | undefined;
     const textureSize = body.textureSize as ThreeDTextureSize | undefined;
+    const effectiveResolution = resolution ?? config.ai3d.defaults.resolution;
+    const effectiveTextureSize = textureSize ?? config.ai3d.defaults.textureSize;
     const decimationTarget = body.decimationTarget as ThreeDDecimationTarget | undefined;
     const seed = readOptionalNumber(body, 'seed');
     const meshScale = readOptionalNumber(body, 'meshScale');
@@ -117,7 +124,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const balance = await creditService.getBalance(userId);
+    const [balance, subscription] = await Promise.all([
+      creditService.getBalance(userId),
+      checkSubscriptionStatus(userId),
+    ]);
     if (balance < creditCost) {
       return NextResponse.json(
         {
@@ -127,6 +137,22 @@ export async function POST(req: Request) {
           balance,
         },
         { status: 402 }
+      );
+    }
+
+    const planLimit = check3DGenerationPlanLimit(
+      get3DPlanEntitlement(subscription?.planId),
+      { resolution: effectiveResolution, textureSize: effectiveTextureSize }
+    );
+    if (!planLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: 'plan_limit_exceeded',
+          message: 'This generation setting is not available on your current plan.',
+          reason: planLimit.reason,
+          requiredTier: planLimit.requiredTier,
+        },
+        { status: 403 }
       );
     }
 

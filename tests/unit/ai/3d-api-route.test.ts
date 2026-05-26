@@ -4,6 +4,7 @@ const getBalanceMock = vi.fn();
 const consumeCreditsMock = vi.fn();
 const addCreditsMock = vi.fn();
 const getSessionMock = vi.fn();
+const checkSubscriptionStatusMock = vi.fn();
 
 function createRequest(body: unknown) {
   return new Request('http://localhost/api/3d-generate', {
@@ -22,6 +23,7 @@ describe('Next Pixal3D generation API route', () => {
     consumeCreditsMock.mockReset();
     addCreditsMock.mockReset();
     getSessionMock.mockReset();
+    checkSubscriptionStatusMock.mockReset();
 
     vi.doMock('next/server', () => ({
       NextResponse: {
@@ -48,6 +50,10 @@ describe('Next Pixal3D generation API route', () => {
         consumeCredits: consumeCreditsMock,
         addCredits: addCreditsMock,
       },
+    }));
+
+    vi.doMock('@libs/database/utils/subscription', () => ({
+      checkSubscriptionStatus: checkSubscriptionStatusMock,
     }));
 
     vi.doMock('@libs/ai/3d-task-store', () => ({
@@ -215,6 +221,70 @@ describe('Next Pixal3D generation API route', () => {
     });
     expect(consumeCreditsMock).not.toHaveBeenCalled();
     expect(addCreditsMock).not.toHaveBeenCalled();
+  });
+
+  test('rejects generation settings above an active subscription plan limit before provider submit', async () => {
+    vi.stubEnv('FAL_API_KEY', 'test_fal_key');
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({ request_id: 'fal_request_123' }, { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
+    getBalanceMock.mockResolvedValue(3000);
+    checkSubscriptionStatusMock.mockResolvedValue({ planId: 'starterMonthly' });
+    consumeCreditsMock.mockResolvedValue({
+      success: true,
+      transactionId: 'tx_123',
+      newBalance: 1900,
+    });
+
+    const { POST } = await import('../../../apps/next-app/app/api/3d-generate/route');
+    const response = await POST(createRequest({
+      imageUrl: 'https://example.com/input.png',
+      prompt: 'product render',
+      provider: 'fal',
+      resolution: 1536,
+      textureSize: 1024,
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body).toMatchObject({
+      error: 'plan_limit_exceeded',
+    });
+    expect(consumeCreditsMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('allows all provider-supported settings when the user has credits but no active subscription', async () => {
+    vi.stubEnv('FAL_API_KEY', 'test_fal_key');
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({ request_id: 'fal_request_123' }, { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
+    getBalanceMock.mockResolvedValue(3000);
+    checkSubscriptionStatusMock.mockResolvedValue(null);
+    consumeCreditsMock.mockResolvedValue({
+      success: true,
+      transactionId: 'tx_123',
+      newBalance: 1400,
+    });
+
+    const { POST } = await import('../../../apps/next-app/app/api/3d-generate/route');
+    const response = await POST(createRequest({
+      imageUrl: 'https://example.com/input.png',
+      prompt: 'product render',
+      provider: 'fal',
+      resolution: 1536,
+      textureSize: 4096,
+    }));
+
+    expect(response.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(consumeCreditsMock).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 1600,
+    }));
   });
 
   test('forwards Pixal3D generation settings to fal using API field names', async () => {
