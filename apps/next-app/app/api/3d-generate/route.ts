@@ -33,10 +33,22 @@ function isSupportedImageUrl(value: string): boolean {
   return /^https?:\/\//i.test(value) || /^data:image\/(png|jpe?g|webp|bmp);base64,/i.test(value);
 }
 
+function readOptionalNumber(body: Record<string, unknown>, key: string): number | undefined {
+  const value = body[key];
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
 export async function POST(req: Request) {
   try {
     const userId = await getOptionalUserId(req);
-    const body = await req.json();
+    const body = await req.json() as Record<string, unknown>;
     const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl.trim() : '';
     const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
     const requestedProvider = typeof body.provider === 'string' ? body.provider : config.ai3d.defaultProvider;
@@ -53,9 +65,22 @@ export async function POST(req: Request) {
     const resolution = body.resolution as ThreeDResolution | undefined;
     const textureSize = body.textureSize as ThreeDTextureSize | undefined;
     const decimationTarget = body.decimationTarget as ThreeDDecimationTarget | undefined;
-    const seed = typeof body.seed === 'number' ? body.seed : undefined;
-    const meshScale = typeof body.meshScale === 'number' ? body.meshScale : undefined;
+    const seed = readOptionalNumber(body, 'seed');
+    const meshScale = readOptionalNumber(body, 'meshScale');
     const remesh = typeof body.remesh === 'boolean' ? body.remesh : undefined;
+    const maxNumTokens = readOptionalNumber(body, 'maxNumTokens');
+    const sparseStructureSteps = readOptionalNumber(body, 'sparseStructureSteps');
+    const sparseStructureGuidanceStrength = readOptionalNumber(body, 'sparseStructureGuidanceStrength');
+    const sparseStructureGuidanceRescale = readOptionalNumber(body, 'sparseStructureGuidanceRescale');
+    const sparseStructureRescaleT = readOptionalNumber(body, 'sparseStructureRescaleT');
+    const shapeSteps = readOptionalNumber(body, 'shapeSteps');
+    const shapeGuidanceStrength = readOptionalNumber(body, 'shapeGuidanceStrength');
+    const shapeGuidanceRescale = readOptionalNumber(body, 'shapeGuidanceRescale');
+    const shapeRescaleT = readOptionalNumber(body, 'shapeRescaleT');
+    const textureSteps = readOptionalNumber(body, 'textureSteps');
+    const textureGuidanceStrength = readOptionalNumber(body, 'textureGuidanceStrength');
+    const textureGuidanceRescale = readOptionalNumber(body, 'textureGuidanceRescale');
+    const textureRescaleT = readOptionalNumber(body, 'textureRescaleT');
 
     if (!imageUrl || !isSupportedImageUrl(imageUrl)) {
       return NextResponse.json(
@@ -146,6 +171,19 @@ export async function POST(req: Request) {
         seed,
         meshScale,
         remesh,
+        maxNumTokens,
+        sparseStructureSteps,
+        sparseStructureGuidanceStrength,
+        sparseStructureGuidanceRescale,
+        sparseStructureRescaleT,
+        shapeSteps,
+        shapeGuidanceStrength,
+        shapeGuidanceRescale,
+        shapeRescaleT,
+        textureSteps,
+        textureGuidanceStrength,
+        textureGuidanceRescale,
+        textureRescaleT,
       });
     } catch (taskError) {
       if (userId && consumeTransactionId && creditCost > 0) {

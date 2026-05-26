@@ -7,6 +7,28 @@ import { Input } from "@libs/react-shared/ui/input";
 import { useTranslation } from "@/hooks/use-translation";
 
 type TaskStatus = "idle" | "upload-ready" | "processing" | "succeeded" | "failed";
+type ResolutionOption = 1024 | 1536;
+type TextureSizeOption = 1024 | 2048 | 4096;
+
+interface Pixal3DSettings {
+  resolution: ResolutionOption;
+  textureSize: TextureSizeOption;
+  decimationTarget: number;
+  maxNumTokens: number;
+  meshScale: number;
+  sparseStructureGuidanceStrength: number;
+  sparseStructureGuidanceRescale: number;
+  sparseStructureSteps: number;
+  sparseStructureRescaleT: number;
+  shapeGuidanceStrength: number;
+  shapeGuidanceRescale: number;
+  shapeSteps: number;
+  shapeRescaleT: number;
+  textureGuidanceStrength: number;
+  textureSteps: number;
+  textureRescaleT: number;
+  remesh: boolean;
+}
 
 interface GenerateResponse {
   success: boolean;
@@ -60,6 +82,43 @@ interface HfInstanceResponse {
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const FREE_TRIAL_DURATION_SECONDS = 10 * 60;
+const RESOLUTION_OPTIONS: ResolutionOption[] = [1024, 1536];
+const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096];
+const DEFAULT_PIXAL3D_SETTINGS: Pixal3DSettings = {
+  resolution: 1024,
+  textureSize: 1024,
+  decimationTarget: 200000,
+  maxNumTokens: 49152,
+  meshScale: 1,
+  sparseStructureGuidanceStrength: 7.5,
+  sparseStructureGuidanceRescale: 0.7,
+  sparseStructureSteps: 12,
+  sparseStructureRescaleT: 5,
+  shapeGuidanceStrength: 7.5,
+  shapeGuidanceRescale: 0.5,
+  shapeSteps: 12,
+  shapeRescaleT: 3,
+  textureGuidanceStrength: 1,
+  textureSteps: 12,
+  textureRescaleT: 3,
+  remesh: true,
+};
+const ADVANCED_SETTING_FIELDS = [
+  { key: "decimationTarget", min: 5000, max: 2000000, step: 1000 },
+  { key: "maxNumTokens", min: 4096, max: 131072, step: 1024 },
+  { key: "meshScale", min: 0.1, max: 10, step: 0.1 },
+  { key: "sparseStructureGuidanceStrength", min: 0, max: 10, step: 0.1 },
+  { key: "sparseStructureGuidanceRescale", min: 0, max: 1, step: 0.1 },
+  { key: "sparseStructureSteps", min: 1, max: 50, step: 1 },
+  { key: "sparseStructureRescaleT", min: 1, max: 6, step: 0.1 },
+  { key: "shapeGuidanceStrength", min: 0, max: 10, step: 0.1 },
+  { key: "shapeGuidanceRescale", min: 0, max: 1, step: 0.1 },
+  { key: "shapeSteps", min: 1, max: 50, step: 1 },
+  { key: "shapeRescaleT", min: 1, max: 6, step: 0.1 },
+  { key: "textureGuidanceStrength", min: 0, max: 10, step: 0.1 },
+  { key: "textureSteps", min: 1, max: 50, step: 1 },
+  { key: "textureRescaleT", min: 1, max: 6, step: 0.1 },
+] as const;
 const SAMPLE_IMAGES = [
   { name: "Bunny mascot", src: "/samples/pixal3d-bunny.svg" },
   { name: "Mushroom merchant", src: "/samples/pixal3d-mushroom.svg" },
@@ -93,6 +152,8 @@ export default function Home() {
   const [imageDataUrl, setImageDataUrl] = useState("");
   const [imageName, setImageName] = useState("");
   const [generatedModelUrl, setGeneratedModelUrl] = useState("");
+  const [settings, setSettings] = useState<Pixal3DSettings>(DEFAULT_PIXAL3D_SETTINGS);
+  const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false);
   const [taskStatus, setTaskStatus] = useState<TaskStatus>("idle");
   const [taskMessage, setTaskMessage] = useState(t.pixal3d.generator.status.idle);
   const [isReadingFile, setIsReadingFile] = useState(false);
@@ -192,6 +253,19 @@ export default function Home() {
     setTaskMessage(t.pixal3d.generator.status.ready);
   };
 
+  const updateSetting = <K extends keyof Pixal3DSettings>(key: K, value: Pixal3DSettings[K]) => {
+    setSettings((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  };
+
+  const updateNumberSetting = (key: keyof Omit<Pixal3DSettings, "remesh">, value: string) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return;
+    updateSetting(key, parsed as never);
+  };
+
   const pollTask = async (taskId: string) => {
     const startedAt = Date.now();
 
@@ -236,6 +310,7 @@ export default function Home() {
           imageUrl: imageDataUrl,
           prompt: t.pixal3d.generator.defaultPrompt,
           quality: "standard",
+          ...settings,
         }),
       });
       const data = (await response.json()) as GenerateResponse;
@@ -454,29 +529,73 @@ export default function Home() {
               )}
             </div>
 
-            <div className="mt-7 border-t border-[#303a59] pt-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="inline-flex h-12 items-center gap-3 rounded-full bg-[#48bdff] px-6 text-lg font-extrabold text-[#051021]">
-                  {t.pixal3d.generator.stylePreset}
-                  <span aria-hidden="true">x</span>
+            <div className="mt-7 border-t border-[#303a59] pt-6">
+              <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+                <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:max-w-[820px]">
+                  <label className="flex min-w-0 flex-col gap-2">
+                    <span className="text-sm font-extrabold text-[#d9dfef]">{t.pixal3d.generator.settings.resolution}</span>
+                    <select
+                      data-testid="pixal3d-resolution-select"
+                      value={settings.resolution}
+                      disabled={taskStatus === "processing"}
+                      onChange={(event) => updateSetting("resolution", Number(event.target.value) as ResolutionOption)}
+                      className="h-12 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-base font-bold text-[#dbe1f2] outline-none transition hover:border-[#48bdff] focus:border-[#48bdff] disabled:opacity-60"
+                    >
+                      {RESOLUTION_OPTIONS.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex min-w-0 flex-col gap-2">
+                    <span className="text-sm font-extrabold text-[#d9dfef]">{t.pixal3d.generator.settings.textureSize}</span>
+                    <select
+                      data-testid="pixal3d-texture-size-select"
+                      value={settings.textureSize}
+                      disabled={taskStatus === "processing"}
+                      onChange={(event) => updateSetting("textureSize", Number(event.target.value) as TextureSizeOption)}
+                      className="h-12 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-base font-bold text-[#dbe1f2] outline-none transition hover:border-[#48bdff] focus:border-[#48bdff] disabled:opacity-60"
+                    >
+                      {TEXTURE_SIZE_OPTIONS.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="flex min-w-0 flex-col gap-2 sm:col-span-2 lg:col-span-1">
+                    <span className="text-sm font-extrabold text-[#d9dfef]">{t.pixal3d.generator.settings.advanceSettings}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      data-testid="pixal3d-advanced-settings-toggle"
+                      className={`h-12 justify-between rounded-full px-5 text-base font-bold shadow-[0_10px_32px_rgba(0,0,0,0.12)] transition hover:text-white ${
+                        isAdvancedSettingsOpen
+                          ? "border-[#48bdff] bg-[#113555] text-white shadow-[0_14px_38px_rgba(72,189,255,0.18)]"
+                          : "border-[#313b59] bg-[#121a30] text-[#dbe1f2] hover:border-[#48bdff] hover:bg-[#172341]"
+                      }`}
+                      disabled={taskStatus === "processing"}
+                      aria-expanded={isAdvancedSettingsOpen}
+                      onClick={() => setIsAdvancedSettingsOpen((open) => !open)}
+                    >
+                      <span className="flex min-w-0 flex-col items-start leading-none">
+                        <span>{isAdvancedSettingsOpen ? t.pixal3d.generator.settings.hideAdvanceSettings : t.pixal3d.generator.settings.showAdvanceSettings}</span>
+                        <span className="mt-1 text-xs font-semibold text-[#aeb6ca]">
+                          {t.pixal3d.generator.settings.advancedSettingsSummary}
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className={`ml-4 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xl leading-none transition ${
+                          isAdvancedSettingsOpen
+                            ? "border-[#48bdff] bg-[#48bdff] text-[#051021]"
+                            : "border-[#3c4668] bg-[#18223d] text-[#dbe1f2]"
+                        }`}
+                      >
+                        {isAdvancedSettingsOpen ? "-" : "+"}
+                      </span>
+                    </Button>
+                  </div>
                 </div>
-                <div className="inline-flex h-12 items-center gap-3 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-sm font-semibold text-[#aeb6ca]">
-                  <span className="h-4 w-4 rounded-sm bg-[#123e65]" />
-                  {t.pixal3d.generator.cleanTopology}
-                  <span className="ml-1 inline-flex h-8 w-14 items-center justify-end rounded-full bg-[#28324f] p-1">
-                    <span className="h-6 w-6 rounded-full bg-white" />
-                  </span>
-                </div>
-                <div className="inline-flex h-12 items-center gap-3 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-sm font-semibold text-[#aeb6ca]">
-                  <span className="h-4 w-4 rounded-sm bg-[#304660]" />
-                  {t.pixal3d.generator.pbrMaterials}
-                  <span className="ml-1 inline-flex h-8 w-14 items-center justify-end rounded-full bg-[#48bdff] p-1">
-                    <span className="h-6 w-6 rounded-full bg-white" />
-                  </span>
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button
                   data-testid="pixal3d-generate-button"
                   size="lg"
@@ -503,7 +622,61 @@ export default function Home() {
                   {isOpeningHfTrial ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : null}
                   {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
                 </Button>
+                </div>
               </div>
+
+              {isAdvancedSettingsOpen && (
+                <div
+                  data-testid="pixal3d-advanced-settings-panel"
+                  className="mt-5 rounded-lg border border-[#48bdff]/55 bg-[#0a1430]/92 p-4 shadow-[0_20px_80px_rgba(72,189,255,0.12)]"
+                >
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {ADVANCED_SETTING_FIELDS.map((field) => (
+                      <label key={field.key} className="flex min-w-0 flex-col gap-2">
+                        <span className="text-xs font-extrabold uppercase tracking-normal text-[#aeb6ca]">
+                          {t.pixal3d.generator.settings.fields[field.key]}
+                        </span>
+                        <Input
+                          data-testid={`pixal3d-setting-${field.key}`}
+                          type="number"
+                          min={field.min}
+                          max={field.max}
+                          step={field.step}
+                          value={settings[field.key]}
+                          disabled={taskStatus === "processing"}
+                          onChange={(event) => updateNumberSetting(field.key, event.target.value)}
+                          className="h-11 rounded-md border-[#313b59] bg-[#121a30] text-base font-bold text-[#dbe1f2] outline-none focus:border-[#48bdff] disabled:opacity-60"
+                        />
+                      </label>
+                    ))}
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <span className="text-xs font-extrabold uppercase tracking-normal text-[#aeb6ca]">
+                        {t.pixal3d.generator.settings.fields.remesh}
+                      </span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={settings.remesh}
+                        data-testid="pixal3d-setting-remesh"
+                        disabled={taskStatus === "processing"}
+                        onClick={() => updateSetting("remesh", !settings.remesh)}
+                        className={`flex h-11 items-center justify-between rounded-md border px-4 text-sm font-extrabold transition disabled:opacity-60 ${
+                          settings.remesh
+                            ? "border-[#48bdff] bg-[#123e65] text-white"
+                            : "border-[#313b59] bg-[#121a30] text-[#aeb6ca]"
+                        }`}
+                      >
+                        <span>{settings.remesh ? t.pixal3d.generator.settings.on : t.pixal3d.generator.settings.off}</span>
+                        <span className={`flex h-6 w-11 items-center rounded-full p-1 transition ${
+                          settings.remesh ? "justify-end bg-[#48bdff]" : "justify-start bg-[#28324f]"
+                        }`}>
+                          <span className="h-4 w-4 rounded-full bg-white" />
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

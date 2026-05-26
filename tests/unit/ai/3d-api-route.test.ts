@@ -182,4 +182,70 @@ describe('Next Pixal3D generation API route', () => {
       }),
     }));
   });
+
+  test('forwards Pixal3D generation settings to fal using API field names', async () => {
+    vi.stubEnv('FAL_API_KEY', 'test_fal_key');
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({ request_id: 'fal_request_123' }, { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
+    getBalanceMock.mockResolvedValue(100);
+    consumeCreditsMock.mockResolvedValue({
+      success: true,
+      transactionId: 'tx_123',
+      newBalance: 80,
+    });
+
+    const { POST } = await import('../../../apps/next-app/app/api/3d-generate/route');
+    const response = await POST(createRequest({
+      imageUrl: 'https://example.com/input.png',
+      prompt: 'product render',
+      provider: 'fal',
+      resolution: 1536,
+      textureSize: 4096,
+      decimationTarget: 150000,
+      seed: 123,
+      meshScale: 1.25,
+      remesh: false,
+      maxNumTokens: 32768,
+      sparseStructureSteps: 14,
+      sparseStructureGuidanceStrength: 8,
+      sparseStructureGuidanceRescale: 0.6,
+      sparseStructureRescaleT: 4,
+      shapeSteps: 10,
+      shapeGuidanceStrength: 7,
+      shapeGuidanceRescale: 0.4,
+      shapeRescaleT: 2,
+      textureSteps: 16,
+      textureGuidanceStrength: 1.2,
+      textureGuidanceRescale: 0.5,
+      textureRescaleT: 2.5,
+    }));
+    const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+
+    expect(response.status).toBe(200);
+    expect(requestBody).toMatchObject({
+      image_url: 'https://example.com/input.png',
+      resolution: 1536,
+      texture_size: 4096,
+      decimation_target: 150000,
+      seed: 123,
+      mesh_scale: 1.25,
+      remesh: false,
+      max_num_tokens: 32768,
+      ss_sampling_steps: 14,
+      ss_guidance_strength: 8,
+      ss_guidance_rescale: 0.6,
+      ss_rescale_t: 4,
+      shape_slat_sampling_steps: 10,
+      shape_slat_guidance_strength: 7,
+      shape_slat_guidance_rescale: 0.4,
+      shape_slat_rescale_t: 2,
+      tex_slat_sampling_steps: 16,
+      tex_slat_guidance_strength: 1.2,
+      tex_slat_guidance_rescale: 0.5,
+      tex_slat_rescale_t: 2.5,
+    });
+  });
 });
