@@ -90,6 +90,12 @@ interface HfInstanceResponse {
   message?: string;
 }
 
+interface CreditStatusResponse {
+  credits?: {
+    balance?: number;
+  };
+}
+
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const FREE_TRIAL_DURATION_SECONDS = 10 * 60;
@@ -178,11 +184,14 @@ export default function Home() {
   const [hfTrialSecondsLeft, setHfTrialSecondsLeft] = useState(0);
   const [hfTrialEndsAt, setHfTrialEndsAt] = useState<number | null>(null);
   const [isOpeningHfTrial, setIsOpeningHfTrial] = useState(false);
+  const [creditBalance, setCreditBalance] = useState(0);
   const hfTrialPanelRef = useRef<HTMLDivElement | null>(null);
 
+  const hasCredits = creditBalance > 0;
+  const canEditGenerationSettings = taskStatus !== "processing";
   const canGenerate = useMemo(() => {
-    return Boolean(imageDataUrl && taskStatus !== "processing" && !isReadingFile);
-  }, [imageDataUrl, taskStatus, isReadingFile]);
+    return Boolean(imageDataUrl && hasCredits && taskStatus !== "processing" && !isReadingFile);
+  }, [hasCredits, imageDataUrl, isReadingFile, taskStatus]);
 
   const progressStepLabels = t.pixal3d.generator.progress.steps as Record<Pixal3DProgressStepKey, string>;
   const showGenerationProgress = Boolean(progressSnapshot && taskStatus !== "idle" && taskStatus !== "upload-ready");
@@ -190,6 +199,37 @@ export default function Home() {
   useEffect(() => {
     setTaskMessage(t.pixal3d.generator.status.idle);
   }, [t.pixal3d.generator.status.idle]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCreditStatus = async () => {
+      try {
+        const response = await fetch("/api/credits/status", { cache: "no-store" });
+        if (!response.ok) {
+          if (isMounted) setCreditBalance(0);
+          return;
+        }
+
+        const data = (await response.json()) as CreditStatusResponse;
+        if (isMounted) setCreditBalance(Number(data.credits?.balance || 0));
+      } catch {
+        if (isMounted) setCreditBalance(0);
+      }
+    };
+
+    loadCreditStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasCredits) {
+      setIsAdvancedSettingsOpen(false);
+    }
+  }, [hasCredits]);
 
   useEffect(() => {
     if (!hfTrialEndsAt || !hfTrialUrl) return;
@@ -353,6 +393,11 @@ export default function Home() {
   };
 
   const handleGenerate = async () => {
+    if (!hasCredits) {
+      toast.error(t.pixal3d.generator.errors.creditsRequired);
+      return;
+    }
+
     if (!imageDataUrl) {
       toast.error(t.pixal3d.generator.errors.imageRequired);
       return;
@@ -603,13 +648,15 @@ export default function Home() {
 
             <div className="mt-7 border-t border-[#303a59] pt-6">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-                <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:max-w-[820px]">
+                <div className={`grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:max-w-[820px] ${
+                  canEditGenerationSettings ? "" : "opacity-55"
+                }`}>
                   <label className="flex min-w-0 flex-col gap-2">
                     <span className="text-sm font-extrabold text-[#d9dfef]">{t.pixal3d.generator.settings.resolution}</span>
                     <select
                       data-testid="pixal3d-resolution-select"
                       value={settings.resolution}
-                      disabled={taskStatus === "processing"}
+                      disabled={!canEditGenerationSettings}
                       onChange={(event) => updateSetting("resolution", Number(event.target.value) as ResolutionOption)}
                       className="h-12 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-base font-bold text-[#dbe1f2] outline-none transition hover:border-[#48bdff] focus:border-[#48bdff] disabled:opacity-60"
                     >
@@ -623,7 +670,7 @@ export default function Home() {
                     <select
                       data-testid="pixal3d-texture-size-select"
                       value={settings.textureSize}
-                      disabled={taskStatus === "processing"}
+                      disabled={!canEditGenerationSettings}
                       onChange={(event) => updateSetting("textureSize", Number(event.target.value) as TextureSizeOption)}
                       className="h-12 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-base font-bold text-[#dbe1f2] outline-none transition hover:border-[#48bdff] focus:border-[#48bdff] disabled:opacity-60"
                     >
@@ -643,7 +690,7 @@ export default function Home() {
                           ? "border-[#48bdff] bg-[#113555] text-white shadow-[0_14px_38px_rgba(72,189,255,0.18)]"
                           : "border-[#313b59] bg-[#121a30] text-[#dbe1f2] hover:border-[#48bdff] hover:bg-[#172341]"
                       }`}
-                      disabled={taskStatus === "processing"}
+                      disabled={!canEditGenerationSettings}
                       aria-expanded={isAdvancedSettingsOpen}
                       onClick={() => setIsAdvancedSettingsOpen((open) => !open)}
                     >
@@ -667,7 +714,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                 <Button
                   data-testid="pixal3d-generate-button"
                   size="lg"
@@ -682,18 +729,26 @@ export default function Home() {
                   )}
                   {taskStatus === "processing" ? t.pixal3d.generator.generatingButton : t.pixal3d.generator.generateButton}
                 </Button>
-                <Button
-                  data-testid="pixal3d-free-trial-button"
-                  type="button"
-                  size="lg"
-                  variant="outline"
-                  className="h-14 rounded-full border-[#48bdff]/55 bg-[#0b1328] px-7 text-lg font-extrabold text-[#dbe1f2] hover:border-[#48bdff] hover:bg-[#132448] hover:text-white disabled:opacity-60"
-                  disabled={isOpeningHfTrial}
-                  onClick={handleOpenHfTrial}
-                >
-                  {isOpeningHfTrial ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : null}
-                  {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
-                </Button>
+                <div className="group relative flex w-full flex-col items-stretch sm:w-[300px]">
+                  <Button
+                    data-testid="pixal3d-free-trial-button"
+                    type="button"
+                    size="lg"
+                    className="h-14 rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff2a8] to-[#ffb86b] px-7 text-lg font-extrabold text-[#17111c] shadow-[0_18px_50px_rgba(255,184,107,0.22)] hover:brightness-105 disabled:opacity-60"
+                    disabled={isOpeningHfTrial}
+                    onClick={handleOpenHfTrial}
+                  >
+                    {isOpeningHfTrial ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#17111c]/30 border-t-[#17111c]" /> : null}
+                    {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
+                  </Button>
+                  <div
+                    role="tooltip"
+                    className="pointer-events-none absolute bottom-[calc(100%+12px)] left-1/2 z-20 w-[320px] max-w-[calc(100vw-48px)] -translate-x-1/2 rounded-lg border border-[#ffe08a]/55 bg-[#10152a]/98 px-4 py-3 text-center text-xs font-semibold leading-5 text-[#f4e7c7] opacity-0 shadow-[0_20px_70px_rgba(255,184,107,0.24)] transition duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
+                  >
+                    {t.pixal3d.generator.trialDescription}
+                    <span className="absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[#ffe08a]/55 bg-[#10152a]" />
+                  </div>
+                </div>
                 </div>
               </div>
 
@@ -715,7 +770,7 @@ export default function Home() {
                           max={field.max}
                           step={field.step}
                           value={settings[field.key]}
-                          disabled={taskStatus === "processing"}
+                          disabled={!canEditGenerationSettings}
                           onChange={(event) => updateNumberSetting(field.key, event.target.value)}
                           className="h-11 rounded-md border-[#313b59] bg-[#121a30] text-base font-bold text-[#dbe1f2] outline-none focus:border-[#48bdff] disabled:opacity-60"
                         />
@@ -730,7 +785,7 @@ export default function Home() {
                         role="switch"
                         aria-checked={settings.remesh}
                         data-testid="pixal3d-setting-remesh"
-                        disabled={taskStatus === "processing"}
+                        disabled={!canEditGenerationSettings}
                         onClick={() => updateSetting("remesh", !settings.remesh)}
                         className={`flex h-11 items-center justify-between rounded-md border px-4 text-sm font-extrabold transition disabled:opacity-60 ${
                           settings.remesh
@@ -761,7 +816,7 @@ export default function Home() {
                   : "border-[#25314f] bg-[#080f24]/92"
               }`}
             >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-[#7fdaff]">
                     {t.pixal3d.generator.progress.title}
@@ -781,6 +836,16 @@ export default function Home() {
                     ? `${PIXAL3D_PROGRESS_STEPS.length}/${PIXAL3D_PROGRESS_STEPS.length}`
                     : `${progressSnapshot.currentStepIndex + 1}/${PIXAL3D_PROGRESS_STEPS.length}`}
                 </div>
+                {progressSnapshot.status === "succeeded" && generatedModelUrl && (
+                  <Button
+                    type="button"
+                    data-testid="pixal3d-preview-model-button"
+                    className="h-11 rounded-full bg-[#48bdff] px-5 text-sm font-extrabold text-[#051021] hover:bg-[#71ccff]"
+                    onClick={() => setIsGlbPreviewOpen(true)}
+                  >
+                    {t.pixal3d.generator.previewModelButton}
+                  </Button>
+                )}
               </div>
 
               <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#1a2235]">
@@ -804,29 +869,6 @@ export default function Home() {
                 </span>
               </div>
 
-            </div>
-          )}
-
-          {generatedModelUrl && taskStatus === "succeeded" && (
-            <div
-              data-testid="pixal3d-result-panel"
-              className="mt-7 w-full max-w-[1420px] rounded-lg border border-[#2d875f] bg-[#071d24]/92 px-5 py-4 shadow-[0_22px_80px_rgba(0,240,138,0.12)]"
-            >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-extrabold text-white">{t.pixal3d.generator.resultTitle}</h2>
-                </div>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button
-                    type="button"
-                    data-testid="pixal3d-preview-model-button"
-                    className="h-11 rounded-full bg-[#48bdff] px-5 text-sm font-extrabold text-[#051021] hover:bg-[#71ccff]"
-                    onClick={() => setIsGlbPreviewOpen(true)}
-                  >
-                    {t.pixal3d.generator.previewModelButton}
-                  </Button>
-                </div>
-              </div>
             </div>
           )}
 
@@ -879,10 +921,6 @@ export default function Home() {
               />
             </div>
           )}
-
-          <div className="mt-5 w-full max-w-[1420px] rounded-lg border border-[#25314f] bg-[#0a1430]/70 px-5 py-4 text-sm leading-6 text-[#aeb6ca]">
-            <p>{t.pixal3d.generator.trialDescription}</p>
-          </div>
 
           <div id="features" className="mt-8 w-full max-w-[1420px] scroll-mt-24 border-t border-[#25314f] pt-8">
             <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-[#aeb6ca]">
