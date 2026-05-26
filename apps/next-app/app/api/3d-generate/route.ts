@@ -103,7 +103,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const creditCost = calculate3DCreditCost({ provider, model });
+    const creditCost = calculate3DCreditCost({ provider, model, resolution });
     let consumeTransactionId: string | undefined;
     let remainingCredits: number | undefined;
 
@@ -139,6 +139,10 @@ export async function POST(req: Request) {
         model: model || config.ai3d.defaultModels[provider],
         prompt: prompt.substring(0, 100),
         quality,
+        resolution,
+        textureSize,
+        decimationTarget,
+        remesh,
       },
     });
 
@@ -230,6 +234,7 @@ export async function POST(req: Request) {
         status: record.status,
         provider: record.provider,
         model: record.model,
+        providerTaskId: record.providerTaskId,
       },
       credits: userId
         ? { consumed: creditCost, remaining: remainingCredits }

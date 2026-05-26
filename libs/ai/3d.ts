@@ -606,8 +606,13 @@ export async function query3DTask(
 export function calculate3DCreditCost(options: {
   provider?: ThreeDProviderName;
   model?: string;
+  resolution?: ThreeDResolution;
 }): number {
   const provider = resolveProvider(options.provider);
   const model = resolveModel(provider, options.model);
-  return resolveFixedConsumption(config.credits.fixedConsumption.ai3d, model);
+  return resolveFixedConsumption(
+    config.credits.fixedConsumption.ai3d,
+    model,
+    options.resolution
+  );
 }

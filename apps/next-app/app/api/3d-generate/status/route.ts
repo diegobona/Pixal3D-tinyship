@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
-import { query3DTask } from '@libs/ai/3d';
+import {
+  isSupported3DModel,
+  isSupported3DProvider,
+  query3DTask,
+  type ThreeDProviderName,
+} from '@libs/ai/3d';
 import {
   get3DGenerationRecord,
   mark3DGenerationFailed,
@@ -22,11 +27,42 @@ export async function GET(req: Request) {
     const taskId = searchParams.get('taskId') || '';
     const record = get3DGenerationRecord(taskId);
 
-    if (!record || record.userId !== userId) {
+    if (record && record.userId !== userId) {
       return NextResponse.json(
         { error: 'not_found', message: '3D generation task was not found.' },
         { status: 404 }
       );
+    }
+
+    if (!record) {
+      const provider = searchParams.get('provider') || '';
+      const model = searchParams.get('model') || '';
+      const providerTaskId = searchParams.get('providerTaskId') || '';
+
+      if (
+        !providerTaskId ||
+        !isSupported3DProvider(provider) ||
+        !isSupported3DModel(provider as ThreeDProviderName, model)
+      ) {
+        return NextResponse.json(
+          { error: 'not_found', message: '3D generation task was not found.' },
+          { status: 404 }
+        );
+      }
+
+      const status = await query3DTask(provider as ThreeDProviderName, model, providerTaskId);
+      return NextResponse.json({
+        success: true,
+        data: {
+          id: taskId,
+          provider,
+          model,
+          providerTaskId,
+          status: status.status,
+          result: status.result,
+          errorMessage: status.errorMessage,
+        },
+      });
     }
 
     if (record.status === 'succeeded' || record.status === 'failed') {

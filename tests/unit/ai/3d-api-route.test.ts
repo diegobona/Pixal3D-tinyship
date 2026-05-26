@@ -77,7 +77,7 @@ describe('Next Pixal3D generation API route', () => {
           defaults: {
             quality: 'standard',
             resolution: 1024,
-            textureSize: 2048,
+            textureSize: 1024,
             decimationTarget: 200000,
           },
           fal: {
@@ -98,11 +98,21 @@ describe('Next Pixal3D generation API route', () => {
         credits: {
           fixedConsumption: {
             ai3d: {
-              default: 20,
+              default: 1100,
               models: {
-                'fal-ai/pixal3d': 20,
-                'tencentarc/pixal3d': 20,
+                'fal-ai/pixal3d': 1100,
+                'tencentarc/pixal3d': 1100,
                 'pixal3d-mock-v1': 5,
+              },
+              modelResolutionCredits: {
+                'fal-ai/pixal3d': {
+                  1024: 1100,
+                  1536: 1600,
+                },
+                'tencentarc/pixal3d': {
+                  1024: 1100,
+                  1536: 1600,
+                },
               },
             },
           },
@@ -150,11 +160,11 @@ describe('Next Pixal3D generation API route', () => {
 
   test('refunds consumed credits when fal task creation fails before provider submit', async () => {
     getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
-    getBalanceMock.mockResolvedValue(100);
+    getBalanceMock.mockResolvedValue(2000);
     consumeCreditsMock.mockResolvedValue({
       success: true,
       transactionId: 'tx_123',
-      newBalance: 80,
+      newBalance: 900,
     });
 
     const { POST } = await import('../../../apps/next-app/app/api/3d-generate/route');
@@ -172,8 +182,8 @@ describe('Next Pixal3D generation API route', () => {
     expect(consumeCreditsMock).toHaveBeenCalledOnce();
     expect(addCreditsMock).toHaveBeenCalledWith(expect.objectContaining({
       userId: 'user_123',
-      amount: 20,
       type: 'refund',
+      amount: 1100,
       metadata: expect.objectContaining({
         originalTransactionId: 'tx_123',
         provider: 'fal',
@@ -183,6 +193,30 @@ describe('Next Pixal3D generation API route', () => {
     }));
   });
 
+  test('requires the resolution-specific credit balance before submit', async () => {
+    vi.stubEnv('FAL_API_KEY', 'test_fal_key');
+    getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
+    getBalanceMock.mockResolvedValue(1500);
+
+    const { POST } = await import('../../../apps/next-app/app/api/3d-generate/route');
+    const response = await POST(createRequest({
+      imageUrl: 'https://example.com/input.png',
+      prompt: 'product render',
+      provider: 'fal',
+      resolution: 1536,
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(402);
+    expect(body).toMatchObject({
+      error: 'insufficient_credits',
+      required: 1600,
+      balance: 1500,
+    });
+    expect(consumeCreditsMock).not.toHaveBeenCalled();
+    expect(addCreditsMock).not.toHaveBeenCalled();
+  });
+
   test('forwards Pixal3D generation settings to fal using API field names', async () => {
     vi.stubEnv('FAL_API_KEY', 'test_fal_key');
     const fetchMock = vi.fn().mockResolvedValue(
@@ -190,11 +224,11 @@ describe('Next Pixal3D generation API route', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
     getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
-    getBalanceMock.mockResolvedValue(100);
+    getBalanceMock.mockResolvedValue(3000);
     consumeCreditsMock.mockResolvedValue({
       success: true,
       transactionId: 'tx_123',
-      newBalance: 80,
+      newBalance: 1400,
     });
 
     const { POST } = await import('../../../apps/next-app/app/api/3d-generate/route');
@@ -225,6 +259,17 @@ describe('Next Pixal3D generation API route', () => {
     const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body as string);
 
     expect(response.status).toBe(200);
+    expect(consumeCreditsMock).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 1600,
+      metadata: expect.objectContaining({
+        provider: 'fal',
+        model: 'fal-ai/pixal3d',
+        resolution: 1536,
+        textureSize: 4096,
+        decimationTarget: 150000,
+        remesh: false,
+      }),
+    }));
     expect(requestBody).toMatchObject({
       image_url: 'https://example.com/input.png',
       resolution: 1536,

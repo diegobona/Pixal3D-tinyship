@@ -68,6 +68,46 @@ describe('AI 3D generation abstraction', () => {
     expect(calculate3DCreditCost({ provider: 'mock', model: 'unknown-model' })).toBe(20);
   });
 
+  test('uses resolution-specific 3D credit cost when configured', async () => {
+    vi.resetModules();
+    vi.doMock('@config', () => ({
+      config: {
+        ai3d: {
+          defaultProvider: 'fal',
+          defaultModels: {
+            mock: 'pixal3d-mock-v1',
+            fal: 'fal-ai/pixal3d',
+            wiro: 'tencentarc/pixal3d',
+          },
+          availableModels: {
+            fal: ['fal-ai/pixal3d'],
+          },
+        },
+        credits: {
+          fixedConsumption: {
+            ai3d: {
+              default: 1100,
+              models: {
+                'fal-ai/pixal3d': 1100,
+              },
+              modelResolutionCredits: {
+                'fal-ai/pixal3d': {
+                  1024: 1100,
+                  1536: 1600,
+                },
+              },
+            },
+          },
+        },
+      },
+    }));
+
+    const { calculate3DCreditCost } = await import('@libs/ai/3d');
+
+    expect(calculate3DCreditCost({ provider: 'fal', resolution: 1024 })).toBe(1100);
+    expect(calculate3DCreditCost({ provider: 'fal', resolution: 1536 })).toBe(1600);
+  });
+
   test('validates configured 3D providers and models at runtime', async () => {
     const { isSupported3DModel, isSupported3DProvider } = await import('@libs/ai/3d');
 

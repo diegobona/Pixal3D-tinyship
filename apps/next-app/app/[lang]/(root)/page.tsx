@@ -47,6 +47,7 @@ interface GenerateResponse {
     status: "processing";
     provider: string;
     model: string;
+    providerTaskId?: string;
   };
   error?: string;
   message?: string;
@@ -314,12 +315,23 @@ export default function Home() {
     setProgressSnapshot(getPixal3DProgressSnapshot(plan, Date.now() - startedAt, status));
   };
 
-  const pollTask = async (taskId: string) => {
+  const pollTask = async (task: GenerateResponse["data"]) => {
+    if (!task) {
+      throw new Error(t.pixal3d.generator.errors.statusFailed);
+    }
     const startedAt = Date.now();
+    const searchParams = new URLSearchParams({
+      taskId: task.taskId,
+      provider: task.provider,
+      model: task.model,
+    });
+    if (task.providerTaskId) {
+      searchParams.set("providerTaskId", task.providerTaskId);
+    }
 
     while (Date.now() - startedAt < POLL_TIMEOUT_MS) {
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-      const response = await fetch(`/api/3d-generate/status?taskId=${encodeURIComponent(taskId)}`);
+      const response = await fetch(`/api/3d-generate/status?${searchParams.toString()}`);
       const data = (await response.json()) as StatusResponse;
 
       if (!response.ok || !data.success || !data.data) {
@@ -416,13 +428,12 @@ export default function Home() {
         throw new Error(data.message || t.pixal3d.generator.errors.generationFailed);
       }
 
-      const modelUrl = await pollTask(data.data.taskId);
+      const modelUrl = await pollTask(data.data);
       setGeneratedModelUrl(modelUrl);
       completeProgress(nextProgressPlan, nextProgressStartedAt, "succeeded");
       setIsGlbPreviewOpen(true);
       setTaskStatus("succeeded");
       setTaskMessage(t.pixal3d.generator.status.succeeded);
-      toast.success(t.pixal3d.generator.status.succeeded);
     } catch (error) {
       const message = error instanceof Error ? error.message : t.pixal3d.generator.errors.generationFailed;
       setTaskStatus("failed");
@@ -784,48 +795,15 @@ export default function Home() {
               </div>
               <div className="mt-2 flex items-center justify-between text-xs font-bold text-[#828aa4]">
                 <span>{progressSnapshot.percent}%</span>
-                <span>{taskMessage}</span>
+                <span>
+                  {progressSnapshot.status === "failed"
+                    ? taskMessage
+                    : progressSnapshot.status === "succeeded"
+                      ? t.pixal3d.generator.progress.completedTitle
+                      : progressStepLabels[progressSnapshot.currentStepKey]}
+                </span>
               </div>
 
-              <div className="mt-5 border-t border-[#25314f] pt-4">
-                <div className="grid gap-3 md:grid-cols-2">
-                  {PIXAL3D_PROGRESS_STEPS.map((step, index) => {
-                    const isCompleted = progressSnapshot.status === "succeeded" || index < progressSnapshot.completedStepCount;
-                    const isCurrent = progressSnapshot.status === "processing" && index === progressSnapshot.currentStepIndex;
-                    const isFailed = progressSnapshot.status === "failed" && index === progressSnapshot.currentStepIndex;
-
-                    return (
-                      <div
-                        key={step.key}
-                        className={`flex items-center gap-3 rounded-md border px-3 py-2 text-sm font-semibold ${
-                          isFailed
-                            ? "border-[#ff6b6b]/55 bg-[#321725] text-[#ffd1d1]"
-                            : isCurrent
-                              ? "border-[#48bdff]/55 bg-[#10264b] text-white"
-                              : isCompleted
-                                ? "border-[#2d875f]/45 bg-[#08251d] text-[#8df5c2]"
-                                : "border-[#25314f] bg-[#0b1426] text-[#828aa4]"
-                        }`}
-                      >
-                        <span
-                          className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${
-                            isFailed
-                              ? "bg-[#ff6b6b] text-[#1e0f1a]"
-                              : isCompleted
-                                ? "bg-[#00f08a] text-[#051021]"
-                                : isCurrent
-                                  ? "bg-[#48bdff] text-[#051021]"
-                                  : "bg-[#1a2235] text-[#aeb6ca]"
-                          }`}
-                        >
-                          {isFailed ? "!" : isCompleted ? "OK" : index + 1}
-                        </span>
-                        <span>{progressStepLabels[step.key]}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
           )}
 
@@ -837,7 +815,6 @@ export default function Home() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-lg font-extrabold text-white">{t.pixal3d.generator.resultTitle}</h2>
-                  <p className="mt-1 max-w-3xl break-all text-sm leading-6 text-[#aeb6ca]">{generatedModelUrl}</p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button
@@ -847,26 +824,6 @@ export default function Home() {
                     onClick={() => setIsGlbPreviewOpen(true)}
                   >
                     {t.pixal3d.generator.previewModelButton}
-                  </Button>
-                  <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    className="h-11 rounded-full border-[#48bdff]/55 bg-[#0b1328] px-5 text-sm font-extrabold text-[#dbe1f2] hover:border-[#48bdff] hover:bg-[#132448] hover:text-white"
-                  >
-                    <a href={generatedModelUrl} target="_blank" rel="noreferrer">
-                      {t.pixal3d.generator.openModelButton}
-                    </a>
-                  </Button>
-                  <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    className="h-11 rounded-full border-[#48bdff]/55 bg-[#0b1328] px-5 text-sm font-extrabold text-[#dbe1f2] hover:border-[#48bdff] hover:bg-[#132448] hover:text-white"
-                  >
-                    <a href={generatedModelUrl} download>
-                      {t.pixal3d.generator.downloadModelButton}
-                    </a>
                   </Button>
                 </div>
               </div>

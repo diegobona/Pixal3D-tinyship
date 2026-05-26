@@ -30,8 +30,22 @@ export interface ThreeDGenerationRecord {
   completedAt?: Date;
 }
 
-const anonymousTrials = new Set<string>();
-const generationRecords = new Map<string, ThreeDGenerationRecord>();
+type ThreeDTaskStore = {
+  anonymousTrials: Set<string>;
+  generationRecords: Map<string, ThreeDGenerationRecord>;
+};
+
+const globalTaskStore = globalThis as typeof globalThis & {
+  __pixal3DTaskStore?: ThreeDTaskStore;
+};
+
+const taskStore = globalTaskStore.__pixal3DTaskStore ??= {
+  anonymousTrials: new Set<string>(),
+  generationRecords: new Map<string, ThreeDGenerationRecord>(),
+};
+
+const anonymousTrials = taskStore.anonymousTrials;
+const generationRecords = taskStore.generationRecords;
 
 function getAnonymousKey(input: AnonymousTrialInput): string {
   return `${input.ipHash}:${input.trialToken}`;
