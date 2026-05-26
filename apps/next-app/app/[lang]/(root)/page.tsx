@@ -101,6 +101,10 @@ const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const FREE_TRIAL_DURATION_SECONDS = 10 * 60;
 const RESOLUTION_OPTIONS: ResolutionOption[] = [1024, 1536];
 const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096];
+const RESOLUTION_CREDIT_COST: Record<ResolutionOption, number> = {
+  1024: 1100,
+  1536: 1600,
+};
 const DEFAULT_PIXAL3D_SETTINGS: Pixal3DSettings = {
   resolution: 1024,
   textureSize: 1024,
@@ -187,11 +191,12 @@ export default function Home() {
   const [creditBalance, setCreditBalance] = useState(0);
   const hfTrialPanelRef = useRef<HTMLDivElement | null>(null);
 
-  const hasCredits = creditBalance > 0;
+  const requiredCredits = RESOLUTION_CREDIT_COST[settings.resolution];
+  const hasEnoughCredits = creditBalance >= requiredCredits;
   const canEditGenerationSettings = taskStatus !== "processing";
   const canGenerate = useMemo(() => {
-    return Boolean(imageDataUrl && hasCredits && taskStatus !== "processing" && !isReadingFile);
-  }, [hasCredits, imageDataUrl, isReadingFile, taskStatus]);
+    return Boolean(imageDataUrl && hasEnoughCredits && taskStatus !== "processing" && !isReadingFile);
+  }, [hasEnoughCredits, imageDataUrl, isReadingFile, taskStatus]);
 
   const progressStepLabels = t.pixal3d.generator.progress.steps as Record<Pixal3DProgressStepKey, string>;
   const showGenerationProgress = Boolean(progressSnapshot && taskStatus !== "idle" && taskStatus !== "upload-ready");
@@ -224,12 +229,6 @@ export default function Home() {
       isMounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (!hasCredits) {
-      setIsAdvancedSettingsOpen(false);
-    }
-  }, [hasCredits]);
 
   useEffect(() => {
     if (!hfTrialEndsAt || !hfTrialUrl) return;
@@ -393,8 +392,12 @@ export default function Home() {
   };
 
   const handleGenerate = async () => {
-    if (!hasCredits) {
-      toast.error(t.pixal3d.generator.errors.creditsRequired);
+    if (!hasEnoughCredits) {
+      toast.error(t.pixal3d.generator.errors.insufficientCredits, {
+        description: t.pixal3d.generator.errors.insufficientCreditsDescription
+          .replace("{required}", String(requiredCredits))
+          .replace("{balance}", String(creditBalance)),
+      });
       return;
     }
 

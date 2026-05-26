@@ -125,7 +125,6 @@ export const en: Locale = {
         uploadFailed: "Could not read the image. Please try another file.",
         imageRequired: "Upload a reference image first.",
         signInRequired: "Sign in or upgrade to generate and save models.",
-        creditsRequired: "Add credits to unlock model generation controls.",
         generationFailed: "3D generation failed.",
         statusFailed: "Could not check the 3D task status.",
         timeout: "3D generation timed out. Please try again.",
@@ -133,7 +132,8 @@ export const en: Locale = {
         freeTrialLimitReached: "Free trials used. Sign in or upgrade to keep generating.",
         trialUsed: "Free trial already used",
         trialUsedDescription: "Create an account to continue generating Pixal3D models.",
-        insufficientCredits: "Not enough credits for 3D generation."
+        insufficientCredits: "Not enough credits for 3D generation.",
+        insufficientCreditsDescription: "This resolution requires {required} credits. Your current balance is {balance} credits."
       }
     },
     advantages: {
