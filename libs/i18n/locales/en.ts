@@ -132,6 +132,7 @@ export const en: Locale = {
         freeTrialLimitReached: "Free trials used. Sign in or upgrade to keep generating.",
         trialUsed: "Free trial already used",
         trialUsedDescription: "Create an account to continue generating Pixal3D models.",
+        generateDisabledInsufficientCredits: "Insufficient credits",
         insufficientCredits: "Not enough credits for 3D generation.",
         insufficientCreditsDescription: "This resolution requires {required} credits. Your current balance is {balance} credits."
       }

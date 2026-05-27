@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { config } from "@config";
 import { authClientReact } from "@libs/auth/authClient";
@@ -14,6 +14,8 @@ interface HeaderProps {
 
 export default function Header({ className }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { t, locale: currentLocale } = useTranslation();
@@ -25,8 +27,35 @@ export default function Header({ className }: HeaderProps) {
 
   const homeHref = localizedPath("/");
   const featuresHref = `${homeHref}#features`;
+  const displayName = user?.name || user?.email || "User";
+  const displayEmail = user?.email || "";
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!userMenuRef.current?.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isUserMenuOpen]);
 
   const handleSignOut = async () => {
+    setIsUserMenuOpen(false);
     await authClientReact.signOut();
     router.push(homeHref);
   };
@@ -79,20 +108,66 @@ export default function Header({ className }: HeaderProps) {
             {isPending ? (
               <div className="h-8 w-28 rounded-full bg-white/10" />
             ) : user ? (
-              <div className="flex items-center gap-3">
-                <Link href={localizedPath("/dashboard")} className="flex items-center gap-3 rounded-full px-1 py-1 transition-colors hover:bg-white/10">
+              <div ref={userMenuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsUserMenuOpen((open) => !open)}
+                  className="flex items-center gap-3 rounded-full px-1 py-1 transition-colors hover:bg-white/10"
+                  aria-haspopup="menu"
+                  aria-expanded={isUserMenuOpen}
+                >
                   {user.image ? (
-                    <img src={user.image} alt={user.name || user.email || "User"} className="h-8 w-8 rounded-full border border-white/20 object-cover" />
+                    <img src={user.image} alt={displayName} className="h-8 w-8 rounded-full border border-white/20 object-cover" />
                   ) : (
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-white">
-                      {(user.name || user.email || "U").charAt(0).toUpperCase()}
+                      {displayName.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="max-w-28 truncate text-sm font-semibold text-white/85">{user.name || user.email}</span>
-                </Link>
-                <button type="button" onClick={handleSignOut} className="text-sm font-semibold text-white/60 transition-colors hover:text-white">
-                  {t.header.auth.signOut}
+                  <span className="max-w-28 truncate text-sm font-semibold text-white/85">{displayName}</span>
                 </button>
+
+                {isUserMenuOpen ? (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-xl border border-white/15 bg-[#1b1b1d] text-white shadow-[0_20px_70px_rgba(0,0,0,0.45)]"
+                  >
+                    <div className="px-5 py-4">
+                      <p className="truncate text-lg font-semibold text-white">{displayName}</p>
+                      {displayEmail ? <p className="mt-1 truncate text-base text-white/58">{displayEmail}</p> : null}
+                    </div>
+                    <div className="border-t border-white/10 py-2">
+                      <Link
+                        href={localizedPath("/my-assets")}
+                        role="menuitem"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-5 py-3 text-base font-semibold text-white/88 transition-colors hover:bg-white/8 hover:text-white"
+                      >
+                        <HistoryIcon />
+                        {t.header.auth.myAssets}
+                      </Link>
+                      <Link
+                        href={localizedPath("/dashboard")}
+                        role="menuitem"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-5 py-3 text-base font-semibold text-white/88 transition-colors hover:bg-white/8 hover:text-white"
+                      >
+                        <DashboardIcon />
+                        {t.header.auth.dashboard}
+                      </Link>
+                    </div>
+                    <div className="border-t border-white/10 py-2">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={handleSignOut}
+                        className="flex w-full items-center gap-3 px-5 py-3 text-left text-base font-semibold text-white/88 transition-colors hover:bg-white/8 hover:text-white"
+                      >
+                        <LogOutIcon />
+                        {t.header.auth.logOut}
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : (
               <>
@@ -129,6 +204,9 @@ export default function Header({ className }: HeaderProps) {
               </button>
               {user ? (
                 <>
+                  <Link href={localizedPath("/my-assets")} className="block py-2 text-sm font-semibold text-white/75">
+                    {t.header.auth.myAssets}
+                  </Link>
                   <Link href={localizedPath("/dashboard")} className="block py-2 text-sm font-semibold text-white/75">
                     {t.header.auth.dashboard}
                   </Link>
@@ -151,5 +229,36 @@ export default function Header({ className }: HeaderProps) {
         </div>
       )}
     </header>
+  );
+}
+
+function HistoryIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white/62" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v5h5" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+function DashboardIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white/62" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 5h7v7H4z" />
+      <path d="M13 5h7v4h-7z" />
+      <path d="M13 11h7v8h-7z" />
+      <path d="M4 14h7v5H4z" />
+    </svg>
+  );
+}
+
+function LogOutIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white/62" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M10 17l5-5-5-5" />
+      <path d="M15 12H3" />
+      <path d="M21 4v16" />
+    </svg>
   );
 }
