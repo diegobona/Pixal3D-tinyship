@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { GlbPreviewDialog } from "@/components/glb-preview-dialog";
 import {
   PIXAL3D_PROGRESS_STEPS,
@@ -53,6 +53,13 @@ interface Pixal3DSettings {
   textureSteps: number;
   textureRescaleT: number;
   remesh: boolean;
+}
+
+interface SampleImage {
+  id: string;
+  name: string;
+  src: string;
+  modelUrl?: string;
 }
 
 interface GenerateResponse {
@@ -158,25 +165,86 @@ const ADVANCED_SETTING_FIELDS = [
   { key: "textureSteps", min: 1, max: 50, step: 1 },
   { key: "textureRescaleT", min: 1, max: 6, step: 0.1 },
 ] as const;
-const SAMPLE_IMAGES = [
-  { name: "Bunny mascot", src: "/samples/pixal3d-bunny.svg" },
-  { name: "Mushroom merchant", src: "/samples/pixal3d-mushroom.svg" },
-  { name: "Retro console", src: "/samples/pixal3d-console.svg" },
-  { name: "Fantasy dwarf", src: "/samples/pixal3d-dwarf.svg" },
+const PIXAL3D_REFERENCE_ASSET_BASE = "https://ldyang694.github.io/projects/pixal3d";
+const SAMPLE_IMAGES: SampleImage[] = [
+  { id: "bunny", name: "Bunny mascot", src: "/samples/pixal3d-bunny.svg" },
+  { id: "mushroom", name: "Mushroom merchant", src: "/samples/pixal3d-mushroom.svg" },
+  { id: "console", name: "Retro console", src: "/samples/pixal3d-console.svg" },
+  { id: "dwarf", name: "Fantasy dwarf", src: "/samples/pixal3d-dwarf.svg" },
 ];
-const INSPIRATION_IMAGES = [
-  SAMPLE_IMAGES[0],
-  SAMPLE_IMAGES[2],
-  SAMPLE_IMAGES[1],
-  SAMPLE_IMAGES[3],
-  SAMPLE_IMAGES[2],
-  SAMPLE_IMAGES[1],
-  SAMPLE_IMAGES[3],
-  SAMPLE_IMAGES[0],
-  SAMPLE_IMAGES[1],
-  SAMPLE_IMAGES[3],
-  SAMPLE_IMAGES[0],
-  SAMPLE_IMAGES[2],
+const INSPIRATION_IMAGES: SampleImage[] = [
+  {
+    id: "chair",
+    name: "Stylized chair",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/chair.png`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/chair.glb`,
+  },
+  {
+    id: "city",
+    name: "Floating city",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/city.jpg`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/city.glb`,
+  },
+  {
+    id: "keyboard",
+    name: "Mechanical keyboard",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/keyboard.jpg`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/keyboard.glb`,
+  },
+  {
+    id: "picnic",
+    name: "Picnic basket",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/picnic.jpg`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/picnic.glb`,
+  },
+  {
+    id: "pizza",
+    name: "Pizza slice",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/pizza.png`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/pizza.glb`,
+  },
+  {
+    id: "treehouse",
+    name: "Treehouse",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/treehouse.png`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/treehouse.glb`,
+  },
+  {
+    id: "windhouse",
+    name: "Windmill house",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/windhouse.png`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/windhouse.glb`,
+  },
+  {
+    id: "result-0",
+    name: "Armored turtle",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/0_img.png`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/0_mesh.glb`,
+  },
+  {
+    id: "result-1",
+    name: "Fantasy relic",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/1_img.png`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/1_mesh.glb`,
+  },
+  {
+    id: "result-10",
+    name: "Creature concept",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/10_img.webp`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/10_mesh.glb`,
+  },
+  {
+    id: "result-12",
+    name: "Fantasy building",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/12_img.png`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/12_mesh.glb`,
+  },
+  {
+    id: "result-21",
+    name: "Scene concept",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/21_img.png`,
+    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/21_mesh.glb`,
+  },
 ];
 const ADVANTAGE_KEYS = [
   "faithful",
@@ -207,6 +275,7 @@ export default function Home() {
   const [hfTrialSecondsLeft, setHfTrialSecondsLeft] = useState(0);
   const [hfTrialEndsAt, setHfTrialEndsAt] = useState<number | null>(null);
   const [isOpeningHfTrial, setIsOpeningHfTrial] = useState(false);
+  const [activeInspirationId, setActiveInspirationId] = useState<string | null>(null);
   const [creditBalance, setCreditBalance] = useState(0);
   const [subscriptionPlanId, setSubscriptionPlanId] = useState<string | null>(null);
   const [pageNotice, setPageNotice] = useState<PageNotice | null>(null);
@@ -240,6 +309,28 @@ export default function Home() {
   useEffect(() => {
     setTaskMessage(t.pixal3d.generator.status.idle);
   }, [t.pixal3d.generator.status.idle]);
+
+  useEffect(() => {
+    void import("@google/model-viewer");
+
+    const head = document.head;
+    const preconnectLink = document.createElement("link");
+    preconnectLink.rel = "preconnect";
+    preconnectLink.href = "https://ldyang694.github.io";
+    preconnectLink.crossOrigin = "anonymous";
+
+    const dnsPrefetchLink = document.createElement("link");
+    dnsPrefetchLink.rel = "dns-prefetch";
+    dnsPrefetchLink.href = "https://ldyang694.github.io";
+
+    head.appendChild(preconnectLink);
+    head.appendChild(dnsPrefetchLink);
+
+    return () => {
+      preconnectLink.remove();
+      dnsPrefetchLink.remove();
+    };
+  }, []);
 
   const showPageNotice = (
     type: PageNoticeType,
@@ -394,9 +485,12 @@ export default function Home() {
     if (file) void readFileAsDataUrl(file);
   };
 
-  const useSampleImage = (sample: (typeof SAMPLE_IMAGES)[number]) => {
+  const useSampleImage = (sample: Pick<SampleImage, "name" | "src">) => {
+    const resolvedImageSrc = /^https?:\/\//.test(sample.src)
+      ? sample.src
+      : `${window.location.origin}${sample.src}`;
     clearPageNotice();
-    setImageDataUrl(`${window.location.origin}${sample.src}`);
+    setImageDataUrl(resolvedImageSrc);
     setImageName(sample.name);
     setGeneratedModelUrl("");
     setIsGlbPreviewOpen(false);
@@ -1105,28 +1199,67 @@ export default function Home() {
 
             <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:gap-x-8">
               {INSPIRATION_IMAGES.map((item, index) => (
-                <button
-                  key={`${item.src}-${index}`}
-                  type="button"
-                  className="group relative flex min-h-[112px] items-center justify-center rounded-lg outline-none transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-[#00f08a]"
-                  onClick={() => {
-                    useSampleImage(item);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  aria-label={`${t.pixal3d.inspiration.generateSimilar} ${item.name}`}
-                >
-                  <span className="absolute inset-x-8 bottom-3 h-10 rounded-full bg-[#00f08a]/10 opacity-0 blur-xl transition-opacity group-hover:opacity-100" />
-                  <img
-                    src={item.src}
-                    alt=""
-                    className="relative h-24 w-24 object-contain drop-shadow-[0_18px_26px_rgba(0,0,0,0.34)] transition-transform group-hover:scale-105 sm:h-28 sm:w-28"
-                  />
-                  {index === 1 && (
-                    <span className="absolute bottom-0 left-1/2 hidden -translate-x-1/2 rounded-lg border border-[#005f4d] bg-[#06130f] px-4 py-2 text-xs font-semibold leading-5 text-[#00d884] shadow-[0_12px_30px_rgba(0,216,132,0.12)] md:inline-flex md:max-w-[190px]">
-                      {t.pixal3d.inspiration.generateSimilar}
-                    </span>
-                  )}
-                </button>
+                (() => {
+                  const isActive = activeInspirationId === item.id;
+                  return (
+                    <button
+                      key={`${item.id}-${index}`}
+                      type="button"
+                      className="group relative flex min-h-[144px] items-center justify-center rounded-2xl outline-none transition-transform hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#00f08a]"
+                      onMouseEnter={() => setActiveInspirationId(item.id)}
+                      onMouseLeave={() => setActiveInspirationId((current) => (current === item.id ? null : current))}
+                      onFocus={() => setActiveInspirationId(item.id)}
+                      onBlur={() => setActiveInspirationId((current) => (current === item.id ? null : current))}
+                      onClick={() => {
+                        useSampleImage(item);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      aria-label={`${t.pixal3d.inspiration.generateSimilar} ${item.name}`}
+                    >
+                      <span className={`absolute inset-x-7 bottom-4 h-12 rounded-full blur-2xl transition-opacity ${
+                        isActive ? "bg-[#48bdff]/30 opacity-100" : "bg-[#00f08a]/10 opacity-0 group-hover:opacity-100"
+                      }`} />
+                      <span className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-[28px] border shadow-[0_18px_28px_rgba(0,0,0,0.28)] transition-all sm:h-32 sm:w-32 ${
+                        isActive
+                          ? "border-[#48bdff]/65 bg-[#0c1831]"
+                          : "border-[#22304f] bg-[#0f1831]"
+                      }`}>
+                        <img
+                          src={item.src}
+                          alt=""
+                          className={`absolute inset-0 h-full w-full object-cover transition duration-300 ${
+                            isActive ? "scale-[0.94] opacity-0" : "scale-100 opacity-100"
+                          }`}
+                        />
+                        {isActive && item.modelUrl ? (
+                          <span className="absolute inset-0 overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_50%_18%,rgba(72,189,255,0.12),transparent_42%),#091426]">
+                            {createElement("model-viewer", {
+                              src: item.modelUrl,
+                              "auto-rotate": true,
+                              "rotation-per-second": "28deg",
+                              "camera-orbit": "35deg 75deg auto",
+                              "interaction-prompt": "none",
+                              "shadow-intensity": "0.8",
+                              exposure: "1",
+                              "environment-image": "neutral",
+                              loading: "eager",
+                              style: { width: "100%", height: "100%", pointerEvents: "none" },
+                            })}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className={`absolute -bottom-2 left-1/2 hidden w-[184px] -translate-x-1/2 rounded-lg border px-4 py-2 text-xs font-semibold leading-5 shadow-[0_12px_30px_rgba(0,0,0,0.22)] transition md:inline-flex md:justify-center ${
+                        isActive
+                          ? "border-[#2a5279] bg-[#081425] text-[#d8f4ff]"
+                          : index === 1
+                            ? "border-[#005f4d] bg-[#06130f] text-[#00d884]"
+                            : "border-transparent bg-transparent text-transparent"
+                      }`}>
+                        {t.pixal3d.inspiration.generateSimilar}
+                      </span>
+                    </button>
+                  );
+                })()
               ))}
             </div>
           </div>
