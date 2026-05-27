@@ -116,6 +116,7 @@ export default function PricingPage() {
             const monthlyPeer = monthlyPlans.find((item) => item.i18n.en.name === plan.i18n.en.name);
             const crossedPrice = billingCycle === "yearly" ? monthlyAmount(monthlyPeer || plan) : null;
             const creditPrice = credits > 0 ? (displayMonthlyPrice / credits) * 100 : null;
+            const isPaidPlan = plan.id !== "free";
 
             return (
               <article
@@ -160,7 +161,13 @@ export default function PricingPage() {
                 </div>
 
                 <Button
-                  className="mt-10 w-full rounded-full"
+                  className={cn(
+                    "mt-10 h-14 w-full rounded-full text-base font-extrabold transition",
+                    isPaidPlan
+                      ? "border-0 bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] text-[#06111f] shadow-[0_18px_50px_rgba(0,240,138,0.22)] hover:scale-[1.015] hover:brightness-110"
+                      : "bg-white/55 text-black/75 hover:bg-white/55",
+                    plan.recommended && isPaidPlan && "shadow-[0_20px_70px_rgba(72,189,255,0.34)] ring-2 ring-[#48bdff]/35",
+                  )}
                   disabled={plan.id === "free" || loading === plan.id}
                   onClick={() => handleSubscribe(plan)}
                 >
