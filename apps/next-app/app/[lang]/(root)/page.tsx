@@ -689,12 +689,18 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  <span aria-hidden="true" className="text-6xl font-light text-[#aeb6ca]">+</span>
-                  <p className="mt-9 text-3xl font-extrabold text-[#b7bdce]">{t.pixal3d.generator.uploadButton}</p>
+                  <p className="text-3xl font-extrabold text-[#b7bdce]">{t.pixal3d.generator.uploadButton}</p>
                   <p className="mt-5 text-xl font-medium text-[#757f9b]">{t.pixal3d.generator.dragDropPaste}</p>
+                  <div className="mt-8 flex w-full max-w-[390px] items-center gap-4">
+                    <span className="h-px flex-1 bg-[#26324d]" />
+                    <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#7f889e]">
+                      {t.pixal3d.generator.orLabel}
+                    </p>
+                    <span className="h-px flex-1 bg-[#26324d]" />
+                  </div>
                   <Button
                     type="button"
-                    className="mt-20 h-16 w-full max-w-[390px] rounded-full border border-[#313b59] bg-[#141b31] text-2xl font-bold text-[#dbe1f2] hover:bg-[#1a2440]"
+                    className="mt-8 h-16 w-full max-w-[390px] rounded-full border border-[#313b59] bg-[#141b31] text-2xl font-bold text-[#dbe1f2] hover:bg-[#1a2440]"
                     disabled={isReadingFile}
                   >
                     {isReadingFile ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : null}
