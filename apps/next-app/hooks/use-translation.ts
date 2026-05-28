@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { config } from "@config";
-import { locales, translations, type SupportedLocale, type Translations } from "@libs/i18n";
+import { isValidLocale, locales, translations, type SupportedLocale, type Translations } from "@libs/i18n";
 
 function createTranslationFunction(dictionary: Translations) {
   return (key: string, params?: Record<string, unknown>) => {
@@ -29,7 +29,10 @@ export function useTranslation() {
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
-  const locale = (params?.lang as SupportedLocale) || config.app.i18n.defaultLocale;
+  const paramLocale = params?.lang;
+  const locale = typeof paramLocale === "string" && isValidLocale(paramLocale)
+    ? paramLocale
+    : config.app.i18n.defaultLocale;
   const t = translations[locale] as Translations;
   const tWithParams = createTranslationFunction(t);
 

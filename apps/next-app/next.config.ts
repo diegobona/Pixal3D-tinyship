@@ -16,6 +16,7 @@ const defaultLocalePaths = [
   'blog',
   'blog/:path*',
   'dashboard',
+  'my-assets',
   'payment-cancel',
   'payment-success',
   'pricing',

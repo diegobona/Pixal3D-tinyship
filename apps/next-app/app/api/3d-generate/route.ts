@@ -250,6 +250,8 @@ export async function POST(req: Request) {
       model: task.model,
       providerTaskId: task.providerTaskId,
       creditCost: userId ? creditCost : 0,
+      resolution: effectiveResolution,
+      textureSize: effectiveTextureSize,
       consumeTransactionId,
     });
 

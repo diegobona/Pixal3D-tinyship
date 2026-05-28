@@ -323,5 +323,32 @@ export const en: Locale = {
       title: "Recent orders",
       empty: "No payments yet."
     }
+  },
+  myAssets: {
+    eyebrow: "Your Library",
+    title: "My Assets",
+    description: "Review your recent Pixal3D generation tasks and reopen completed GLB models.",
+    actions: {
+      create: "Create",
+      refresh: "Refresh",
+      preview3DModel: "Preview 3D Model",
+      openModel: "Open GLB",
+      sourceImage: "Source Image"
+    },
+    empty: {
+      title: "No generation history yet",
+      description: "Create your first 3D model and it will appear here."
+    },
+    card: {
+      targetResolution: "Target Resolution",
+      textureSize: "Texture Size",
+      createdAt: "Created",
+      credits: "Credits",
+      status: {
+        processing: "Processing",
+        succeeded: "Completed",
+        failed: "Failed"
+      }
+    }
   }
 } as const;

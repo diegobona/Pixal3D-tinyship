@@ -1,4 +1,9 @@
-import type { ThreeDGenerationResult, ThreeDGenerationStatus } from './3d';
+import type {
+  ThreeDGenerationResult,
+  ThreeDGenerationStatus,
+  ThreeDResolution,
+  ThreeDTextureSize,
+} from './3d';
 
 export interface AnonymousTrialInput {
   ipHash: string;
@@ -21,6 +26,8 @@ export interface ThreeDGenerationRecord {
   status: ThreeDGenerationStatus;
   providerTaskId: string;
   creditCost: number;
+  resolution: ThreeDResolution;
+  textureSize: ThreeDTextureSize;
   consumeTransactionId?: string;
   refunded?: boolean;
   result?: ThreeDGenerationResult;
@@ -77,6 +84,12 @@ export function create3DGenerationRecord(
 
 export function get3DGenerationRecord(taskId: string): ThreeDGenerationRecord | undefined {
   return generationRecords.get(taskId);
+}
+
+export function list3DGenerationRecordsByUser(userId: string): ThreeDGenerationRecord[] {
+  return Array.from(generationRecords.values())
+    .filter((record) => record.userId === userId)
+    .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
 }
 
 export function mark3DGenerationSucceeded(
