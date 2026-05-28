@@ -52,7 +52,7 @@ export const en: Locale = {
       removeImage: "Remove uploaded image",
       featuresNav: "Features",
       defaultPrompt: "Create a clean, game-ready 3D asset with accurate proportions, tidy topology, neutral studio lighting, and PBR-friendly materials.",
-      trialDescription: "Users without a subscription get two Free Trial sessions. Each session lasts 10 minutes. Sign in to generate with credits and save your history.",
+      trialDescription: "Users without a subscription get two Free Trial sessions. Each session lasts 10 minutes.",
       stylePreset: "Game Dev: High Poly",
       cleanTopology: "Clean topology",
       pbrMaterials: "PBR materials",

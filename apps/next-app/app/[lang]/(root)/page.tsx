@@ -167,10 +167,26 @@ const ADVANCED_SETTING_FIELDS = [
 ] as const;
 const PIXAL3D_REFERENCE_ASSET_BASE = "https://ldyang694.github.io/projects/pixal3d";
 const SAMPLE_IMAGES: SampleImage[] = [
-  { id: "bunny", name: "Bunny mascot", src: "/samples/pixal3d-bunny.svg" },
-  { id: "mushroom", name: "Mushroom merchant", src: "/samples/pixal3d-mushroom.svg" },
-  { id: "console", name: "Retro console", src: "/samples/pixal3d-console.svg" },
-  { id: "dwarf", name: "Fantasy dwarf", src: "/samples/pixal3d-dwarf.svg" },
+  {
+    id: "keyboard",
+    name: "Retro terminal",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/keyboard.jpg`,
+  },
+  {
+    id: "treehouse",
+    name: "Treehouse",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/treehouse.png`,
+  },
+  {
+    id: "result-21",
+    name: "Dessert scene",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/21_img.png`,
+  },
+  {
+    id: "result-10",
+    name: "Creature concept",
+    src: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/10_img.webp`,
+  },
 ];
 const INSPIRATION_IMAGES: SampleImage[] = [
   {
@@ -929,26 +945,6 @@ export default function Home() {
                     </div>
                   ) : null}
                 </div>
-                <div className="group relative flex w-full flex-col items-stretch sm:w-[300px]">
-                  <Button
-                    data-testid="pixal3d-free-trial-button"
-                    type="button"
-                    size="lg"
-                    className="h-14 rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff2a8] to-[#ffb86b] px-7 text-lg font-extrabold text-[#17111c] shadow-[0_18px_50px_rgba(255,184,107,0.22)] hover:brightness-105 disabled:opacity-60"
-                    disabled={isOpeningHfTrial}
-                    onClick={handleOpenHfTrial}
-                  >
-                    {isOpeningHfTrial ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#17111c]/30 border-t-[#17111c]" /> : null}
-                    {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
-                  </Button>
-                  <div
-                    role="tooltip"
-                    className="pointer-events-none absolute bottom-[calc(100%+12px)] left-1/2 z-20 w-[320px] max-w-[calc(100vw-48px)] -translate-x-1/2 rounded-lg border border-[#ffe08a]/55 bg-[#10152a]/98 px-4 py-3 text-center text-xs font-semibold leading-5 text-[#f4e7c7] opacity-0 shadow-[0_20px_70px_rgba(255,184,107,0.24)] transition duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
-                  >
-                    {t.pixal3d.generator.trialDescription}
-                    <span className="absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[#ffe08a]/55 bg-[#10152a]" />
-                  </div>
-                </div>
                 </div>
               </div>
 
@@ -1004,6 +1000,33 @@ export default function Home() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          <div className="mt-5 w-full max-w-[1420px] overflow-hidden rounded-xl border border-[#39476d] bg-[radial-gradient(circle_at_0%_50%,rgba(255,197,96,0.12),transparent_26%),radial-gradient(circle_at_100%_50%,rgba(72,189,255,0.09),transparent_24%),linear-gradient(180deg,#09142f_0%,#081126_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.2)]">
+            <div className="flex flex-col gap-6 p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+              <div className="min-w-0 flex-1">
+                <span className="inline-flex items-center rounded-full border border-[#7a6132] bg-[#1c1820] px-3 py-1 text-xs font-extrabold uppercase tracking-[0.22em] text-[#ffd88d]">
+                  {t.pixal3d.generator.freeTrialButton}
+                </span>
+                <p className="mt-4 max-w-3xl text-lg font-semibold leading-8 text-white/92 sm:text-[22px]">
+                  {t.pixal3d.generator.trialDescription}
+                </p>
+              </div>
+
+              <div className="flex w-full shrink-0 flex-col items-stretch lg:w-auto">
+                <Button
+                  data-testid="pixal3d-free-trial-button"
+                  type="button"
+                  size="lg"
+                  className="h-16 w-full rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff2a8] via-[#ffd47a] to-[#ffb86b] px-10 text-2xl font-extrabold text-[#17111c] shadow-[0_20px_60px_rgba(255,184,107,0.28)] hover:brightness-105 disabled:opacity-60 sm:min-w-[320px] lg:min-w-[360px]"
+                  disabled={isOpeningHfTrial}
+                  onClick={handleOpenHfTrial}
+                >
+                  {isOpeningHfTrial ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#17111c]/30 border-t-[#17111c]" /> : null}
+                  {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
+                </Button>
+              </div>
             </div>
           </div>
 
