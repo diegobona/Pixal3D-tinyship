@@ -28,7 +28,9 @@ export const en: Locale = {
     auth: {
       signIn: "Sign In",
       signOut: "Sign Out",
-      dashboard: "Dashboard"
+      dashboard: "Dashboard",
+      myAssets: "My Assets",
+      myCredits: "My Credits"
     },
     language: {
       english: "English",

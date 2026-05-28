@@ -12,9 +12,16 @@ interface HeaderProps {
   className?: string;
 }
 
+interface CreditStatusResponse {
+  credits?: {
+    balance?: number;
+  };
+}
+
 export default function Header({ className }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -53,6 +60,38 @@ export default function Header({ className }: HeaderProps) {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isUserMenuOpen]);
+
+  useEffect(() => {
+    if (!user) {
+      setCreditBalance(null);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadCreditBalance = async () => {
+      try {
+        const response = await fetch("/api/credits/status", { cache: "no-store" });
+        if (!response.ok) {
+          if (isMounted) setCreditBalance(0);
+          return;
+        }
+
+        const data = (await response.json()) as CreditStatusResponse;
+        if (isMounted) {
+          setCreditBalance(Number(data.credits?.balance || 0));
+        }
+      } catch {
+        if (isMounted) setCreditBalance(0);
+      }
+    };
+
+    void loadCreditBalance();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const handleSignOut = async () => {
     setIsUserMenuOpen(false);
@@ -96,79 +135,143 @@ export default function Header({ className }: HeaderProps) {
             {navigation}
           </nav>
 
-          <div className="hidden items-center gap-4 md:flex">
-            <button
-              type="button"
-              onClick={toggleLocale}
-              className="text-sm font-semibold text-white/75 transition-colors hover:text-white"
-            >
-              {currentLocale === "en" ? t.header.language.english : t.header.language.chinese}
-            </button>
-
+          <div className="hidden items-center gap-3 md:flex">
             {isPending ? (
               <div className="h-8 w-28 rounded-full bg-white/10" />
             ) : user ? (
-              <div ref={userMenuRef} className="relative">
+              <>
+                <div className="group relative">
+                  <div className="inline-flex h-10 items-center gap-2 rounded-full border border-[#6a4a16] bg-[linear-gradient(180deg,#2a1b06,#1a1207)] px-3 text-[#f7c455] shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
+                    <CreditsIcon />
+                    <span className="min-w-[1ch] text-sm font-bold leading-none">
+                      {creditBalance === null ? "..." : creditBalance.toLocaleString("en-US")}
+                    </span>
+                  </div>
+                  <div
+                    role="tooltip"
+                    className="pointer-events-none absolute left-1/2 top-[calc(100%+10px)] z-30 -translate-x-1/2 rounded-lg border border-[#6a4a16] bg-[#171008]/98 px-3 py-2 text-xs font-semibold text-[#f7c455] opacity-0 shadow-[0_18px_40px_rgba(0,0,0,0.3)] transition duration-150 group-hover:opacity-100"
+                  >
+                    {t.header.auth.myCredits}
+                    <span className="absolute bottom-full left-1/2 h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rotate-45 border-l border-t border-[#6a4a16] bg-[#171008]" />
+                  </div>
+                </div>
+                <Link
+                  href={localizedPath("/pricing")}
+                  className="inline-flex h-10 items-center rounded-full bg-[#48bdff] px-4 text-sm font-bold text-[#04101e] transition-colors hover:bg-[#72ceff]"
+                >
+                  {t.pixal3d.generator.upgradeButton}
+                </Link>
+                <div
+                  ref={userMenuRef}
+                  className="relative"
+                  onMouseEnter={() => setIsUserMenuOpen(true)}
+                  onMouseLeave={() => setIsUserMenuOpen(false)}
+                  onFocusCapture={() => setIsUserMenuOpen(true)}
+                  onBlurCapture={(event) => {
+                    if (!userMenuRef.current?.contains(event.relatedTarget as Node | null)) {
+                      setIsUserMenuOpen(false);
+                    }
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] px-1.5 py-1.5 transition-colors hover:bg-white/8"
+                    aria-haspopup="menu"
+                    aria-expanded={isUserMenuOpen}
+                  >
+                    {user.image ? (
+                      <img src={user.image} alt={displayName} className="h-9 w-9 rounded-full border border-white/20 object-cover" />
+                    ) : (
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-white">
+                        {displayName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="max-w-28 truncate text-sm font-semibold text-white/85">{displayName}</span>
+                  </button>
+
+                  {isUserMenuOpen ? (
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-14 z-50 w-[320px] overflow-hidden rounded-[22px] border border-white/12 bg-[linear-gradient(180deg,rgba(24,29,43,0.98),rgba(16,19,29,0.98))] text-white shadow-[0_28px_90px_rgba(0,0,0,0.52)] backdrop-blur-xl"
+                    >
+                      <div className="border-b border-white/8 px-5 py-5">
+                        <div className="flex items-center gap-4">
+                          {user.image ? (
+                            <img
+                              src={user.image}
+                              alt={displayName}
+                              className="h-14 w-14 rounded-full border border-white/15 object-cover shadow-[0_10px_30px_rgba(0,0,0,0.24)]"
+                            />
+                          ) : (
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(135deg,#1b315d,#0c6c86)] text-lg font-bold text-white">
+                              {displayName.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[15px] font-semibold text-white">{displayName}</p>
+                            {displayEmail ? (
+                              <p className="mt-1 truncate text-sm text-white/55">{displayEmail}</p>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="px-3 py-3">
+                        <Link
+                          href={localizedPath("/my-assets")}
+                          role="menuitem"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
+                        >
+                          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                            <AssetsIcon />
+                          </span>
+                          <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                            <span className="truncate">{t.header.auth.myAssets}</span>
+                            <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
+                          </span>
+                        </Link>
+                        <Link
+                          href={localizedPath("/dashboard")}
+                          role="menuitem"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="mt-1.5 flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
+                        >
+                          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                            <DashboardIcon />
+                          </span>
+                          <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                            <span className="truncate">{t.header.auth.dashboard}</span>
+                            <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
+                          </span>
+                        </Link>
+                      </div>
+                      <div className="border-t border-white/8 px-3 py-3">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={handleSignOut}
+                          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-base font-semibold text-white/84 transition-colors hover:bg-[#2a1318] hover:text-white"
+                        >
+                          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#4f232b] bg-[#241217]">
+                            <LogOutIcon />
+                          </span>
+                          <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                            <span className="truncate">{t.header.auth.signOut}</span>
+                            <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
                 <button
                   type="button"
-                  onClick={() => setIsUserMenuOpen((open) => !open)}
-                  className="flex items-center gap-3 rounded-full px-1 py-1 transition-colors hover:bg-white/10"
-                  aria-haspopup="menu"
-                  aria-expanded={isUserMenuOpen}
+                  onClick={toggleLocale}
+                  className="text-sm font-semibold text-white/75 transition-colors hover:text-white"
                 >
-                  {user.image ? (
-                    <img src={user.image} alt={displayName} className="h-8 w-8 rounded-full border border-white/20 object-cover" />
-                  ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-white">
-                      {displayName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="max-w-28 truncate text-sm font-semibold text-white/85">{displayName}</span>
+                  {currentLocale === "en" ? t.header.language.english : t.header.language.chinese}
                 </button>
-
-                {isUserMenuOpen ? (
-                  <div
-                    role="menu"
-                    className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-xl border border-white/15 bg-[#1b1b1d] text-white shadow-[0_20px_70px_rgba(0,0,0,0.45)]"
-                  >
-                    <div className="px-5 py-4">
-                      <p className="truncate text-lg font-semibold text-white">{displayName}</p>
-                      {displayEmail ? <p className="mt-1 truncate text-base text-white/58">{displayEmail}</p> : null}
-                    </div>
-                    <div className="border-t border-white/10 py-2">
-                      <Link
-                        href={localizedPath("/my-assets")}
-                        role="menuitem"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-3 px-5 py-3 text-base font-semibold text-white/88 transition-colors hover:bg-white/8 hover:text-white"
-                      >
-                        <HistoryIcon />
-                        {t.header.auth.myAssets}
-                      </Link>
-                      <Link
-                        href={localizedPath("/dashboard")}
-                        role="menuitem"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-3 px-5 py-3 text-base font-semibold text-white/88 transition-colors hover:bg-white/8 hover:text-white"
-                      >
-                        <DashboardIcon />
-                        {t.header.auth.dashboard}
-                      </Link>
-                    </div>
-                    <div className="border-t border-white/10 py-2">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={handleSignOut}
-                        className="flex w-full items-center gap-3 px-5 py-3 text-left text-base font-semibold text-white/88 transition-colors hover:bg-white/8 hover:text-white"
-                      >
-                        <LogOutIcon />
-                        {t.header.auth.logOut}
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              </>
             ) : (
               <>
                 <Link href={localizedPath("/signin")} className="text-sm font-semibold text-white/70 transition-colors hover:text-white">
@@ -232,33 +335,45 @@ export default function Header({ className }: HeaderProps) {
   );
 }
 
-function HistoryIcon() {
+function AssetsIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white/62" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 12a9 9 0 1 0 3-6.7" />
-      <path d="M3 4v5h5" />
-      <path d="M12 7v5l3 2" />
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-[#c9d2e8]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.75 8.75 12 4.5l7.25 4.25v6.5L12 19.5l-7.25-4.25z" />
+      <path d="M12 12 4.75 8.75" />
+      <path d="M12 12l7.25-3.25" />
+      <path d="M12 12v7.5" />
     </svg>
   );
 }
 
 function DashboardIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white/62" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 5h7v7H4z" />
-      <path d="M13 5h7v4h-7z" />
-      <path d="M13 11h7v8h-7z" />
-      <path d="M4 14h7v5H4z" />
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-[#c9d2e8]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.75 6.75h6.5v4.75h-6.5z" />
+      <path d="M12.75 6.75h6.5v7.75h-6.5z" />
+      <path d="M4.75 13h6.5v4.25h-6.5z" />
+      <path d="M12.75 16h6.5v1.25h-6.5z" />
     </svg>
   );
 }
 
 function LogOutIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white/62" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M10 17l5-5-5-5" />
-      <path d="M15 12H3" />
-      <path d="M21 4v16" />
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-[#ffb7c0]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 7.5V6.75A2.75 2.75 0 0 1 11.75 4h5.5A2.75 2.75 0 0 1 20 6.75v10.5A2.75 2.75 0 0 1 17.25 20h-5.5A2.75 2.75 0 0 1 9 17.25v-.75" />
+      <path d="M13.5 12H4.5" />
+      <path d="m7.75 8.75-3.25 3.25 3.25 3.25" />
+    </svg>
+  );
+}
+
+function CreditsIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 text-[#f7c455]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <ellipse cx="13" cy="8" rx="5" ry="2.25" />
+      <path d="M8 8v4c0 1.24 2.24 2.25 5 2.25s5-1.01 5-2.25V8" />
+      <path d="M5 12.25c0-1.24 2.01-2.25 4.5-2.25" />
+      <path d="M5 12.25v3.5c0 1.24 2.01 2.25 4.5 2.25 1.9 0 3.52-.58 4.16-1.41" />
     </svg>
   );
 }
