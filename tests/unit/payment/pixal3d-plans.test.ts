@@ -18,7 +18,10 @@ describe('Pixal3D pricing plans', () => {
     const freePlan = config.payment.plans.free;
     expect(freePlan.amount).toBe(0);
     expect(freePlan.provider).toBe('free');
-    expect(freePlan.i18n.en.features).toContain('300 monthly credits');
+    expect(freePlan.i18n.en.features).not.toContain('300 monthly credits');
+    expect(freePlan.i18n.en.features).toContain('1 concurrent task');
+    expect(freePlan.i18n.en.features).not.toContain('Asset ownership: shared sample license');
+    expect(freePlan.i18n.en.features).not.toContain('3D generation resolution: up to 1024');
 
     const paidPlans = plans.filter((plan) => plan.id !== 'free');
     expect(paidPlans.every((plan) => plan.provider === 'stripe')).toBe(true);
@@ -34,11 +37,10 @@ describe('Pixal3D pricing plans', () => {
     expect(config.payment.plans.proYearly.amount % 12).toBe(0);
 
     expect(plans.every((plan) => plan.i18n.en.name.includes('Stripe'))).toBe(false);
-    expect(plans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('credits')))).toBe(true);
+    expect(paidPlans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('credits')))).toBe(true);
     expect(plans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('concurrent')))).toBe(true);
-    expect(plans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('downloads')))).toBe(true);
-    expect(plans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('Asset ownership')))).toBe(true);
-    expect(plans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('limits')))).toBe(true);
+    expect(paidPlans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('downloads')))).toBe(true);
+    expect(paidPlans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('Asset ownership')))).toBe(true);
     expect(plans.every((plan) => !plan.i18n.en.features.some((feature) => feature.includes('Commercial use')))).toBe(true);
   });
 });

@@ -24,7 +24,7 @@ const monthlyCredits = (plan: Plan) => {
 };
 
 export default function PricingPage() {
-  const { locale: currentLocale, localizedPath } = useTranslation();
+  const { locale: currentLocale, localizedPath, t } = useTranslation();
   const router = useRouter();
   const pathname = usePathname();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
@@ -186,6 +186,12 @@ export default function PricingPage() {
                 </Button>
 
                 <ul className="mt-10 space-y-4 text-sm">
+                  {plan.id === "free" ? (
+                    <li className="flex gap-3 text-sm font-medium leading-6 text-primary">
+                      <span className="mt-0.5 shrink-0 text-primary" aria-hidden="true">✓</span>
+                      <span>{t.pricing.freeTrialNotice}</span>
+                    </li>
+                  ) : null}
                   {content.features.map((feature) => (
                     <li key={feature} className="flex gap-3">
                       <span className="mt-0.5 shrink-0 text-primary" aria-hidden="true">✓</span>

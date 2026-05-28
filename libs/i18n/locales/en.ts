@@ -235,7 +235,8 @@ export const en: Locale = {
       title: "Pixal3D Pricing - Credits for AI 3D Models",
       description: "Choose Pixal3D credits for image-to-3D generation, GLB downloads, queue priority, and private asset ownership.",
       keywords: "pixal3d pricing, ai 3d model credits, image to 3d subscription"
-    }
+    },
+    freeTrialNotice: "Two Free Trial sessions(Each session lasts 10 minutes)"
   },
   payment: {
     metadata: {
