@@ -34,7 +34,7 @@ export const en: Locale = {
     },
     language: {
       english: "English",
-      chinese: "English"
+      chinese: "中文"
     }
   },
   pixal3d: {

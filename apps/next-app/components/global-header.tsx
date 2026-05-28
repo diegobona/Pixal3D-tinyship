@@ -21,8 +21,10 @@ interface CreditStatusResponse {
 export default function Header({ className }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLocaleMenuOpen, setIsLocaleMenuOpen] = useState(false);
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
+  const localeMenuRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { t, locale: currentLocale } = useTranslation();
@@ -38,17 +40,22 @@ export default function Header({ className }: HeaderProps) {
   const displayEmail = user?.email || "";
 
   useEffect(() => {
-    if (!isUserMenuOpen) return;
+    if (!isUserMenuOpen && !isLocaleMenuOpen) return;
 
     const handlePointerDown = (event: PointerEvent) => {
-      if (!userMenuRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (!userMenuRef.current?.contains(target)) {
         setIsUserMenuOpen(false);
+      }
+      if (!localeMenuRef.current?.contains(target)) {
+        setIsLocaleMenuOpen(false);
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsUserMenuOpen(false);
+        setIsLocaleMenuOpen(false);
       }
     };
 
@@ -59,7 +66,7 @@ export default function Header({ className }: HeaderProps) {
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isUserMenuOpen]);
+  }, [isLocaleMenuOpen, isUserMenuOpen]);
 
   useEffect(() => {
     if (!user) {
@@ -99,8 +106,8 @@ export default function Header({ className }: HeaderProps) {
     router.push(homeHref);
   };
 
-  const toggleLocale = () => {
-    const nextLocale = currentLocale === "en" ? "zh-CN" : "en";
+  const setLocale = (nextLocale: "en" | "zh-CN") => {
+    setIsLocaleMenuOpen(false);
     const pathWithoutLocale = pathname.replace(`/${currentLocale}`, "") || "/";
     document.cookie = `${config.app.i18n.cookieKey}=${nextLocale}; path=/; max-age=31536000`;
     window.location.href =
@@ -190,87 +197,136 @@ export default function Header({ className }: HeaderProps) {
                   </button>
 
                   {isUserMenuOpen ? (
-                    <div
-                      role="menu"
-                      className="absolute right-0 top-14 z-50 w-[320px] overflow-hidden rounded-[22px] border border-white/12 bg-[linear-gradient(180deg,rgba(24,29,43,0.98),rgba(16,19,29,0.98))] text-white shadow-[0_28px_90px_rgba(0,0,0,0.52)] backdrop-blur-xl"
-                    >
-                      <div className="border-b border-white/8 px-5 py-5">
-                        <div className="flex items-center gap-4">
-                          {user.image ? (
-                            <img
-                              src={user.image}
-                              alt={displayName}
-                              className="h-14 w-14 rounded-full border border-white/15 object-cover shadow-[0_10px_30px_rgba(0,0,0,0.24)]"
-                            />
-                          ) : (
-                            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(135deg,#1b315d,#0c6c86)] text-lg font-bold text-white">
-                              {displayName.charAt(0).toUpperCase()}
+                    <div className="absolute right-0 top-full z-50 pt-2">
+                      <div
+                        role="menu"
+                        className="w-[320px] overflow-hidden rounded-[22px] border border-white/12 bg-[linear-gradient(180deg,rgba(24,29,43,0.98),rgba(16,19,29,0.98))] text-white shadow-[0_28px_90px_rgba(0,0,0,0.52)] backdrop-blur-xl"
+                      >
+                        <div className="border-b border-white/8 px-5 py-5">
+                          <div className="flex items-center gap-4">
+                            {user.image ? (
+                              <img
+                                src={user.image}
+                                alt={displayName}
+                                className="h-14 w-14 rounded-full border border-white/15 object-cover shadow-[0_10px_30px_rgba(0,0,0,0.24)]"
+                              />
+                            ) : (
+                              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(135deg,#1b315d,#0c6c86)] text-lg font-bold text-white">
+                                {displayName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[15px] font-semibold text-white">{displayName}</p>
+                              {displayEmail ? (
+                                <p className="mt-1 truncate text-sm text-white/55">{displayEmail}</p>
+                              ) : null}
                             </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[15px] font-semibold text-white">{displayName}</p>
-                            {displayEmail ? (
-                              <p className="mt-1 truncate text-sm text-white/55">{displayEmail}</p>
-                            ) : null}
                           </div>
                         </div>
+                        <div className="px-3 py-3">
+                          <Link
+                            href={localizedPath("/my-assets")}
+                            role="menuitem"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
+                          >
+                            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                              <AssetsIcon />
+                            </span>
+                            <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                              <span className="truncate">{t.header.auth.myAssets}</span>
+                              <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
+                            </span>
+                          </Link>
+                          <Link
+                            href={localizedPath("/dashboard")}
+                            role="menuitem"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="mt-1.5 flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
+                          >
+                            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                              <DashboardIcon />
+                            </span>
+                            <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                              <span className="truncate">{t.header.auth.dashboard}</span>
+                              <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
+                            </span>
+                          </Link>
+                        </div>
+                        <div className="border-t border-white/8 px-3 py-3">
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={handleSignOut}
+                            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-base font-semibold text-white/84 transition-colors hover:bg-[#2a1318] hover:text-white"
+                          >
+                            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#4f232b] bg-[#241217]">
+                              <LogOutIcon />
+                            </span>
+                            <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                              <span className="truncate">{t.header.auth.signOut}</span>
+                              <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
+                            </span>
+                          </button>
+                        </div>
                       </div>
-                      <div className="px-3 py-3">
-                        <Link
-                          href={localizedPath("/my-assets")}
-                          role="menuitem"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
-                        >
-                          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-                            <AssetsIcon />
-                          </span>
-                          <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
-                            <span className="truncate">{t.header.auth.myAssets}</span>
-                            <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
-                          </span>
-                        </Link>
-                        <Link
-                          href={localizedPath("/dashboard")}
-                          role="menuitem"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="mt-1.5 flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
-                        >
-                          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-                            <DashboardIcon />
-                          </span>
-                          <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
-                            <span className="truncate">{t.header.auth.dashboard}</span>
-                            <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
-                          </span>
-                        </Link>
-                      </div>
-                      <div className="border-t border-white/8 px-3 py-3">
+                    </div>
+                  ) : null}
+                </div>
+                <div
+                  ref={localeMenuRef}
+                  className="relative"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setIsLocaleMenuOpen((open) => !open);
+                    }}
+                    className="inline-flex h-10 w-8 items-center justify-center text-white/82 transition-colors hover:text-white"
+                    aria-haspopup="menu"
+                    aria-expanded={isLocaleMenuOpen}
+                    aria-label="Language"
+                  >
+                    <LocaleIcon />
+                  </button>
+
+                  {isLocaleMenuOpen ? (
+                    <div className="absolute right-0 top-full z-50 pt-2">
+                      <div
+                        role="menu"
+                        className="min-w-[170px] overflow-hidden rounded-[18px] border border-white/12 bg-[linear-gradient(180deg,rgba(24,29,43,0.98),rgba(16,19,29,0.98))] p-2 text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+                      >
                         <button
                           type="button"
-                          role="menuitem"
-                          onClick={handleSignOut}
-                          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-base font-semibold text-white/84 transition-colors hover:bg-[#2a1318] hover:text-white"
+                          role="menuitemradio"
+                          aria-checked={currentLocale === "en"}
+                          onClick={() => setLocale("en")}
+                          className={`flex w-full items-center rounded-xl px-4 py-3 text-left text-base font-semibold transition-colors ${
+                            currentLocale === "en"
+                              ? "bg-white/10 text-white"
+                              : "text-white/82 hover:bg-white/8 hover:text-white"
+                          }`}
                         >
-                          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#4f232b] bg-[#241217]">
-                            <LogOutIcon />
-                          </span>
-                          <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
-                            <span className="truncate">{t.header.auth.signOut}</span>
-                            <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
-                          </span>
+                          English
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitemradio"
+                          aria-checked={currentLocale === "zh-CN"}
+                          onClick={() => setLocale("zh-CN")}
+                          className={`mt-1 flex w-full items-center rounded-xl px-4 py-3 text-left text-base font-semibold transition-colors ${
+                            currentLocale === "zh-CN"
+                              ? "bg-white/10 text-white"
+                              : "text-white/82 hover:bg-white/8 hover:text-white"
+                          }`}
+                        >
+                          中文
                         </button>
                       </div>
                     </div>
                   ) : null}
                 </div>
-                <button
-                  type="button"
-                  onClick={toggleLocale}
-                  className="text-sm font-semibold text-white/75 transition-colors hover:text-white"
-                >
-                  {currentLocale === "en" ? t.header.language.english : t.header.language.chinese}
-                </button>
               </>
             ) : (
               <>
@@ -302,7 +358,11 @@ export default function Header({ className }: HeaderProps) {
               {navigation}
             </div>
             <div className="border-t border-[#26324d] pt-4">
-              <button type="button" onClick={toggleLocale} className="block py-2 text-sm font-semibold text-white/75">
+              <button
+                type="button"
+                onClick={() => setLocale(currentLocale === "en" ? "zh-CN" : "en")}
+                className="block py-2 text-sm font-semibold text-white/75"
+              >
                 {currentLocale === "en" ? t.header.language.english : t.header.language.chinese}
               </button>
               {user ? (
@@ -374,6 +434,26 @@ function CreditsIcon() {
       <path d="M8 8v4c0 1.24 2.24 2.25 5 2.25s5-1.01 5-2.25V8" />
       <path d="M5 12.25c0-1.24 2.01-2.25 4.5-2.25" />
       <path d="M5 12.25v3.5c0 1.24 2.01 2.25 4.5 2.25 1.9 0 3.52-.58 4.16-1.41" />
+    </svg>
+  );
+}
+
+function LocaleIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4.5 w-4.5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="8.25" />
+      <path d="M3.75 12h16.5" />
+      <path d="M12 3.75a12.4 12.4 0 0 1 0 16.5" />
+      <path d="M12 3.75a12.4 12.4 0 0 0 0 16.5" />
     </svg>
   );
 }

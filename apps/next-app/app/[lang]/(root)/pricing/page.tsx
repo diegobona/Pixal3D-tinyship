@@ -165,14 +165,24 @@ export default function PricingPage() {
                     "mt-10 h-14 w-full rounded-full text-base font-extrabold transition",
                     isPaidPlan
                       ? "border-0 bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] text-[#06111f] shadow-[0_18px_50px_rgba(0,240,138,0.22)] hover:scale-[1.015] hover:brightness-110"
-                      : "bg-white/55 text-black/75 hover:bg-white/55",
+                      : "border border-white/20 bg-[linear-gradient(180deg,#6c727e,#535864)] text-white shadow-[0_14px_36px_rgba(255,255,255,0.08)] ring-2 ring-white/10 disabled:cursor-default disabled:opacity-100",
                     plan.recommended && isPaidPlan && "shadow-[0_20px_70px_rgba(72,189,255,0.34)] ring-2 ring-[#48bdff]/35",
                   )}
                   disabled={plan.id === "free" || loading === plan.id}
                   onClick={() => handleSubscribe(plan)}
                 >
                   {loading === plan.id ? <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current" /> : null}
-                  {plan.id === "free" ? "Current plan" : "Subscribe Now"}
+                  {plan.id === "free" ? (
+                    <>
+                      <span
+                        aria-hidden="true"
+                        className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/16 text-sm"
+                      >
+                        ✓
+                      </span>
+                      Current plan
+                    </>
+                  ) : "Subscribe Now"}
                 </Button>
 
                 <ul className="mt-10 space-y-4 text-sm">
