@@ -321,6 +321,25 @@ export default function Home() {
 
   const progressStepLabels = t.pixal3d.generator.progress.steps as Record<Pixal3DProgressStepKey, string>;
   const showGenerationProgress = Boolean(progressSnapshot && taskStatus !== "idle" && taskStatus !== "upload-ready");
+  const trialDescription = t.pixal3d.generator.trialDescription;
+  const highlightedTrialDescription = useMemo(() => {
+    const marker = "10";
+    const markerIndex = trialDescription.indexOf(marker);
+
+    if (markerIndex === -1) {
+      return trialDescription;
+    }
+
+    return (
+      <>
+        {trialDescription.slice(0, markerIndex)}
+        <span className="mx-1 inline-flex min-w-[2.3rem] items-center justify-center px-2 py-0.5 text-[1.08em] font-extrabold leading-none text-[#ffe7a8]">
+          {marker}
+        </span>
+        {trialDescription.slice(markerIndex + marker.length)}
+      </>
+    );
+  }, [trialDescription]);
 
   useEffect(() => {
     setTaskMessage(t.pixal3d.generator.status.idle);
@@ -1010,7 +1029,7 @@ export default function Home() {
                   {t.pixal3d.generator.freeTrialButton}
                 </span>
                 <p className="mt-4 max-w-3xl text-lg font-semibold leading-8 text-white/92 sm:text-[22px]">
-                  {t.pixal3d.generator.trialDescription}
+                  {highlightedTrialDescription}
                 </p>
               </div>
 

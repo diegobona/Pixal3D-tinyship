@@ -226,6 +226,8 @@ export default function Header({ className }: HeaderProps) {
                         <div className="px-3 py-3">
                           <Link
                             href={localizedPath("/my-assets")}
+                            target="_blank"
+                            rel="noreferrer"
                             role="menuitem"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
@@ -240,6 +242,8 @@ export default function Header({ className }: HeaderProps) {
                           </Link>
                           <Link
                             href={localizedPath("/dashboard")}
+                            target="_blank"
+                            rel="noreferrer"
                             role="menuitem"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="mt-1.5 flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
@@ -367,10 +371,10 @@ export default function Header({ className }: HeaderProps) {
               </button>
               {user ? (
                 <>
-                  <Link href={localizedPath("/my-assets")} className="block py-2 text-sm font-semibold text-white/75">
+                  <Link href={localizedPath("/my-assets")} target="_blank" rel="noreferrer" className="block py-2 text-sm font-semibold text-white/75">
                     {t.header.auth.myAssets}
                   </Link>
-                  <Link href={localizedPath("/dashboard")} className="block py-2 text-sm font-semibold text-white/75">
+                  <Link href={localizedPath("/dashboard")} target="_blank" rel="noreferrer" className="block py-2 text-sm font-semibold text-white/75">
                     {t.header.auth.dashboard}
                   </Link>
                   <button type="button" onClick={handleSignOut} className="block py-2 text-sm font-semibold text-white/75">
