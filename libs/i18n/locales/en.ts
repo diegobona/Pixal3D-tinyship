@@ -236,7 +236,8 @@ export const en: Locale = {
       description: "Choose Pixal3D credits for image-to-3D generation, GLB downloads, queue priority, and private asset ownership.",
       keywords: "pixal3d pricing, ai 3d model credits, image to 3d subscription"
     },
-    freeTrialNotice: "Two Free Trial sessions(Each session lasts 10 minutes)"
+    freeTrialNotice: "Two Free Trial sessions(Each session lasts 10 minutes)",
+    billedYearly: "Billed yearly: ${amount}"
   },
   payment: {
     metadata: {

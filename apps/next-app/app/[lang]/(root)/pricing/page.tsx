@@ -34,7 +34,7 @@ export default function PricingPage() {
 
   const allPlans = Object.values(config.payment.plans) as unknown as Plan[];
   const plans = allPlans.filter((plan) => {
-    if (plan.id === "free") return billingCycle === "monthly";
+    if (plan.id === "free") return true;
     if (!("months" in plan.duration)) return false;
     return billingCycle === "monthly" ? plan.duration.months === 1 : plan.duration.months === 12;
   });
@@ -113,6 +113,7 @@ export default function PricingPage() {
             const content = plan.i18n[currentLocale] || plan.i18n.en;
             const credits = monthlyCredits(plan);
             const displayMonthlyPrice = monthlyAmount(plan);
+            const billedYearlyPrice = displayMonthlyPrice * 12;
             const monthlyPeer = monthlyPlans.find((item) => item.i18n.en.name === plan.i18n.en.name);
             const crossedPrice = billingCycle === "yearly" ? monthlyAmount(monthlyPeer || plan) : null;
             const creditPrice = credits > 0 ? (displayMonthlyPrice / credits) * 100 : null;
@@ -151,6 +152,11 @@ export default function PricingPage() {
                         <span className="text-5xl font-bold">${formatPrice(displayMonthlyPrice)}</span>
                         <span className="pb-2 text-sm text-muted-foreground">/ month</span>
                       </div>
+                      {billingCycle === "yearly" ? (
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {t.pricing.billedYearly.replace("{amount}", formatPrice(billedYearlyPrice))}
+                        </p>
+                      ) : null}
                       {creditPrice !== null && (
                         <p className="mt-2 text-sm text-muted-foreground">
                           ${creditPrice.toFixed(2)} / 100 credits
