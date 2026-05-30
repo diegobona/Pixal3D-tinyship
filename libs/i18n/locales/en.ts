@@ -52,7 +52,7 @@ export const en: Locale = {
       removeImage: "Remove uploaded image",
       featuresNav: "Features",
       defaultPrompt: "Create a clean, game-ready 3D asset with accurate proportions, tidy topology, neutral studio lighting, and PBR-friendly materials.",
-      trialDescription: "Users without a subscription get two Free Trial sessions. Each session lasts 10 minutes.",
+      trialDescription: "Users without a subscription get two Free Trial sessions. Each session lasts 15 minutes. (No credits required)",
       stylePreset: "Game Dev: High Poly",
       cleanTopology: "Clean topology",
       pbrMaterials: "PBR materials",
@@ -64,6 +64,7 @@ export const en: Locale = {
       hfTrialTitle: "Pixal3D Free Trial",
       hfTrialQueueLabel: "Current queue",
       hfTrialTimeLeft: "Time left",
+      hfTrialStartHint: "If the \"Start Generation\" button is disabled, please wait a few seconds while the server finishes loading.",
       hfTrialClose: "Close",
       generateButton: "Generate Model",
       generatingButton: "Building model...",
@@ -257,7 +258,7 @@ export const en: Locale = {
       description: "Choose Pixal3D credits for image-to-3D generation, GLB downloads, queue priority, and private asset ownership.",
       keywords: "pixal3d pricing, ai 3d model credits, image to 3d subscription"
     },
-    freeTrialNotice: "Two Free Trial sessions(Each session lasts 10 minutes)",
+    freeTrialNotice: "Two Free Trial sessions (Each session lasts 15 minutes, no credits required)",
     billedYearly: "Billed yearly: ${amount}"
   },
   payment: {

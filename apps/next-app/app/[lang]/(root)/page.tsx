@@ -123,7 +123,7 @@ interface CreditStatusResponse {
 
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
-const FREE_TRIAL_DURATION_SECONDS = 10 * 60;
+const FREE_TRIAL_DURATION_SECONDS = 15 * 60;
 const RESOLUTION_OPTIONS: ResolutionOption[] = [1024, 1536];
 const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096, 8192];
 const RESOLUTION_CREDIT_COST: Record<ResolutionOption, number> = {
@@ -324,7 +324,7 @@ export default function Home() {
   const showGenerationProgress = Boolean(progressSnapshot && taskStatus !== "idle" && taskStatus !== "upload-ready");
   const trialDescription = t.pixal3d.generator.trialDescription;
   const highlightedTrialDescription = useMemo(() => {
-    const marker = "10";
+    const marker = "15";
     const markerIndex = trialDescription.indexOf(marker);
 
     if (markerIndex === -1) {
@@ -1173,27 +1173,34 @@ export default function Home() {
               data-testid="pixal3d-hf-trial-panel"
               className="mt-7 w-full max-w-[1420px] overflow-hidden rounded-lg border border-[#25314f] bg-[#070d20]/92 shadow-[0_28px_120px_rgba(0,0,0,0.26)]"
             >
-              <div className="flex flex-col gap-3 border-b border-[#25314f] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+              <div className="flex flex-col gap-4 border-b border-[#25314f] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
                   <h2 className="text-lg font-extrabold text-white">{t.pixal3d.generator.hfTrialTitle}</h2>
-                  {hfTrialQueueSize !== null && (
-                    <p className="mt-1 text-sm text-[#aeb6ca]">
-                      {t.pixal3d.generator.hfTrialQueueLabel}: {hfTrialQueueSize}
-                    </p>
-                  )}
+                  <p className="mt-1 whitespace-nowrap text-sm font-medium leading-6 text-[#9ec8ff]">
+                    {t.pixal3d.generator.hfTrialStartHint}
+                  </p>
                 </div>
-                <div className="text-sm font-bold text-[#48bdff]">
-                  {t.pixal3d.generator.hfTrialTimeLeft}: {formatTrialTime(hfTrialSecondsLeft)}
+                <div className="flex flex-col gap-3 lg:items-end">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                    <div className="inline-flex min-w-[190px] items-center justify-center rounded-2xl border border-[#2dd6ff]/40 bg-[linear-gradient(135deg,rgba(48,194,255,0.22),rgba(17,38,83,0.72))] px-5 py-3 shadow-[0_0_36px_rgba(72,189,255,0.18)]">
+                      <span className="text-[15px] font-extrabold uppercase tracking-[0.12em] text-[#b5f4ff]">
+                        {t.pixal3d.generator.hfTrialTimeLeft}
+                      </span>
+                      <span className="ml-3 text-[1.55rem] font-extrabold leading-none text-[#59e6ff] sm:text-[1.75rem]">
+                        {formatTrialTime(hfTrialSecondsLeft)}
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-10 rounded-full px-4 text-[#aeb6ca] hover:bg-white/10 hover:text-white"
+                      onClick={closeHfTrial}
+                    >
+                      <span aria-hidden="true">x</span>
+                      {t.pixal3d.generator.hfTrialClose}
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-10 rounded-full px-4 text-[#aeb6ca] hover:bg-white/10 hover:text-white"
-                  onClick={closeHfTrial}
-                >
-                  <span aria-hidden="true">x</span>
-                  {t.pixal3d.generator.hfTrialClose}
-                </Button>
               </div>
               <iframe
                 title={t.pixal3d.generator.hfTrialTitle}
