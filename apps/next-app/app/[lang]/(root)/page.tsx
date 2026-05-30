@@ -269,6 +269,7 @@ const ADVANTAGE_KEYS = [
   "pbr",
   "fast",
 ] as const;
+const FAQ_KEYS = ["generator", "oneImage", "bestImages", "formats"] as const;
 
 export default function Home() {
   const { t, locale, localizedPath } = useTranslation();
@@ -743,8 +744,8 @@ export default function Home() {
     <div className="min-h-screen overflow-hidden bg-[#071431] text-white">
       <section className="relative min-h-[calc(100vh-4rem)] border-l border-r border-[#2b3657] bg-[radial-gradient(circle_at_50%_-10%,rgba(22,91,173,0.22),transparent_42%),linear-gradient(180deg,#071431_0%,#0a1737_46%,#071431_100%)] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-[1420px] flex-col items-center">
-          <div className="mb-9 text-center">
-            <h1 className="bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] bg-clip-text text-5xl font-extrabold tracking-normal text-transparent sm:text-6xl">
+          <div className="mb-9 pt-1 text-center">
+            <h1 className="bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] bg-clip-text text-5xl font-extrabold leading-[1.08] tracking-normal text-transparent sm:text-6xl">
               {t.pixal3d.generator.heroTitle}
             </h1>
             <p className="mt-4 text-xl font-medium tracking-normal text-[#9ca4ba] sm:text-2xl">
@@ -1290,18 +1291,44 @@ export default function Home() {
                           </span>
                         ) : null}
                       </span>
-                      <span className={`absolute -bottom-2 left-1/2 hidden w-[184px] -translate-x-1/2 rounded-lg border px-4 py-2 text-xs font-semibold leading-5 shadow-[0_12px_30px_rgba(0,0,0,0.22)] transition md:inline-flex md:justify-center ${
-                        isActive
-                          ? "border-[#2a5279] bg-[#081425] text-[#d8f4ff]"
-                          : index === 1
-                            ? "border-[#005f4d] bg-[#06130f] text-[#00d884]"
-                            : "border-transparent bg-transparent text-transparent"
-                      }`}>
-                        {t.pixal3d.inspiration.generateSimilar}
-                      </span>
+                      {isActive ? (
+                        <span className="absolute -bottom-2 left-1/2 hidden w-[184px] -translate-x-1/2 rounded-lg border border-[#2a5279] bg-[#081425] px-4 py-2 text-xs font-semibold leading-5 text-[#d8f4ff] shadow-[0_12px_30px_rgba(0,0,0,0.22)] md:inline-flex md:justify-center">
+                          {t.pixal3d.inspiration.generateSimilar}
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })()
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-12 w-full max-w-[1420px] border-t border-[#25314f] pt-10">
+            <div>
+              <h2 className="text-4xl font-extrabold tracking-normal text-white sm:text-5xl">
+                {t.pixal3d.faq.title}
+              </h2>
+            </div>
+            <div className="mt-6 space-y-3">
+              {FAQ_KEYS.map((key) => (
+                <details
+                  key={key}
+                  open
+                  className="group overflow-hidden rounded-xl border border-[#25314f] bg-[#0b1426]/88 shadow-[0_18px_50px_rgba(0,0,0,0.14)]"
+                >
+                  <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-4 text-lg font-extrabold text-white marker:hidden">
+                    <span
+                      aria-hidden="true"
+                      className="text-sm text-white/85 transition-transform group-open:rotate-90"
+                    >
+                      &gt;
+                    </span>
+                    <span>{t.pixal3d.faq.items[key].question}</span>
+                  </summary>
+                  <div className="border-t border-[#1b2740] px-5 py-4 text-lg leading-8 text-[#aeb6ca]">
+                    {t.pixal3d.faq.items[key].answer}
+                  </div>
+                </details>
               ))}
             </div>
           </div>

@@ -2,10 +2,11 @@ import Link from "next/link";
 
 import { db, blogPost, user } from "@libs/database";
 import { blogPostStatus } from "@libs/database/schema/blog-post";
-import { eq, desc, count } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { translations } from "@libs/i18n";
 import type { Metadata } from "next";
 import { Button } from "@libs/react-shared/ui/button";
+import { getStaticBlogPosts } from "@/lib/static-blog-posts";
 
 const PAGE_SIZE = 12;
 
@@ -33,15 +34,7 @@ export default async function BlogListPage({ params, searchParams }: Props) {
   const page = Math.max(1, parseInt(pageParam || "1", 10));
   const offset = (page - 1) * PAGE_SIZE;
 
-  const totalResult = await db
-    .select({ count: count() })
-    .from(blogPost)
-    .where(eq(blogPost.status, blogPostStatus.PUBLISHED));
-
-  const total = totalResult[0]?.count ?? 0;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-
-  const posts = await db
+  const dbPosts = await db
     .select({
       id: blogPost.id,
       title: blogPost.title,
@@ -54,9 +47,28 @@ export default async function BlogListPage({ params, searchParams }: Props) {
     .from(blogPost)
     .leftJoin(user, eq(blogPost.authorId, user.id))
     .where(eq(blogPost.status, blogPostStatus.PUBLISHED))
-    .orderBy(desc(blogPost.publishedAt))
-    .limit(PAGE_SIZE)
-    .offset(offset);
+    .orderBy(desc(blogPost.publishedAt));
+
+  const posts = [
+    ...getStaticBlogPosts().map((post) => ({
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt,
+      coverImage: post.coverImage,
+      publishedAt: post.publishedAt,
+      authorName: post.authorName,
+    })),
+    ...dbPosts,
+  ].sort((left, right) => {
+    const leftTime = left.publishedAt ? new Date(left.publishedAt).getTime() : 0;
+    const rightTime = right.publishedAt ? new Date(right.publishedAt).getTime() : 0;
+    return rightTime - leftTime;
+  });
+
+  const total = posts.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const paginatedPosts = posts.slice(offset, offset + PAGE_SIZE);
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,14 +83,14 @@ export default async function BlogListPage({ params, searchParams }: Props) {
             </p>
           </div>
 
-          {posts.length === 0 ? (
+          {paginatedPosts.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">
               {t.blog.noPosts}
             </p>
           ) : (
             <>
               <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                {posts.map((post) => (
+                {paginatedPosts.map((post) => (
                   <Link
                     key={post.id}
                     href={`/${lang}/blog/${post.slug}`}

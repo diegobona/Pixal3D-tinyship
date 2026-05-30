@@ -1,0 +1,40 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#050B18"/>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="1234" cy="206" r="220" fill="url(#glow1)" opacity="0.82"/>
+  <circle cx="312" cy="714" r="252" fill="url(#glow2)" opacity="0.78"/>
+  <rect x="488" y="188" width="624" height="524" rx="32" fill="url(#panel)" stroke="#7ED9FF" stroke-opacity="0.34" stroke-width="2"/>
+  <rect x="572" y="272" width="456" height="356" rx="24" fill="#081225" stroke="#A8EFFF" stroke-opacity="0.2"/>
+  <path d="M572 360H1028" stroke="#8EDCFF" stroke-opacity="0.22"/>
+  <path d="M572 448H1028" stroke="#8EDCFF" stroke-opacity="0.22"/>
+  <path d="M572 536H1028" stroke="#8EDCFF" stroke-opacity="0.22"/>
+  <circle cx="646" cy="322" r="22" fill="#57C9FF"/>
+  <circle cx="800" cy="322" r="22" fill="#78FFE1"/>
+  <circle cx="954" cy="322" r="22" fill="#57C9FF"/>
+  <path d="M646 322H800M800 322H954" stroke="#D5FBFF" stroke-opacity="0.56" stroke-width="3"/>
+  <path d="M646 322L730 448L646 574" stroke="#4DEFFF" stroke-opacity="0.5" stroke-width="3"/>
+  <path d="M954 322L870 448L954 574" stroke="#4DEFFF" stroke-opacity="0.5" stroke-width="3"/>
+  <path d="M730 448H870" stroke="#A8F7F4" stroke-opacity="0.54" stroke-width="3"/>
+  <path d="M730 448L800 536L870 448" stroke="#A8F7F4" stroke-opacity="0.54" stroke-width="3"/>
+  <path d="M224 214C332 146 438 120 586 132" stroke="#45BFFF" stroke-opacity="0.18" stroke-width="2"/>
+  <path d="M1038 780C1176 736 1298 738 1422 786" stroke="#3EFFC9" stroke-opacity="0.2" stroke-width="2"/>
+  <defs>
+    <linearGradient id="bg" x1="124" y1="106" x2="1476" y2="864" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#081120"/>
+      <stop offset="0.55" stop-color="#07101D"/>
+      <stop offset="1" stop-color="#040912"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1234 206) rotate(90) scale(220)">
+      <stop stop-color="#1CD5FF"/>
+      <stop offset="1" stop-color="#1CD5FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(312 714) rotate(90) scale(252)">
+      <stop stop-color="#00FFB4"/>
+      <stop offset="1" stop-color="#00FFB4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="panel" x1="516" y1="218" x2="1120" y2="724" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A7DFF" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#4FFFF0" stop-opacity="0.14"/>
+    </linearGradient>
+  </defs>
+</svg>

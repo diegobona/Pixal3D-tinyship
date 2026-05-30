@@ -40,7 +40,7 @@ export const en: Locale = {
   pixal3d: {
     generator: {
       heroTitle: "Turn Any Image into a Faithful 3D Model",
-      subtitle: "Free to start, no login required",
+      subtitle: "Free to try, no sign-in needed",
       imageHint: "Single image input for the Pixal3D generation pipeline.",
       imagePreviewAlt: "Uploaded reference image",
       uploadButton: "Upload image",
@@ -170,6 +170,27 @@ export const en: Locale = {
       eyebrow: "Model Inspiration Gallery",
       title: "Explore example 3D model directions for your next generation",
       generateSimilar: "Click to generate a similar 3D model"
+    },
+    faq: {
+      title: "FAQ",
+      items: {
+        generator: {
+          question: "Is Pixal3D an AI 3D model generator?",
+          answer: "Pixal3D.net is an online image to 3D model generator for creating faithful 3D models from reference images and exporting GLB outputs."
+        },
+        oneImage: {
+          question: "Can Pixal3D create a 3D model from one image?",
+          answer: "Yes. Start with a clear reference image, then use the generator to create a 3D model that can be reviewed and used in downstream projects."
+        },
+        bestImages: {
+          question: "What images work best for image-to-3D generation?",
+          answer: "Single-object images with a clean background, strong silhouette, and visible shape details usually work better than crowded scenes or heavily occluded subjects."
+        },
+        formats: {
+          question: "Can I use the result as a GLB file?",
+          answer: "Pixal3D.net is designed around GLB output. Always inspect the generated mesh before using it in production or interactive scenes."
+        }
+      }
     }
   },
   auth: {
