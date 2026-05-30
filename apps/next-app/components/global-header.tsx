@@ -16,6 +16,9 @@ interface CreditStatusResponse {
   credits?: {
     balance?: number;
   };
+  subscription?: {
+    planId?: string;
+  } | null;
 }
 
 export default function Header({ className }: HeaderProps) {
@@ -23,6 +26,8 @@ export default function Header({ className }: HeaderProps) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLocaleMenuOpen, setIsLocaleMenuOpen] = useState(false);
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
+  const [subscriptionPlanId, setSubscriptionPlanId] = useState<string | null>(null);
+  const [isCreditStatusLoaded, setIsCreditStatusLoaded] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const localeMenuRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
@@ -38,6 +43,7 @@ export default function Header({ className }: HeaderProps) {
   const featuresHref = `${homeHref}#features`;
   const displayName = user?.name || user?.email || "User";
   const displayEmail = user?.email || "";
+  const shouldShowUpgradeButton = !user || (isCreditStatusLoaded && !subscriptionPlanId);
 
   useEffect(() => {
     if (!isUserMenuOpen && !isLocaleMenuOpen) return;
@@ -71,25 +77,38 @@ export default function Header({ className }: HeaderProps) {
   useEffect(() => {
     if (!user) {
       setCreditBalance(null);
+      setSubscriptionPlanId(null);
+      setIsCreditStatusLoaded(false);
       return;
     }
 
     let isMounted = true;
+    setIsCreditStatusLoaded(false);
 
     const loadCreditBalance = async () => {
       try {
         const response = await fetch("/api/credits/status", { cache: "no-store" });
         if (!response.ok) {
-          if (isMounted) setCreditBalance(0);
+          if (isMounted) {
+            setCreditBalance(0);
+            setSubscriptionPlanId(null);
+            setIsCreditStatusLoaded(true);
+          }
           return;
         }
 
         const data = (await response.json()) as CreditStatusResponse;
         if (isMounted) {
           setCreditBalance(Number(data.credits?.balance || 0));
+          setSubscriptionPlanId(data.subscription?.planId || null);
+          setIsCreditStatusLoaded(true);
         }
       } catch {
-        if (isMounted) setCreditBalance(0);
+        if (isMounted) {
+          setCreditBalance(0);
+          setSubscriptionPlanId(null);
+          setIsCreditStatusLoaded(true);
+        }
       }
     };
 
@@ -162,12 +181,14 @@ export default function Header({ className }: HeaderProps) {
                     <span className="absolute bottom-full left-1/2 h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rotate-45 border-l border-t border-[#6a4a16] bg-[#171008]" />
                   </div>
                 </div>
-                <Link
-                  href={localizedPath("/pricing")}
-                  className="inline-flex h-10 items-center rounded-full bg-[#48bdff] px-4 text-sm font-bold text-[#04101e] transition-colors hover:bg-[#72ceff]"
-                >
-                  {t.pixal3d.generator.upgradeButton}
-                </Link>
+                {shouldShowUpgradeButton ? (
+                  <Link
+                    href={localizedPath("/pricing")}
+                    className="inline-flex h-10 items-center rounded-full bg-[#48bdff] px-4 text-sm font-bold text-[#04101e] transition-colors hover:bg-[#72ceff]"
+                  >
+                    {t.pixal3d.generator.upgradeButton}
+                  </Link>
+                ) : null}
                 <div
                   ref={userMenuRef}
                   className="relative"
@@ -377,6 +398,11 @@ export default function Header({ className }: HeaderProps) {
                   <Link href={localizedPath("/dashboard")} target="_blank" rel="noreferrer" className="block py-2 text-sm font-semibold text-white/75">
                     {t.header.auth.dashboard}
                   </Link>
+                  {shouldShowUpgradeButton ? (
+                    <Link href={localizedPath("/pricing")} className="block py-2 text-sm font-semibold text-white/75">
+                      {t.pixal3d.generator.upgradeButton}
+                    </Link>
+                  ) : null}
                   <button type="button" onClick={handleSignOut} className="block py-2 text-sm font-semibold text-white/75">
                     {t.header.auth.signOut}
                   </button>
