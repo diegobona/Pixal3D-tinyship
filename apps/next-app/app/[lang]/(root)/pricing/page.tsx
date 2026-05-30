@@ -140,16 +140,23 @@ export default function PricingPage() {
 
                 <div className="mt-10">
                   {plan.id === "free" ? (
-                    <div className="text-5xl font-bold">$0</div>
+                    <div className="flex items-start gap-1">
+                      <span className="pt-2 text-xl font-semibold text-foreground/72">$</span>
+                      <span className="text-5xl font-bold">0</span>
+                    </div>
                   ) : (
                     <>
                       <div className="flex items-end gap-2">
                         {crossedPrice !== null && (
-                          <span className="pb-2 text-xl text-muted-foreground line-through">
-                            ${formatPrice(crossedPrice)}
+                          <span className="flex items-start gap-0.5 pb-2 text-muted-foreground line-through">
+                            <span className="pt-1 text-sm font-semibold">$</span>
+                            <span className="text-xl">{formatPrice(crossedPrice)}</span>
                           </span>
                         )}
-                        <span className="text-5xl font-bold">${formatPrice(displayMonthlyPrice)}</span>
+                        <span className="flex items-start gap-1">
+                          <span className="pt-2 text-xl font-semibold text-foreground/72">$</span>
+                          <span className="text-5xl font-bold">{formatPrice(displayMonthlyPrice)}</span>
+                        </span>
                         <span className="pb-2 text-sm text-muted-foreground">/ month</span>
                       </div>
                       {billingCycle === "yearly" ? (

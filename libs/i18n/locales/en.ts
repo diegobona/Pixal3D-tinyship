@@ -334,7 +334,8 @@ export const en: Locale = {
     },
     credits: {
       label: "Credits",
-      description: "Available credits for Pixal3D model generation."
+      description: "Available credits for Pixal3D model generation.",
+      pricingHint: "Per-generation credit usage will decrease as provider pricing drops."
     },
     account: {
       label: "Account",
