@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@libs/react-shared/ui/button";
 
 interface GlbPreviewDialogProps {
@@ -17,6 +17,19 @@ interface GlbPreviewDialogProps {
 }
 
 type GlbLoadState = "loading" | "ready" | "error";
+type ModelViewerElement = HTMLElement & {
+  loaded?: boolean;
+  modelIsVisible?: boolean;
+};
+type ModelViewerProgressEvent = Event & {
+  detail?: {
+    totalProgress?: number;
+  };
+};
+
+export function isModelViewerReady(element: Pick<ModelViewerElement, "loaded" | "modelIsVisible"> | null) {
+  return Boolean(element?.loaded || element?.modelIsVisible);
+}
 
 export function GlbPreviewDialog({
   open,
@@ -30,6 +43,7 @@ export function GlbPreviewDialog({
   onClose,
 }: GlbPreviewDialogProps) {
   const [loadState, setLoadState] = useState<GlbLoadState>("loading");
+  const modelViewerRef = useRef<ModelViewerElement | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -43,6 +57,50 @@ export function GlbPreviewDialog({
       setLoadState("error");
     });
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const element = modelViewerRef.current;
+    if (!element) return;
+
+    let frameId: number | null = null;
+    let timeoutId: number | null = null;
+    const markReady = () => setLoadState("ready");
+    const markError = () => setLoadState("error");
+    const checkReady = () => {
+      if (isModelViewerReady(element)) {
+        markReady();
+      }
+    };
+    const handleProgress = (event: Event) => {
+      const progress = (event as ModelViewerProgressEvent).detail?.totalProgress;
+      if (typeof progress === "number" && progress >= 1) {
+        markReady();
+      }
+    };
+
+    element.addEventListener("load", markReady);
+    element.addEventListener("error", markError);
+    element.addEventListener("model-visibility", checkReady);
+    element.addEventListener("progress", handleProgress);
+
+    frameId = window.requestAnimationFrame(checkReady);
+    timeoutId = window.setTimeout(checkReady, 350);
+
+    return () => {
+      element.removeEventListener("load", markReady);
+      element.removeEventListener("error", markError);
+      element.removeEventListener("model-visibility", checkReady);
+      element.removeEventListener("progress", handleProgress);
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [modelUrl, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -135,6 +193,7 @@ export function GlbPreviewDialog({
             createElement-compatible props through a narrow cast.
           */}
           <model-viewer
+            ref={modelViewerRef}
             data-testid="pixal3d-glb-model-viewer"
             src={modelUrl}
             camera-controls
@@ -143,8 +202,6 @@ export function GlbPreviewDialog({
             shadow-intensity="0.9"
             exposure="1"
             environment-image="neutral"
-            onLoad={() => setLoadState("ready")}
-            onError={() => setLoadState("error")}
             style={{ width: "100%", height: "100%" }}
           />
         </div>
