@@ -27,6 +27,7 @@
 - [17. Creem 支付流程测试](#17-creem-支付流程测试)
 - [18. PayPal 支付流程测试](#18-paypal-支付流程测试)
 - [16. 管理员子页面筛选功能测试](#16-管理员子页面筛选功能测试)
+- [21. My Assets 历史任务测试](#21-my-assets-历史任务测试)
 
 ### 待实现 (Backlog)
 - [19. 支付宝支付流程测试](#19-支付宝支付流程测试)
@@ -485,6 +486,26 @@ seedCredits 实现 (helpers/credits.ts):
 
 ---
 
+## 21. My Assets 历史任务测试
+
+**文件：** `specs/my-assets.spec.ts` ｜ **优先级：** P1 ｜ **Next.js**
+
+> ⚠️ **前置条件：**
+> 1. `FAL_API_KEY` 或 `FAL_KEY` 已配置
+> 2. 数据库可写，`pixal3d_generation` 表已存在
+> 3. 测试用户在 `beforeAll` 中通过 API 注册，并通过 `seedCredits()` 预充足够积分
+
+验证 Pixal3D 真实建任务后，历史页能读取并展示该用户的持久化任务记录。
+
+> 所有测试共用一个浏览器上下文（`beforeAll` 注册 + 种子积分），按串行顺序执行。
+
+| # | 测试名称 | 具体流程 |
+|---|---------|---------|
+| 1 | 创建 Pixal3D 任务后在 My Assets 中看到历史卡片 | API 注册用户 → `seedCredits(userId, 5000)` → 打开首页 `/en` → 点击一个示例图片按钮 → 等待生成按钮可用 → 点击 Generate Model → 等待 `POST /api/3d-generate` 返回 200 且响应中含 `taskId` → 打开 `/en/my-assets` → 验证页面标题可见 → 验证历史卡片数量为 1 → 验证卡片状态为 `Processing` 或 `Completed` → 验证预览图存在 |
+| 2 | 任务已完成时可以从 My Assets 打开 GLB 预览 | 在步骤 1 之后打开 `/en/my-assets` → 如果卡片出现预览按钮，则点击按钮 → 验证 GLB 预览对话框出现；如果任务仍在处理中，则跳过该断言，不判失败 |
+
+---
+
 ## 待实现的测试 (Backlog)
 
 以下是已规划但尚未实现的测试用例。按优先级排列，实现后应迁移到上方对应章节。
@@ -782,6 +803,7 @@ PayPal 重定向到 /api/payment/return/paypal?order_id=xxx&token=xxx&PayerID=xx
 | 2026-03-09 | Next.js | 11 | 0 | 0 | 博客功能（blog.spec.ts）— 全部通过（43.4s） |
 | 2026-03-09 | Nuxt.js | 11 | 0 | 0 | 博客增强后回归（blog.spec.ts）— 全部通过（15.9s） |
 | 2026-03-09 | Next.js | 11 | 0 | 0 | 博客增强后回归（blog.spec.ts）— 全部通过（55.5s） |
+| 2026-05-31 | Next.js | 1 | 0 | 0 | My Assets 历史任务测试（my-assets.spec.ts）— 通过（32.0s） |
 
 _每次测试运行后更新此表。_
 

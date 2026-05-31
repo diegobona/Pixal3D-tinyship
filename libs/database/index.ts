@@ -179,6 +179,7 @@ export const {
   user,
   order,
   subscription,
+  pixal3dGeneration,
   // Tables from auth schema
   account,
   session,

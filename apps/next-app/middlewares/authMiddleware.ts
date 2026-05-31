@@ -29,6 +29,7 @@ const protectedRoutes: ProtectedRouteConfig[] = [
   { pattern: pagePattern("/signin"), type: "page", requiresAuth: false, isAuthRoute: true },
   { pattern: pagePattern("/signup"), type: "page", requiresAuth: false, isAuthRoute: true },
   { pattern: pagePattern("/dashboard"), type: "page", requiresAuth: true },
+  { pattern: pagePattern("/my-assets"), type: "page", requiresAuth: true },
   { pattern: new RegExp("^/api/payment/initiate(\\/.*)?$"), type: "api", requiresAuth: true },
   { pattern: new RegExp("^/api/payment/query(\\/.*)?$"), type: "api", requiresAuth: true },
 ];

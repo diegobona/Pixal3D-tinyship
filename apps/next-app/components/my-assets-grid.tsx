@@ -53,17 +53,21 @@ export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
 
   return (
     <>
-      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3" data-testid="my-assets-grid">
         {items.map((item) => (
           <article
             key={item.id}
             className="overflow-hidden rounded-[24px] border border-[#263653] bg-[#0a1530] shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
+            data-testid="my-assets-card"
+            data-task-id={item.id}
+            data-task-status={item.status}
           >
             <div className="relative aspect-[4/3] overflow-hidden bg-[#0d1a38]">
               <img
                 src={item.previewImageUrl}
                 alt={item.prompt || "Pixal3D asset"}
                 className="h-full w-full object-cover"
+                data-testid="my-assets-preview-image"
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#07101f] via-[#07101f]/65 to-transparent px-4 pb-4 pt-10">
                 <div className="flex items-end justify-between gap-3">
@@ -71,7 +75,10 @@ export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
                     <p className="text-xs uppercase tracking-[0.18em] text-white/45">{labels.createdAt}</p>
                     <p className="mt-1 truncate text-sm font-semibold text-white">{item.createdAtLabel}</p>
                   </div>
-                  <span className={`rounded-full border px-3 py-1 text-xs font-bold ${getStatusClasses(item.status)}`}>
+                  <span
+                    className={`rounded-full border px-3 py-1 text-xs font-bold ${getStatusClasses(item.status)}`}
+                    data-testid="my-assets-status"
+                  >
                     {labels.status[item.status]}
                   </span>
                 </div>
@@ -99,6 +106,7 @@ export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
                   type="button"
                   onClick={() => setPreviewingId(item.id)}
                   className="inline-flex w-full items-center justify-center rounded-full bg-[#48bdff] px-4 py-2.5 text-sm font-bold text-[#04101e] transition hover:bg-[#72ceff]"
+                  data-testid="my-assets-preview-button"
                 >
                   {labels.preview3DModel}
                 </button>

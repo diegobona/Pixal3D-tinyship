@@ -4,6 +4,7 @@ import type {
   ThreeDResolution,
   ThreeDTextureSize,
 } from './3d';
+import type { Pixal3dGeneration } from '@libs/database/schema/pixal3d-generation';
 
 export interface AnonymousTrialInput {
   ipHash: string;
@@ -39,7 +40,6 @@ export interface ThreeDGenerationRecord {
 
 type ThreeDTaskStore = {
   anonymousTrials: Set<string>;
-  generationRecords: Map<string, ThreeDGenerationRecord>;
 };
 
 const globalTaskStore = globalThis as typeof globalThis & {
@@ -48,11 +48,42 @@ const globalTaskStore = globalThis as typeof globalThis & {
 
 const taskStore = globalTaskStore.__pixal3DTaskStore ??= {
   anonymousTrials: new Set<string>(),
-  generationRecords: new Map<string, ThreeDGenerationRecord>(),
 };
 
 const anonymousTrials = taskStore.anonymousTrials;
-const generationRecords = taskStore.generationRecords;
+
+async function getGenerationPersistenceDeps() {
+  const [{ db }, { pixal3dGeneration }, { desc, eq }] = await Promise.all([
+    import('@libs/database'),
+    import('@libs/database/schema/pixal3d-generation'),
+    import('drizzle-orm'),
+  ]);
+
+  return { db, pixal3dGeneration, desc, eq };
+}
+
+function mapGenerationRow(row: Pixal3dGeneration): ThreeDGenerationRecord {
+  return {
+    id: row.id,
+    userId: row.userId,
+    inputImageUrl: row.inputImageUrl,
+    prompt: row.prompt,
+    provider: row.provider,
+    model: row.model,
+    status: row.status,
+    providerTaskId: row.providerTaskId,
+    creditCost: row.creditCost,
+    resolution: row.resolution,
+    textureSize: row.textureSize,
+    consumeTransactionId: row.consumeTransactionId ?? undefined,
+    refunded: row.refunded,
+    result: row.result ?? undefined,
+    errorMessage: row.errorMessage ?? undefined,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    completedAt: row.completedAt ?? undefined,
+  };
+}
 
 function getAnonymousKey(input: AnonymousTrialInput): string {
   return `${input.ipHash}:${input.trialToken}`;
@@ -67,9 +98,10 @@ export function reserveAnonymousTrial(input: AnonymousTrialInput): AnonymousTria
   return { allowed: true };
 }
 
-export function create3DGenerationRecord(
+export async function create3DGenerationRecord(
   input: Omit<ThreeDGenerationRecord, 'id' | 'status' | 'createdAt' | 'updatedAt'>
-): ThreeDGenerationRecord {
+): Promise<ThreeDGenerationRecord> {
+  const { db, pixal3dGeneration } = await getGenerationPersistenceDeps();
   const now = new Date();
   const record: ThreeDGenerationRecord = {
     ...input,
@@ -78,58 +110,113 @@ export function create3DGenerationRecord(
     createdAt: now,
     updatedAt: now,
   };
-  generationRecords.set(record.id, record);
+  await db.insert(pixal3dGeneration).values({
+    id: record.id,
+    userId: record.userId!,
+    inputImageUrl: record.inputImageUrl,
+    prompt: record.prompt,
+    provider: record.provider,
+    model: record.model,
+    status: record.status,
+    providerTaskId: record.providerTaskId,
+    creditCost: record.creditCost,
+    resolution: record.resolution,
+    textureSize: record.textureSize,
+    consumeTransactionId: record.consumeTransactionId,
+    refunded: record.refunded ?? false,
+    result: record.result ?? null,
+    errorMessage: record.errorMessage,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+    completedAt: record.completedAt,
+  });
+
   return record;
 }
 
-export function get3DGenerationRecord(taskId: string): ThreeDGenerationRecord | undefined {
-  return generationRecords.get(taskId);
+export async function get3DGenerationRecord(taskId: string): Promise<ThreeDGenerationRecord | undefined> {
+  const { db, eq, pixal3dGeneration } = await getGenerationPersistenceDeps();
+  const row = await db.query.pixal3dGeneration.findFirst({
+    where: eq(pixal3dGeneration.id, taskId),
+  });
+
+  return row ? mapGenerationRow(row) : undefined;
 }
 
-export function list3DGenerationRecordsByUser(userId: string): ThreeDGenerationRecord[] {
-  return Array.from(generationRecords.values())
-    .filter((record) => record.userId === userId)
-    .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+export async function list3DGenerationRecordsByUser(userId: string): Promise<ThreeDGenerationRecord[]> {
+  const { db, desc, eq, pixal3dGeneration } = await getGenerationPersistenceDeps();
+  const rows = await db.query.pixal3dGeneration.findMany({
+    where: eq(pixal3dGeneration.userId, userId),
+    orderBy: [desc(pixal3dGeneration.createdAt)],
+  });
+
+  return rows.map(mapGenerationRow);
 }
 
-export function mark3DGenerationSucceeded(
+export async function mark3DGenerationSucceeded(
   taskId: string,
   result: ThreeDGenerationResult
-): ThreeDGenerationRecord | undefined {
-  const record = generationRecords.get(taskId);
+): Promise<ThreeDGenerationRecord | undefined> {
+  const { db, eq, pixal3dGeneration } = await getGenerationPersistenceDeps();
+  const record = await get3DGenerationRecord(taskId);
   if (!record) return undefined;
 
+  const now = new Date();
   const updated: ThreeDGenerationRecord = {
     ...record,
     status: 'succeeded',
     result,
-    updatedAt: new Date(),
-    completedAt: new Date(),
+    updatedAt: now,
+    completedAt: now,
   };
-  generationRecords.set(taskId, updated);
+
+  await db
+    .update(pixal3dGeneration)
+    .set({
+      status: updated.status,
+      result: updated.result,
+      errorMessage: null,
+      updatedAt: updated.updatedAt,
+      completedAt: updated.completedAt,
+    })
+    .where(eq(pixal3dGeneration.id, taskId));
+
   return updated;
 }
 
-export function mark3DGenerationFailed(
+export async function mark3DGenerationFailed(
   taskId: string,
   errorMessage: string
-): ThreeDGenerationRecord | undefined {
-  const record = generationRecords.get(taskId);
+): Promise<ThreeDGenerationRecord | undefined> {
+  const { db, eq, pixal3dGeneration } = await getGenerationPersistenceDeps();
+  const record = await get3DGenerationRecord(taskId);
   if (!record) return undefined;
 
+  const now = new Date();
   const updated: ThreeDGenerationRecord = {
     ...record,
     status: 'failed',
     errorMessage,
-    updatedAt: new Date(),
-    completedAt: new Date(),
+    updatedAt: now,
+    completedAt: now,
   };
-  generationRecords.set(taskId, updated);
+
+  await db
+    .update(pixal3dGeneration)
+    .set({
+      status: updated.status,
+      errorMessage: updated.errorMessage,
+      updatedAt: updated.updatedAt,
+      completedAt: updated.completedAt,
+    })
+    .where(eq(pixal3dGeneration.id, taskId));
+
   return updated;
 }
 
-export function mark3DGenerationRefunded(taskId: string): ThreeDGenerationRecord | undefined {
-  const record = generationRecords.get(taskId);
+export async function mark3DGenerationRefunded(taskId: string): Promise<ThreeDGenerationRecord | undefined> {
+  const { db, eq, pixal3dGeneration } = await getGenerationPersistenceDeps();
+  const record = await get3DGenerationRecord(taskId);
   if (!record) return undefined;
 
   const updated: ThreeDGenerationRecord = {
@@ -137,11 +224,18 @@ export function mark3DGenerationRefunded(taskId: string): ThreeDGenerationRecord
     refunded: true,
     updatedAt: new Date(),
   };
-  generationRecords.set(taskId, updated);
+
+  await db
+    .update(pixal3dGeneration)
+    .set({
+      refunded: true,
+      updatedAt: updated.updatedAt,
+    })
+    .where(eq(pixal3dGeneration.id, taskId));
+
   return updated;
 }
 
 export function resetAnonymousTrialStore() {
   anonymousTrials.clear();
-  generationRecords.clear();
 }

@@ -38,6 +38,7 @@ export const PAGES = {
   forgotPassword: `${BASE}/forgot-password`,
   resetPassword: `${BASE}/reset-password`,
   dashboard: `${BASE}/dashboard`,
+  myAssets: `${BASE}/my-assets`,
   pricing: `${BASE}/pricing`,
   paymentSuccess: `${BASE}/payment-success`,
   paymentCancel: `${BASE}/payment-cancel`,

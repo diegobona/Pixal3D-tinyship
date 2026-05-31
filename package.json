@@ -53,6 +53,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "1.60.0",
     "@types/node": "^22.16.0",
     "@types/pg": "8.15.4",
     "drizzle-kit": "0.30.5",

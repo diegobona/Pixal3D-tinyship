@@ -29,7 +29,7 @@ export default async function MyAssetsPage({ params }: { params: Promise<{ lang:
     redirect(localizedPath("/signin", lang));
   }
 
-  const records = list3DGenerationRecordsByUser(session.user.id);
+  const records = await list3DGenerationRecordsByUser(session.user.id);
   const items = records.map((record) => ({
     id: record.id,
     prompt: record.prompt,
@@ -43,12 +43,15 @@ export default async function MyAssetsPage({ params }: { params: Promise<{ lang:
   }));
 
   return (
-    <main className="min-h-screen bg-[#06132e] px-4 py-10 text-white sm:px-6 lg:px-8">
+    <main
+      className="min-h-screen bg-[#06132e] px-4 py-10 text-white sm:px-6 lg:px-8"
+      data-testid="my-assets-page"
+    >
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#48bdff]">{t.eyebrow}</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">{t.title}</h1>
+            <h1 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl" data-testid="my-assets-title">{t.title}</h1>
             <p className="mt-2 max-w-2xl text-base text-white/65">{t.description}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -68,7 +71,10 @@ export default async function MyAssetsPage({ params }: { params: Promise<{ lang:
         </div>
 
         {records.length === 0 ? (
-          <section className="rounded-[28px] border border-[#263653] bg-[#0a1530] px-6 py-16 text-center shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
+          <section
+            className="rounded-[28px] border border-[#263653] bg-[#0a1530] px-6 py-16 text-center shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
+            data-testid="my-assets-empty-state"
+          >
             <h2 className="text-2xl font-bold">{t.empty.title}</h2>
             <p className="mx-auto mt-3 max-w-xl text-base text-white/62">{t.empty.description}</p>
             <Link

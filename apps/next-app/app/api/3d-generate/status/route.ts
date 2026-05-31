@@ -25,7 +25,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const taskId = searchParams.get('taskId') || '';
-    const record = get3DGenerationRecord(taskId);
+    const record = await get3DGenerationRecord(taskId);
 
     if (record && record.userId !== userId) {
       return NextResponse.json(
@@ -71,12 +71,12 @@ export async function GET(req: Request) {
 
     const status = await query3DTask(record.provider, record.model, record.providerTaskId);
     if (status.status === 'succeeded' && status.result) {
-      const updated = mark3DGenerationSucceeded(taskId, status.result);
+      const updated = await mark3DGenerationSucceeded(taskId, status.result);
       return NextResponse.json({ success: true, data: updated });
     }
 
     if (status.status === 'failed') {
-      const updated = mark3DGenerationFailed(taskId, status.errorMessage || '3D generation failed.');
+      const updated = await mark3DGenerationFailed(taskId, status.errorMessage || '3D generation failed.');
       return NextResponse.json({ success: true, data: updated });
     }
 

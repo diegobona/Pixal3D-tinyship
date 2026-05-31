@@ -242,7 +242,7 @@ export async function POST(req: Request) {
 
       throw taskError;
     }
-    const record = create3DGenerationRecord({
+    const record = await create3DGenerationRecord({
       userId,
       inputImageUrl: imageUrl,
       prompt,
