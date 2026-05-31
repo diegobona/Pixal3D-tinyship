@@ -20,6 +20,7 @@ import { Input } from "@libs/react-shared/ui/input";
 import { useTranslation } from "@/hooks/use-translation";
 import { authClientReact } from "@libs/auth/authClient";
 import { dispatchCreditBalanceUpdated } from "@/lib/credit-balance-events";
+import { getPixal3DGenerateDisabledReason } from "@/lib/pixal3d-generate-disabled-reason";
 
 type TaskStatus = "idle" | "upload-ready" | "processing" | "succeeded" | "failed";
 type ResolutionOption = 1024 | 1536;
@@ -322,9 +323,21 @@ export default function Home() {
       && !isSessionPending
     );
   }, [hasEnoughCredits, imageDataUrl, isAuthenticated, isReadingFile, isSessionPending, taskStatus]);
-  const generateDisabledTooltip = !isAuthenticated || !hasEnoughCredits
-    ? t.pixal3d.generator.errors.generateDisabledInsufficientCredits
-    : undefined;
+  const generateDisabledReason = getPixal3DGenerateDisabledReason({
+    isSessionPending,
+    isAuthenticated,
+    hasImage: Boolean(imageDataUrl),
+    creditBalance,
+    requiredCredits,
+    isReadingFile,
+    isProcessing: taskStatus === "processing",
+    labels: {
+      signInRequired: t.pixal3d.generator.errors.generateDisabledSignIn,
+      insufficientCredits: t.pixal3d.generator.errors.generateDisabledInsufficientCredits,
+      imageRequired: t.pixal3d.generator.errors.generateDisabledImageRequired,
+      readingImage: t.pixal3d.generator.errors.generateDisabledReadingImage,
+    },
+  });
 
   const progressStepLabels = t.pixal3d.generator.progress.steps as Record<Pixal3DProgressStepKey, string>;
   const showGenerationProgress = Boolean(progressSnapshot && taskStatus !== "idle" && taskStatus !== "upload-ready");
@@ -961,12 +974,13 @@ export default function Home() {
                 </div>
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-                <div className="group relative flex w-full flex-col items-stretch sm:w-auto">
+                  <div className="group relative flex w-full flex-col items-stretch sm:w-auto">
                   <Button
                     data-testid="pixal3d-generate-button"
                     size="lg"
                     className="h-14 rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] px-8 text-xl font-extrabold text-[#051021] shadow-[0_18px_55px_rgba(0,240,138,0.18)] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={!canGenerate}
+                    aria-describedby={generateDisabledReason ? "pixal3d-generate-disabled-reason" : undefined}
                     onClick={handleGenerate}
                   >
                     {taskStatus === "processing" ? (
@@ -976,14 +990,14 @@ export default function Home() {
                     )}
                     {taskStatus === "processing" ? t.pixal3d.generator.generatingButton : t.pixal3d.generator.generateButton}
                   </Button>
-                  {!canGenerate && generateDisabledTooltip ? (
-                    <div
-                      role="tooltip"
-                      className="pointer-events-none absolute bottom-[calc(100%+12px)] left-1/2 z-20 w-max max-w-[calc(100vw-48px)] -translate-x-1/2 rounded-lg border border-[#48bdff]/45 bg-[#10152a]/98 px-4 py-3 text-center text-xs font-semibold leading-5 text-[#d8f4ff] opacity-0 shadow-[0_20px_70px_rgba(72,189,255,0.18)] transition duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
+                  {!canGenerate && generateDisabledReason ? (
+                    <p
+                      id="pixal3d-generate-disabled-reason"
+                      data-testid="pixal3d-generate-disabled-reason"
+                      className="mt-2 text-center text-sm font-bold leading-5 text-[#ffb8b8]"
                     >
-                      {generateDisabledTooltip}
-                      <span className="absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[#48bdff]/45 bg-[#10152a]" />
-                    </div>
+                      {generateDisabledReason}
+                    </p>
                   ) : null}
                 </div>
                 </div>
