@@ -1228,6 +1228,9 @@ export default function Home() {
               title={t.pixal3d.generator.previewTitle}
               closeLabel={t.pixal3d.generator.closePreviewButton}
               downloadLabel={t.pixal3d.generator.downloadModelButton}
+              loadingLabel={t.pixal3d.generator.previewLoading}
+              errorTitle={t.pixal3d.generator.previewErrorTitle}
+              errorDescription={t.pixal3d.generator.previewErrorDescription}
               onClose={() => setIsGlbPreviewOpen(false)}
             />
           )}

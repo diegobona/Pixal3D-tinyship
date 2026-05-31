@@ -12,11 +12,19 @@ describe('GlbPreviewDialog', () => {
         title: 'Preview model',
         closeLabel: 'Close',
         downloadLabel: 'Download GLB',
+        loadingLabel: 'Loading model...',
+        errorTitle: 'Model preview failed',
+        errorDescription: 'Download the GLB instead.',
         onClose: () => undefined,
       })
     );
 
     expect(html).toContain('role="dialog"');
+    expect(html).toContain('data-testid="pixal3d-glb-loading-state"');
+    expect(html).toContain('Loading model...');
+    expect(html).toContain('data-testid="pixal3d-glb-error-state"');
+    expect(html).toContain('Model preview failed');
+    expect(html).toContain('Download the GLB instead.');
     expect(html).toContain('data-testid="pixal3d-glb-model-viewer"');
     expect(html).toContain('src="https://example.com/model.glb"');
     expect(html).toContain('camera-controls');
@@ -32,6 +40,9 @@ describe('GlbPreviewDialog', () => {
         title: 'Preview model',
         closeLabel: 'Close',
         downloadLabel: 'Download GLB',
+        loadingLabel: 'Loading model...',
+        errorTitle: 'Model preview failed',
+        errorDescription: 'Download the GLB instead.',
         onClose: () => undefined,
       })
     );

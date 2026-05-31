@@ -1,7 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GlbPreviewDialog } from "@/components/glb-preview-dialog";
+import {
+  mergeMyAssetStatusUpdate,
+  type MyAssetStatusUpdate,
+} from "@/lib/my-assets-status-updates";
 
 type AssetStatus = "processing" | "succeeded" | "failed";
 
@@ -9,6 +13,7 @@ export interface MyAssetItem {
   id: string;
   prompt: string;
   modelUrl?: string;
+  errorMessage?: string;
   status: AssetStatus;
   resolution: number;
   textureSize: number;
@@ -25,8 +30,17 @@ interface MyAssetsGridProps {
     previewTitle: string;
     closePreview: string;
     downloadGlb: string;
+    previewLoading: string;
+    previewErrorTitle: string;
+    previewErrorDescription: string;
+    checkingStatus: string;
     status: Record<AssetStatus, string>;
   };
+}
+
+interface StatusResponse {
+  success: boolean;
+  data?: MyAssetStatusUpdate;
 }
 
 function getStatusClasses(status: AssetStatus) {
@@ -42,17 +56,78 @@ function getStatusClasses(status: AssetStatus) {
 }
 
 export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
+  const [assets, setAssets] = useState(items);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const assetsRef = useRef(assets);
+
+  useEffect(() => {
+    setAssets(items);
+  }, [items]);
+
+  useEffect(() => {
+    assetsRef.current = assets;
+  }, [assets]);
+
+  const processingAssetIds = useMemo(
+    () => assets.filter((item) => item.status === "processing").map((item) => item.id).join("|"),
+    [assets]
+  );
+
+  useEffect(() => {
+    if (!processingAssetIds) return;
+
+    let isCancelled = false;
+    let isInFlight = false;
+
+    const checkProcessingAssets = async () => {
+      if (isInFlight) return;
+      isInFlight = true;
+      setIsCheckingStatus(true);
+
+      const ids = assetsRef.current
+        .filter((item) => item.status === "processing")
+        .map((item) => item.id);
+
+      await Promise.all(ids.map(async (taskId) => {
+        try {
+          const response = await fetch(`/api/3d-generate/status?taskId=${encodeURIComponent(taskId)}`, {
+            cache: "no-store",
+          });
+          const data = (await response.json()) as StatusResponse;
+
+          if (!isCancelled && response.ok && data.success && data.data) {
+            setAssets((current) => mergeMyAssetStatusUpdate(current, data.data!));
+          }
+        } catch {
+          // Keep the card in processing and retry on the next interval.
+        }
+      }));
+
+      if (!isCancelled) {
+        setIsCheckingStatus(false);
+      }
+      isInFlight = false;
+    };
+
+    void checkProcessingAssets();
+    const intervalId = window.setInterval(checkProcessingAssets, 10000);
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [processingAssetIds]);
 
   const previewItem = useMemo(
-    () => items.find((item) => item.id === previewingId && item.modelUrl),
-    [items, previewingId]
+    () => assets.find((item) => item.id === previewingId && item.modelUrl),
+    [assets, previewingId]
   );
 
   return (
     <>
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3" data-testid="my-assets-grid">
-        {items.map((item) => (
+        {assets.map((item) => (
           <article
             key={item.id}
             className="overflow-hidden rounded-[24px] border border-[#263653] bg-[#0a1530] shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
@@ -111,6 +186,19 @@ export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
                   {labels.preview3DModel}
                 </button>
               ) : null}
+              {item.status === "processing" ? (
+                <p
+                  className="text-center text-xs font-semibold text-[#7bd7ff]"
+                  data-testid="my-assets-processing-hint"
+                >
+                  {isCheckingStatus ? labels.checkingStatus : labels.status.processing}
+                </p>
+              ) : null}
+              {item.status === "failed" && item.errorMessage ? (
+                <p className="text-center text-xs font-semibold text-[#ff9dad]">
+                  {item.errorMessage}
+                </p>
+              ) : null}
             </div>
           </article>
         ))}
@@ -123,6 +211,9 @@ export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
           title={labels.previewTitle}
           closeLabel={labels.closePreview}
           downloadLabel={labels.downloadGlb}
+          loadingLabel={labels.previewLoading}
+          errorTitle={labels.previewErrorTitle}
+          errorDescription={labels.previewErrorDescription}
           onClose={() => setPreviewingId(null)}
         />
       ) : null}

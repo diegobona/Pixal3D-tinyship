@@ -55,6 +55,7 @@ export default async function MyAssetsPage({
     id: record.id,
     prompt: record.prompt,
     modelUrl: record.result?.modelUrl,
+    errorMessage: record.errorMessage,
     status: record.status,
     resolution: record.resolution,
     textureSize: record.textureSize,
@@ -115,6 +116,10 @@ export default async function MyAssetsPage({
                 previewTitle: translations[locale]?.pixal3d.generator.previewTitle || translations.en.pixal3d.generator.previewTitle,
                 closePreview: translations[locale]?.pixal3d.generator.closePreviewButton || translations.en.pixal3d.generator.closePreviewButton,
                 downloadGlb: translations[locale]?.pixal3d.generator.downloadModelButton || translations.en.pixal3d.generator.downloadModelButton,
+                previewLoading: translations[locale]?.pixal3d.generator.previewLoading || translations.en.pixal3d.generator.previewLoading,
+                previewErrorTitle: translations[locale]?.pixal3d.generator.previewErrorTitle || translations.en.pixal3d.generator.previewErrorTitle,
+                previewErrorDescription: translations[locale]?.pixal3d.generator.previewErrorDescription || translations.en.pixal3d.generator.previewErrorDescription,
+                checkingStatus: t.card.checkingStatus,
                 status: t.card.status,
               }}
             />

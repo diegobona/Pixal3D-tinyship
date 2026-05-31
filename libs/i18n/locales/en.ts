@@ -74,6 +74,9 @@ export const en: Locale = {
       generatingButton: "Building model...",
       resultTitle: "3D model is ready",
       previewTitle: "Preview 3D Model",
+      previewLoading: "Loading model...",
+      previewErrorTitle: "Model preview failed",
+      previewErrorDescription: "The preview could not load this GLB. You can still download the file and open it in another 3D viewer.",
       previewModelButton: "Preview GLB",
       closePreviewButton: "Close preview",
       openModelButton: "Open GLB",
@@ -382,6 +385,7 @@ export const en: Locale = {
       textureSize: "Texture Size",
       createdAt: "Created",
       credits: "Credits",
+      checkingStatus: "Checking status...",
       status: {
         processing: "Processing",
         succeeded: "Completed",

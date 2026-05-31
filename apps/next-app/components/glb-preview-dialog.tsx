@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@libs/react-shared/ui/button";
 
 interface GlbPreviewDialogProps {
@@ -10,8 +10,13 @@ interface GlbPreviewDialogProps {
   title: string;
   closeLabel: string;
   downloadLabel: string;
+  loadingLabel: string;
+  errorTitle: string;
+  errorDescription: string;
   onClose: () => void;
 }
+
+type GlbLoadState = "loading" | "ready" | "error";
 
 export function GlbPreviewDialog({
   open,
@@ -19,11 +24,24 @@ export function GlbPreviewDialog({
   title,
   closeLabel,
   downloadLabel,
+  loadingLabel,
+  errorTitle,
+  errorDescription,
   onClose,
 }: GlbPreviewDialogProps) {
+  const [loadState, setLoadState] = useState<GlbLoadState>("loading");
+
+  useEffect(() => {
+    if (open) {
+      setLoadState("loading");
+    }
+  }, [modelUrl, open]);
+
   useEffect(() => {
     if (!open) return;
-    void import("@google/model-viewer");
+    void import("@google/model-viewer").catch(() => {
+      setLoadState("error");
+    });
   }, [open]);
 
   useEffect(() => {
@@ -78,7 +96,36 @@ export function GlbPreviewDialog({
             </button>
           </div>
         </div>
-        <div className="h-[68vh] min-h-[460px] bg-[radial-gradient(circle_at_50%_20%,rgba(72,189,255,0.14),transparent_42%),#050b1a]">
+        <div className="relative h-[68vh] min-h-[460px] bg-[radial-gradient(circle_at_50%_20%,rgba(72,189,255,0.14),transparent_42%),#050b1a]">
+          <div
+            data-testid="pixal3d-glb-loading-state"
+            hidden={loadState !== "loading"}
+            className="absolute inset-0 z-10 grid place-items-center bg-[#050b1a]/82 px-6 text-center"
+          >
+            <div>
+              <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[#48bdff]/25 border-t-[#48bdff]" />
+              <p className="mt-4 text-base font-extrabold text-[#d8f4ff]">{loadingLabel}</p>
+            </div>
+          </div>
+          <div
+            data-testid="pixal3d-glb-error-state"
+            hidden={loadState !== "error"}
+            className="absolute inset-0 z-20 grid place-items-center bg-[#050b1a]/92 px-6 text-center"
+          >
+            <div className="max-w-md">
+              <p className="text-xl font-extrabold text-[#ffb8b8]">{errorTitle}</p>
+              <p className="mt-3 text-sm font-semibold leading-6 text-white/68">{errorDescription}</p>
+              <Button
+                asChild
+                type="button"
+                className="mt-6 h-10 rounded-full bg-[#48bdff] px-5 text-sm font-extrabold text-[#051021] hover:bg-[#71ccff]"
+              >
+                <a href={modelUrl} download>
+                  {downloadLabel}
+                </a>
+              </Button>
+            </div>
+          </div>
           {/*
             model-viewer is a custom element loaded lazily above. It provides
             native camera controls for rotate, pan, and zoom.
@@ -96,6 +143,8 @@ export function GlbPreviewDialog({
             shadow-intensity="0.9"
             exposure="1"
             environment-image="neutral"
+            onLoad={() => setLoadState("ready")}
+            onError={() => setLoadState("error")}
             style={{ width: "100%", height: "100%" }}
           />
         </div>
