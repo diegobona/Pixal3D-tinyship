@@ -1,62 +1,78 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-const authMiddlewareMock = vi.fn();
-const localeMiddlewareMock = vi.fn();
+function createRequest(pathname: string, cookieNames: string[] = []) {
+  const url = new URL(`http://localhost${pathname}`);
+  return {
+    headers: new Headers(cookieNames.length ? { cookie: cookieNames.map((name) => `${name}=value`).join("; ") } : undefined),
+    cookies: {
+      getAll: () => cookieNames.map((name) => ({ name, value: "value" })),
+    },
+    nextUrl: {
+      pathname,
+      clone() {
+        return new URL(url);
+      },
+    },
+    url: url.toString(),
+  };
+}
 
-describe("Next app proxy entry", () => {
+describe("Next app middleware entry", () => {
   beforeEach(() => {
     vi.resetModules();
-    authMiddlewareMock.mockReset();
-    localeMiddlewareMock.mockReset();
 
     vi.doMock("next/server", () => ({
       NextResponse: {
+        redirect(url: URL | string) {
+          return Response.redirect(url, 307);
+        },
+        rewrite(url: URL | string) {
+          return new Response(null, {
+            status: 200,
+            headers: { "x-middleware-rewrite": String(url) },
+          });
+        },
         next() {
           return new Response(null, { status: 200 });
         },
       },
     }));
 
-    vi.doMock("../../../apps/next-app/middlewares/authMiddleware", () => ({
-      authMiddleware: authMiddlewareMock,
-    }));
-
-    vi.doMock("../../../apps/next-app/middlewares/localeMiddleware", () => ({
-      localeMiddleware: localeMiddlewareMock,
-    }));
   });
 
-  test("runs auth middleware before locale middleware", async () => {
-    authMiddlewareMock.mockResolvedValue(undefined);
-    localeMiddlewareMock.mockReturnValue(undefined);
+  test("redirects protected pages without importing Node auth middleware", async () => {
+    vi.doMock("../../../apps/next-app/middlewares/authMiddleware", () => {
+      throw new Error("proxy must not import Node auth middleware");
+    });
 
-    const { proxy } = await import("../../../apps/next-app/proxy");
-    const response = await proxy({
-      headers: new Headers(),
-      nextUrl: { pathname: "/my-assets" },
-      url: "http://localhost/my-assets",
-    } as any);
+    const { middleware } = await import("../../../apps/next-app/middleware");
+    const response = middleware(createRequest("/my-assets") as any);
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/signin");
+  });
+
+  test("allows protected pages with a better-auth session cookie to continue to locale rewrite", async () => {
+    const { middleware } = await import("../../../apps/next-app/middleware");
+    const response = middleware(createRequest("/my-assets", ["better-auth.session_token"]) as any);
 
     expect(response.status).toBe(200);
-    expect(authMiddlewareMock).toHaveBeenCalledOnce();
-    expect(localeMiddlewareMock).toHaveBeenCalledOnce();
-    expect(authMiddlewareMock.mock.invocationCallOrder[0]).toBeLessThan(
-      localeMiddlewareMock.mock.invocationCallOrder[0]
-    );
+    expect(response.headers.get("x-middleware-rewrite")).toBe("http://localhost/en/my-assets");
   });
 
-  test("returns auth middleware response without running locale middleware", async () => {
-    const redirectResponse = new Response(null, { status: 307 });
-    authMiddlewareMock.mockResolvedValue(redirectResponse);
+  test("keeps localized signin redirects for protected pages", async () => {
+    const { middleware } = await import("../../../apps/next-app/middleware");
+    const response = middleware(createRequest("/zh-CN/my-assets") as any);
 
-    const { proxy } = await import("../../../apps/next-app/proxy");
-    const response = await proxy({
-      headers: new Headers(),
-      nextUrl: { pathname: "/my-assets" },
-      url: "http://localhost/my-assets",
-    } as any);
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/zh-CN/signin");
+  });
 
-    expect(response).toBe(redirectResponse);
-    expect(localeMiddlewareMock).not.toHaveBeenCalled();
+  test("redirects default locale URLs to clean URLs", async () => {
+    const { middleware } = await import("../../../apps/next-app/middleware");
+    const response = middleware(createRequest("/en/pricing") as any);
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/pricing");
   });
 });
