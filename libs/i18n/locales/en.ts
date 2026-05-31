@@ -110,11 +110,13 @@ export const en: Locale = {
         ready: "Image ready. Generate your model.",
         creating: "Creating 3D task...",
         processing: "Building the GLB...",
+        stillChecking: "Still checking in My Assets...",
         succeeded: "3D model is ready."
       },
       progress: {
         title: "Generation progress",
         completedTitle: "3D model is ready",
+        checkingTitle: "Still checking the result",
         failedTitle: "Generation stopped",
         steps: {
           submitting: "Submitting request",
@@ -136,6 +138,9 @@ export const en: Locale = {
         generationFailed: "3D generation failed.",
         statusFailed: "Could not check the 3D task status.",
         timeout: "3D generation timed out. Please try again.",
+        statusStillChecking: "Your model is still being checked.",
+        statusStillCheckingDescription: "The task was submitted, but this page could not confirm the final result yet. Check My Assets in a few minutes.",
+        timeoutStillChecking: "The task is taking longer than expected. It may still finish in My Assets.",
         freeTrialBusy: "Free trial server is busy, try again later",
         freeTrialLimitReached: "Free trials used. Sign in or upgrade to keep generating.",
         trialUsed: "Free trial already used",

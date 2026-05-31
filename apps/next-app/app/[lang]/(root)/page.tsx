@@ -21,8 +21,12 @@ import { useTranslation } from "@/hooks/use-translation";
 import { authClientReact } from "@libs/auth/authClient";
 import { dispatchCreditBalanceUpdated } from "@/lib/credit-balance-events";
 import { getPixal3DGenerateDisabledReason } from "@/lib/pixal3d-generate-disabled-reason";
+import {
+  Pixal3DGenerationStatusUnknownError,
+  isPixal3DGenerationStatusUnknownError,
+} from "@/lib/pixal3d-generation-errors";
 
-type TaskStatus = "idle" | "upload-ready" | "processing" | "succeeded" | "failed";
+type TaskStatus = "idle" | "upload-ready" | "processing" | "checking" | "succeeded" | "failed";
 type ResolutionOption = 1024 | 1536;
 type TextureSizeOption = 1024 | 2048 | 4096 | 8192;
 type PageNoticeType = "error" | "info" | "success";
@@ -594,11 +598,18 @@ export default function Home() {
 
     while (Date.now() - startedAt < POLL_TIMEOUT_MS) {
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-      const response = await fetch(`/api/3d-generate/status?${searchParams.toString()}`);
-      const data = (await response.json()) as StatusResponse;
+      let response: Response;
+      let data: StatusResponse;
+
+      try {
+        response = await fetch(`/api/3d-generate/status?${searchParams.toString()}`);
+        data = (await response.json()) as StatusResponse;
+      } catch {
+        throw new Pixal3DGenerationStatusUnknownError(t.pixal3d.generator.errors.statusStillCheckingDescription);
+      }
 
       if (!response.ok || !data.success || !data.data) {
-        throw new Error(data.message || t.pixal3d.generator.errors.statusFailed);
+        throw new Pixal3DGenerationStatusUnknownError(data.message || t.pixal3d.generator.errors.statusStillCheckingDescription);
       }
 
       if (data.data.status === "succeeded" && data.data.result?.modelUrl) {
@@ -612,7 +623,7 @@ export default function Home() {
       setTaskMessage(t.pixal3d.generator.status.processing);
     }
 
-    throw new Error(t.pixal3d.generator.errors.timeout);
+    throw new Pixal3DGenerationStatusUnknownError(t.pixal3d.generator.errors.timeoutStillChecking);
   };
 
   const handleGenerate = async () => {
@@ -714,6 +725,21 @@ export default function Home() {
       setTaskMessage(t.pixal3d.generator.status.succeeded);
     } catch (error) {
       const message = error instanceof Error ? error.message : t.pixal3d.generator.errors.generationFailed;
+      if (isPixal3DGenerationStatusUnknownError(error)) {
+        setTaskStatus("checking");
+        setTaskMessage(t.pixal3d.generator.status.stillChecking);
+        setProgressSnapshot(getPixal3DProgressSnapshot(nextProgressPlan, Date.now() - nextProgressStartedAt, "processing"));
+        showPageNotice("info", t.pixal3d.generator.errors.statusStillChecking, {
+          description: message,
+          action: {
+            label: t.header.auth.myAssets,
+            onClick: () => {
+              window.location.href = localizedPath('/my-assets');
+            },
+          },
+        });
+        return;
+      }
       setTaskStatus("failed");
       setTaskMessage(message);
       completeProgress(nextProgressPlan, nextProgressStartedAt, "failed");
@@ -1145,9 +1171,11 @@ export default function Home() {
                   }`}>
                     {progressSnapshot.status === "succeeded"
                       ? t.pixal3d.generator.progress.completedTitle
-                      : progressSnapshot.status === "failed"
-                        ? t.pixal3d.generator.progress.failedTitle
-                        : progressStepLabels[progressSnapshot.currentStepKey]}
+                      : taskStatus === "checking"
+                        ? t.pixal3d.generator.progress.checkingTitle
+                        : progressSnapshot.status === "failed"
+                          ? t.pixal3d.generator.progress.failedTitle
+                          : progressStepLabels[progressSnapshot.currentStepKey]}
                   </h2>
                 </div>
                 <div className="text-lg font-bold text-[#aeb6ca]">
@@ -1182,9 +1210,11 @@ export default function Home() {
                 <span>
                   {progressSnapshot.status === "failed"
                     ? taskMessage
-                    : progressSnapshot.status === "succeeded"
-                      ? t.pixal3d.generator.progress.completedTitle
-                      : progressStepLabels[progressSnapshot.currentStepKey]}
+                    : taskStatus === "checking"
+                      ? taskMessage
+                      : progressSnapshot.status === "succeeded"
+                        ? t.pixal3d.generator.progress.completedTitle
+                        : progressStepLabels[progressSnapshot.currentStepKey]}
                 </span>
               </div>
 
