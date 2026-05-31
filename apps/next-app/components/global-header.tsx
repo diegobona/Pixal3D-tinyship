@@ -7,6 +7,10 @@ import { config } from "@config";
 import { authClientReact } from "@libs/auth/authClient";
 import { Logo } from "@/components/ui/logo";
 import { useTranslation } from "@/hooks/use-translation";
+import {
+  CREDIT_BALANCE_UPDATED_EVENT,
+  getCreditBalanceFromEvent,
+} from "@/lib/credit-balance-events";
 
 interface HeaderProps {
   className?: string;
@@ -118,6 +122,22 @@ export default function Header({ className }: HeaderProps) {
       isMounted = false;
     };
   }, [user]);
+
+  useEffect(() => {
+    const handleCreditBalanceUpdated = (event: Event) => {
+      const nextBalance = getCreditBalanceFromEvent(event);
+      if (nextBalance !== null) {
+        setCreditBalance(nextBalance);
+        setIsCreditStatusLoaded(true);
+      }
+    };
+
+    window.addEventListener(CREDIT_BALANCE_UPDATED_EVENT, handleCreditBalanceUpdated);
+
+    return () => {
+      window.removeEventListener(CREDIT_BALANCE_UPDATED_EVENT, handleCreditBalanceUpdated);
+    };
+  }, []);
 
   const handleSignOut = async () => {
     setIsUserMenuOpen(false);

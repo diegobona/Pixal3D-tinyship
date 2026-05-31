@@ -19,6 +19,7 @@ import { Button } from "@libs/react-shared/ui/button";
 import { Input } from "@libs/react-shared/ui/input";
 import { useTranslation } from "@/hooks/use-translation";
 import { authClientReact } from "@libs/auth/authClient";
+import { dispatchCreditBalanceUpdated } from "@/lib/credit-balance-events";
 
 type TaskStatus = "idle" | "upload-ready" | "processing" | "succeeded" | "failed";
 type ResolutionOption = 1024 | 1536;
@@ -73,6 +74,10 @@ interface GenerateResponse {
   };
   error?: string;
   message?: string;
+  credits?: {
+    consumed?: number;
+    remaining?: number;
+  };
 }
 
 interface StatusResponse {
@@ -681,6 +686,11 @@ export default function Home() {
           return;
         }
         throw new Error(data.message || t.pixal3d.generator.errors.generationFailed);
+      }
+
+      if (typeof data.credits?.remaining === "number" && Number.isFinite(data.credits.remaining)) {
+        setCreditBalance(data.credits.remaining);
+        dispatchCreditBalanceUpdated(data.credits.remaining);
       }
 
       const modelUrl = await pollTask(data.data);
