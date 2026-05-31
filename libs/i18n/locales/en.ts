@@ -357,7 +357,9 @@ export const en: Locale = {
       refresh: "Refresh",
       preview3DModel: "Preview 3D Model",
       openModel: "Open GLB",
-      sourceImage: "Source Image"
+      sourceImage: "Source Image",
+      previous: "Previous",
+      next: "Next"
     },
     empty: {
       title: "No generation history yet",

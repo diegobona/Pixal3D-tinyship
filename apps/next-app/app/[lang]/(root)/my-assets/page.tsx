@@ -2,10 +2,12 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@libs/auth";
-import { list3DGenerationRecordsByUser } from "@libs/ai/3d-task-store";
+import { list3DGenerationRecordsByUserPage } from "@libs/ai/3d-task-store";
 import { translations } from "@libs/i18n";
 import { config } from "@config";
 import { MyAssetsGrid } from "@/components/my-assets-grid";
+
+const PAGE_SIZE = 20;
 
 function localizedPath(path: string, locale: string) {
   return locale === config.app.i18n.defaultLocale ? path : `/${locale}${path}`;
@@ -19,8 +21,22 @@ function formatDate(value: Date, locale: string) {
   });
 }
 
-export default async function MyAssetsPage({ params }: { params: Promise<{ lang: string }> }) {
+function parsePage(value: string | string[] | undefined) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number(raw || "1");
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+export default async function MyAssetsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ lang: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { lang } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const currentPage = parsePage(resolvedSearchParams.page);
   const locale = lang as keyof typeof translations;
   const t = translations[locale]?.myAssets || translations.en.myAssets;
   const session = await auth.api.getSession({ headers: await headers() });
@@ -29,12 +45,15 @@ export default async function MyAssetsPage({ params }: { params: Promise<{ lang:
     redirect(localizedPath("/signin", lang));
   }
 
-  const records = await list3DGenerationRecordsByUser(session.user.id);
-  const items = records.map((record) => ({
+  const records = await list3DGenerationRecordsByUserPage(session.user.id, {
+    limit: PAGE_SIZE + 1,
+    offset: (currentPage - 1) * PAGE_SIZE,
+  });
+  const hasNextPage = records.length > PAGE_SIZE;
+  const visibleRecords = records.slice(0, PAGE_SIZE);
+  const items = visibleRecords.map((record) => ({
     id: record.id,
     prompt: record.prompt,
-    inputImageUrl: record.inputImageUrl,
-    previewImageUrl: record.result?.thumbnailUrl || record.inputImageUrl,
     modelUrl: record.result?.modelUrl,
     status: record.status,
     resolution: record.resolution,
@@ -70,7 +89,7 @@ export default async function MyAssetsPage({ params }: { params: Promise<{ lang:
           </div>
         </div>
 
-        {records.length === 0 ? (
+        {visibleRecords.length === 0 ? (
           <section
             className="rounded-[28px] border border-[#263653] bg-[#0a1530] px-6 py-16 text-center shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
             data-testid="my-assets-empty-state"
@@ -85,19 +104,41 @@ export default async function MyAssetsPage({ params }: { params: Promise<{ lang:
             </Link>
           </section>
         ) : (
-          <MyAssetsGrid
-            items={items}
-            labels={{
-              createdAt: t.card.createdAt,
-              targetResolution: t.card.targetResolution,
-              textureSize: t.card.textureSize,
-              preview3DModel: t.actions.preview3DModel,
-              previewTitle: translations[locale]?.pixal3d.generator.previewTitle || translations.en.pixal3d.generator.previewTitle,
-              closePreview: translations[locale]?.pixal3d.generator.closePreviewButton || translations.en.pixal3d.generator.closePreviewButton,
-              downloadGlb: translations[locale]?.pixal3d.generator.downloadModelButton || translations.en.pixal3d.generator.downloadModelButton,
-              status: t.card.status,
-            }}
-          />
+          <>
+            <MyAssetsGrid
+              items={items}
+              labels={{
+                createdAt: t.card.createdAt,
+                targetResolution: t.card.targetResolution,
+                textureSize: t.card.textureSize,
+                preview3DModel: t.actions.preview3DModel,
+                previewTitle: translations[locale]?.pixal3d.generator.previewTitle || translations.en.pixal3d.generator.previewTitle,
+                closePreview: translations[locale]?.pixal3d.generator.closePreviewButton || translations.en.pixal3d.generator.closePreviewButton,
+                downloadGlb: translations[locale]?.pixal3d.generator.downloadModelButton || translations.en.pixal3d.generator.downloadModelButton,
+                status: t.card.status,
+              }}
+            />
+            <div className="flex items-center justify-between gap-3">
+              {currentPage > 1 ? (
+                <Link
+                  href={`${localizedPath("/my-assets", lang)}?page=${currentPage - 1}`}
+                  className="inline-flex items-center justify-center rounded-full border border-white/14 bg-white/[0.04] px-5 py-2.5 text-sm font-semibold text-white/78 transition hover:border-white/22 hover:bg-white/[0.08] hover:text-white"
+                >
+                  {t.actions.previous}
+                </Link>
+              ) : (
+                <span />
+              )}
+              {hasNextPage ? (
+                <Link
+                  href={`${localizedPath("/my-assets", lang)}?page=${currentPage + 1}`}
+                  className="inline-flex items-center justify-center rounded-full bg-[#48bdff] px-5 py-2.5 text-sm font-bold text-[#04101e] transition hover:bg-[#72ceff]"
+                >
+                  {t.actions.next}
+                </Link>
+              ) : null}
+            </div>
+          </>
         )}
       </div>
     </main>

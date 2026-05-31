@@ -8,8 +8,6 @@ type AssetStatus = "processing" | "succeeded" | "failed";
 export interface MyAssetItem {
   id: string;
   prompt: string;
-  inputImageUrl: string;
-  previewImageUrl: string;
   modelUrl?: string;
   status: AssetStatus;
   resolution: number;
@@ -62,13 +60,15 @@ export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
             data-task-id={item.id}
             data-task-status={item.status}
           >
-            <div className="relative aspect-[4/3] overflow-hidden bg-[#0d1a38]">
-              <img
-                src={item.previewImageUrl}
-                alt={item.prompt || "Pixal3D asset"}
-                className="h-full w-full object-cover"
-                data-testid="my-assets-preview-image"
-              />
+            <div
+              className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(circle_at_50%_35%,rgba(72,189,255,0.24),rgba(13,26,56,0.96)_52%,rgba(7,16,31,1))]"
+              data-testid="my-assets-model-tile"
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="grid h-24 w-24 place-items-center rounded-[28px] border border-[#48bdff]/25 bg-[#06132e]/70 text-2xl font-black text-[#48bdff] shadow-[0_24px_80px_rgba(72,189,255,0.16)]">
+                  GLB
+                </div>
+              </div>
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#07101f] via-[#07101f]/65 to-transparent px-4 pb-4 pt-10">
                 <div className="flex items-end justify-between gap-3">
                   <div className="min-w-0">

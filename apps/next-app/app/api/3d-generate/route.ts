@@ -12,6 +12,9 @@ import {
 } from '@libs/ai/3d';
 import {
   create3DGenerationRecord,
+  mark3DGenerationFailed,
+  mark3DGenerationProviderTask,
+  mark3DGenerationRefunded,
 } from '@libs/ai/3d-task-store';
 import {
   check3DGenerationPlanLimit,
@@ -48,6 +51,34 @@ function readOptionalNumber(body: Record<string, unknown>, key: string): number 
     return Number.isFinite(parsed) ? parsed : undefined;
   }
   return undefined;
+}
+
+function getPersistedInputImageUrl(imageUrl: string): string {
+  return /^https?:\/\//i.test(imageUrl) ? imageUrl : '';
+}
+
+async function refundConsumedCredits(input: {
+  userId: string;
+  creditCost: number;
+  consumeTransactionId: string;
+  provider: ThreeDProviderName;
+  model?: string;
+  error: unknown;
+}) {
+  if (input.creditCost <= 0) return;
+
+  await creditService.addCredits({
+    userId: input.userId,
+    amount: input.creditCost,
+    type: 'refund',
+    description: 'Refund for failed 3D model generation',
+    metadata: {
+      originalTransactionId: input.consumeTransactionId,
+      provider: input.provider,
+      model: input.model || config.ai3d.defaultModels[input.provider],
+      error: input.error instanceof Error ? input.error.message : 'Unknown error',
+    },
+  });
 }
 
 export async function POST(req: Request) {
@@ -187,6 +218,44 @@ export async function POST(req: Request) {
     consumeTransactionId = consumeResult.transactionId;
     remainingCredits = consumeResult.newBalance;
 
+    let record;
+    try {
+      record = await create3DGenerationRecord({
+        userId,
+        inputImageUrl: getPersistedInputImageUrl(imageUrl),
+        prompt,
+        provider,
+        model: model || config.ai3d.defaultModels[provider],
+        providerTaskId: `pending_${crypto.randomUUID()}`,
+        creditCost: userId ? creditCost : 0,
+        resolution: effectiveResolution,
+        textureSize: effectiveTextureSize,
+        consumeTransactionId,
+      });
+    } catch (persistenceError) {
+      if (consumeTransactionId && creditCost > 0) {
+        try {
+          await refundConsumedCredits({
+            userId,
+            creditCost,
+            consumeTransactionId,
+            provider,
+            model,
+            error: persistenceError,
+          });
+        } catch (refundError) {
+          console.error('CRITICAL: Failed to refund credits after 3D history persistence failure:', {
+            userId,
+            amount: creditCost,
+            originalTransactionId: consumeTransactionId,
+            refundError,
+          });
+        }
+      }
+
+      throw new Error('Failed to save 3D generation history before provider submit.');
+    }
+
     let task;
     try {
       task = await create3DTask({
@@ -218,18 +287,23 @@ export async function POST(req: Request) {
     } catch (taskError) {
       if (userId && consumeTransactionId && creditCost > 0) {
         try {
-          await creditService.addCredits({
-            userId,
-            amount: creditCost,
-            type: 'refund',
-            description: 'Refund for failed 3D model generation',
-            metadata: {
-              originalTransactionId: consumeTransactionId,
-              provider,
-              model: model || config.ai3d.defaultModels[provider],
-              error: taskError instanceof Error ? taskError.message : 'Unknown error',
-            },
+          await mark3DGenerationFailed(record.id, taskError instanceof Error ? taskError.message : '3D task creation failed.');
+        } catch (markError) {
+          console.error('Failed to mark 3D generation as failed after provider submit error:', {
+            taskId: record.id,
+            markError,
           });
+        }
+        try {
+          await refundConsumedCredits({
+            userId,
+            creditCost,
+            consumeTransactionId,
+            provider,
+            model,
+            error: taskError,
+          });
+          await mark3DGenerationRefunded(record.id);
         } catch (refundError) {
           console.error('CRITICAL: Failed to refund credits after 3D task creation failure:', {
             userId,
@@ -242,18 +316,17 @@ export async function POST(req: Request) {
 
       throw taskError;
     }
-    const record = await create3DGenerationRecord({
-      userId,
-      inputImageUrl: imageUrl,
-      prompt,
+    const updatedRecord = await mark3DGenerationProviderTask(record.id, {
       provider: task.provider,
       model: task.model,
       providerTaskId: task.providerTaskId,
-      creditCost: userId ? creditCost : 0,
-      resolution: effectiveResolution,
-      textureSize: effectiveTextureSize,
-      consumeTransactionId,
     });
+    record = updatedRecord || {
+      ...record,
+      provider: task.provider,
+      model: task.model,
+      providerTaskId: task.providerTaskId,
+    };
 
     const response = NextResponse.json({
       success: true,

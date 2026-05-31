@@ -78,7 +78,7 @@ test.describe('My Assets History', () => {
     await expect(cards).toHaveCount(1, { timeout: 20_000 });
 
     const firstCard = cards.first();
-    await expect(firstCard.getByTestId('my-assets-preview-image')).toBeVisible();
+    await expect(firstCard.getByTestId('my-assets-model-tile')).toBeVisible();
 
     const statusText = (await firstCard.getByTestId('my-assets-status').textContent())?.trim() ?? '';
     expect(statusText).toMatch(/Processing|Completed/);

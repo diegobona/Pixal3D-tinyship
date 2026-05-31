@@ -6,15 +6,13 @@ const isSupported3DModelMock = vi.fn();
 const isSupported3DProviderMock = vi.fn();
 const get3DGenerationRecordMock = vi.fn();
 const mark3DGenerationFailedMock = vi.fn();
-const mark3DGenerationRefundedMock = vi.fn();
 const mark3DGenerationSucceededMock = vi.fn();
-const addCreditsMock = vi.fn();
 
 function createRequest(taskId = 'task_123') {
   return new Request(`http://localhost/api/3d-generate/status?taskId=${taskId}`);
 }
 
-function createFallbackRequest() {
+function createProviderTaskRequest() {
   return new Request(
     'http://localhost/api/3d-generate/status?taskId=task_missing&provider=fal&model=fal-ai%2Fpixal3d&providerTaskId=fal-request-123'
   );
@@ -30,9 +28,7 @@ describe('Next Pixal3D status API route', () => {
     isSupported3DProviderMock.mockReset();
     get3DGenerationRecordMock.mockReset();
     mark3DGenerationFailedMock.mockReset();
-    mark3DGenerationRefundedMock.mockReset();
     mark3DGenerationSucceededMock.mockReset();
-    addCreditsMock.mockReset();
 
     vi.doMock('next/server', () => ({
       NextResponse: {
@@ -59,14 +55,7 @@ describe('Next Pixal3D status API route', () => {
     vi.doMock('@libs/ai/3d-task-store', () => ({
       get3DGenerationRecord: get3DGenerationRecordMock,
       mark3DGenerationFailed: mark3DGenerationFailedMock,
-      mark3DGenerationRefunded: mark3DGenerationRefundedMock,
       mark3DGenerationSucceeded: mark3DGenerationSucceededMock,
-    }));
-
-    vi.doMock('@libs/credits', () => ({
-      creditService: {
-        addCredits: addCreditsMock,
-      },
     }));
   });
 
@@ -100,37 +89,19 @@ describe('Next Pixal3D status API route', () => {
     expect(query3DTaskMock).not.toHaveBeenCalled();
   });
 
-  test('falls back to provider polling when the local task record is missing', async () => {
+  test('does not poll provider task ids when the local task record is missing', async () => {
     getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
     get3DGenerationRecordMock.mockReturnValue(undefined);
-    isSupported3DProviderMock.mockReturnValue(true);
-    isSupported3DModelMock.mockReturnValue(true);
-    query3DTaskMock.mockResolvedValue({
-      status: 'succeeded',
-      result: {
-        modelUrl: 'https://v3b.fal.media/model.glb',
-        format: 'glb',
-        provider: 'fal',
-        model: 'fal-ai/pixal3d',
-      },
-    });
 
     const { GET } = await import('../../../apps/next-app/app/api/3d-generate/status/route');
-    const response = await GET(createFallbackRequest());
+    const response = await GET(createProviderTaskRequest());
     const body = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(query3DTaskMock).toHaveBeenCalledWith('fal', 'fal-ai/pixal3d', 'fal-request-123');
-    expect(body).toMatchObject({
-      success: true,
-      data: {
-        id: 'task_missing',
-        status: 'succeeded',
-        result: {
-          modelUrl: 'https://v3b.fal.media/model.glb',
-        },
-      },
-    });
+    expect(response.status).toBe(404);
+    expect(body).toMatchObject({ error: 'not_found' });
+    expect(isSupported3DProviderMock).not.toHaveBeenCalled();
+    expect(isSupported3DModelMock).not.toHaveBeenCalled();
+    expect(query3DTaskMock).not.toHaveBeenCalled();
   });
 
   test('does not refund when provider polling returns a failure after execution started', async () => {
@@ -169,7 +140,5 @@ describe('Next Pixal3D status API route', () => {
         errorMessage: 'Provider failed',
       },
     });
-    expect(addCreditsMock).not.toHaveBeenCalled();
-    expect(mark3DGenerationRefundedMock).not.toHaveBeenCalled();
   });
 });

@@ -153,6 +153,52 @@ export async function list3DGenerationRecordsByUser(userId: string): Promise<Thr
   return rows.map(mapGenerationRow);
 }
 
+export async function list3DGenerationRecordsByUserPage(
+  userId: string,
+  input?: { limit?: number; offset?: number }
+): Promise<ThreeDGenerationRecord[]> {
+  const { db, desc, eq, pixal3dGeneration } = await getGenerationPersistenceDeps();
+  const limit = Math.min(Math.max(input?.limit ?? 20, 1), 50);
+  const offset = Math.max(input?.offset ?? 0, 0);
+  const rows = await db.query.pixal3dGeneration.findMany({
+    where: eq(pixal3dGeneration.userId, userId),
+    orderBy: [desc(pixal3dGeneration.createdAt)],
+    limit,
+    offset,
+  });
+
+  return rows.map(mapGenerationRow);
+}
+
+export async function mark3DGenerationProviderTask(
+  taskId: string,
+  input: { provider: string; model: string; providerTaskId: string }
+): Promise<ThreeDGenerationRecord | undefined> {
+  const { db, eq, pixal3dGeneration } = await getGenerationPersistenceDeps();
+  const record = await get3DGenerationRecord(taskId);
+  if (!record) return undefined;
+
+  const updated: ThreeDGenerationRecord = {
+    ...record,
+    provider: input.provider,
+    model: input.model,
+    providerTaskId: input.providerTaskId,
+    updatedAt: new Date(),
+  };
+
+  await db
+    .update(pixal3dGeneration)
+    .set({
+      provider: updated.provider,
+      model: updated.model,
+      providerTaskId: updated.providerTaskId,
+      updatedAt: updated.updatedAt,
+    })
+    .where(eq(pixal3dGeneration.id, taskId));
+
+  return updated;
+}
+
 export async function mark3DGenerationSucceeded(
   taskId: string,
   result: ThreeDGenerationResult

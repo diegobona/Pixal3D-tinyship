@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import {
-  isSupported3DModel,
-  isSupported3DProvider,
   query3DTask,
-  type ThreeDProviderName,
 } from '@libs/ai/3d';
 import {
   get3DGenerationRecord,
@@ -35,34 +32,10 @@ export async function GET(req: Request) {
     }
 
     if (!record) {
-      const provider = searchParams.get('provider') || '';
-      const model = searchParams.get('model') || '';
-      const providerTaskId = searchParams.get('providerTaskId') || '';
-
-      if (
-        !providerTaskId ||
-        !isSupported3DProvider(provider) ||
-        !isSupported3DModel(provider as ThreeDProviderName, model)
-      ) {
-        return NextResponse.json(
-          { error: 'not_found', message: '3D generation task was not found.' },
-          { status: 404 }
-        );
-      }
-
-      const status = await query3DTask(provider as ThreeDProviderName, model, providerTaskId);
-      return NextResponse.json({
-        success: true,
-        data: {
-          id: taskId,
-          provider,
-          model,
-          providerTaskId,
-          status: status.status,
-          result: status.result,
-          errorMessage: status.errorMessage,
-        },
-      });
+      return NextResponse.json(
+        { error: 'not_found', message: '3D generation task was not found.' },
+        { status: 404 }
+      );
     }
 
     if (record.status === 'succeeded' || record.status === 'failed') {

@@ -5,6 +5,10 @@ const consumeCreditsMock = vi.fn();
 const addCreditsMock = vi.fn();
 const getSessionMock = vi.fn();
 const checkSubscriptionStatusMock = vi.fn();
+const create3DGenerationRecordMock = vi.fn();
+const mark3DGenerationFailedMock = vi.fn();
+const mark3DGenerationProviderTaskMock = vi.fn();
+const mark3DGenerationRefundedMock = vi.fn();
 
 function createRequest(body: unknown) {
   return new Request('http://localhost/api/3d-generate', {
@@ -24,6 +28,20 @@ describe('Next Pixal3D generation API route', () => {
     addCreditsMock.mockReset();
     getSessionMock.mockReset();
     checkSubscriptionStatusMock.mockReset();
+    create3DGenerationRecordMock.mockReset();
+    mark3DGenerationFailedMock.mockReset();
+    mark3DGenerationProviderTaskMock.mockReset();
+    mark3DGenerationRefundedMock.mockReset();
+    create3DGenerationRecordMock.mockImplementation((input: Record<string, unknown>) => ({
+      ...input,
+      id: 'task_3d_test',
+      status: 'processing',
+    }));
+    mark3DGenerationProviderTaskMock.mockImplementation((taskId: string, input: Record<string, unknown>) => ({
+      id: taskId,
+      ...input,
+      status: 'processing',
+    }));
 
     vi.doMock('next/server', () => ({
       NextResponse: {
@@ -57,13 +75,10 @@ describe('Next Pixal3D generation API route', () => {
     }));
 
     vi.doMock('@libs/ai/3d-task-store', () => ({
-      create3DGenerationRecord(input: Record<string, unknown>) {
-        return {
-          ...input,
-          id: 'task_3d_test',
-          status: 'processing',
-        };
-      },
+      create3DGenerationRecord: create3DGenerationRecordMock,
+      mark3DGenerationFailed: mark3DGenerationFailedMock,
+      mark3DGenerationProviderTask: mark3DGenerationProviderTaskMock,
+      mark3DGenerationRefunded: mark3DGenerationRefundedMock,
     }));
 
     vi.doMock('@config', () => ({
@@ -195,6 +210,87 @@ describe('Next Pixal3D generation API route', () => {
         provider: 'fal',
         model: 'fal-ai/pixal3d',
         error: 'FAL_API_KEY or FAL_KEY is not configured.',
+      }),
+    }));
+  });
+
+  test('saves the generation record before submitting to fal', async () => {
+    vi.stubEnv('FAL_API_KEY', 'test_fal_key');
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({ request_id: 'fal_request_123' }, { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
+    getBalanceMock.mockResolvedValue(2000);
+    consumeCreditsMock.mockResolvedValue({
+      success: true,
+      transactionId: 'tx_123',
+      newBalance: 900,
+    });
+
+    const { POST } = await import('../../../apps/next-app/app/api/3d-generate/route');
+    const response = await POST(createRequest({
+      imageUrl: 'data:image/png;base64,abc123',
+      prompt: 'product render',
+      provider: 'fal',
+    }));
+
+    expect(response.status).toBe(200);
+    expect(create3DGenerationRecordMock).toHaveBeenCalledBefore(fetchMock);
+    expect(create3DGenerationRecordMock).toHaveBeenCalledWith(expect.objectContaining({
+      userId: 'user_123',
+      inputImageUrl: '',
+      provider: 'fal',
+      model: 'fal-ai/pixal3d',
+      creditCost: 1100,
+      consumeTransactionId: 'tx_123',
+    }));
+    expect(mark3DGenerationProviderTaskMock).toHaveBeenCalledWith(
+      'task_3d_test',
+      expect.objectContaining({
+        provider: 'fal',
+        model: 'fal-ai/pixal3d',
+        providerTaskId: 'fal_request_123',
+      })
+    );
+  });
+
+  test('refunds consumed credits and does not submit to fal when generation history cannot be saved', async () => {
+    vi.stubEnv('FAL_API_KEY', 'test_fal_key');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    create3DGenerationRecordMock.mockRejectedValue(new Error('database unavailable'));
+    getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
+    getBalanceMock.mockResolvedValue(2000);
+    consumeCreditsMock.mockResolvedValue({
+      success: true,
+      transactionId: 'tx_123',
+      newBalance: 900,
+    });
+
+    const { POST } = await import('../../../apps/next-app/app/api/3d-generate/route');
+    const response = await POST(createRequest({
+      imageUrl: 'https://example.com/input.png',
+      prompt: 'product render',
+      provider: 'fal',
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toMatchObject({
+      error: 'generation_failed',
+      message: 'Failed to save 3D generation history before provider submit.',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(addCreditsMock).toHaveBeenCalledWith(expect.objectContaining({
+      userId: 'user_123',
+      type: 'refund',
+      amount: 1100,
+      metadata: expect.objectContaining({
+        originalTransactionId: 'tx_123',
+        provider: 'fal',
+        model: 'fal-ai/pixal3d',
+        error: 'database unavailable',
       }),
     }));
   });
