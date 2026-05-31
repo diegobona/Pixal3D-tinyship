@@ -802,20 +802,20 @@ export default function Home() {
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#071431] text-white">
-      <section className="relative min-h-[calc(100vh-4rem)] border-l border-r border-[#2b3657] bg-[radial-gradient(circle_at_50%_-10%,rgba(22,91,173,0.22),transparent_42%),linear-gradient(180deg,#071431_0%,#0a1737_46%,#071431_100%)] px-4 py-10 sm:px-6 lg:px-8">
+      <section className="relative min-h-[calc(100vh-4rem)] border-l border-r border-[#2b3657] bg-[radial-gradient(circle_at_50%_-10%,rgba(22,91,173,0.22),transparent_42%),linear-gradient(180deg,#071431_0%,#0a1737_46%,#071431_100%)] px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-[1420px] flex-col items-center">
-          <div className="mb-9 pt-1 text-center">
-            <h1 className="bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] bg-clip-text text-5xl font-extrabold leading-[1.08] tracking-normal text-transparent sm:text-6xl">
+          <div className="mb-7 text-center">
+            <h1 className="inline-block bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] bg-clip-text pb-2 text-[44px] font-extrabold leading-[1.12] tracking-normal text-transparent sm:text-[64px]">
               {t.pixal3d.generator.heroTitle}
             </h1>
-            <p className="mt-4 text-xl font-medium tracking-normal text-[#9ca4ba] sm:text-2xl">
+            <p className="mt-3 text-lg font-medium tracking-normal text-[#9ca4ba] sm:text-[22px]">
               {t.pixal3d.generator.subtitle}
             </p>
           </div>
 
-          <div className="w-full max-w-[1420px] rounded-lg border border-[#4b5575] bg-[#070d20]/92 p-6 shadow-[0_28px_120px_rgba(0,0,0,0.26)] sm:p-8">
+          <div className="w-full max-w-[1420px] rounded-lg border border-[#4b5575] bg-[#070d20]/92 p-5 shadow-[0_28px_120px_rgba(0,0,0,0.26)] sm:p-6">
             <div
-              className={`relative flex min-h-[292px] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed transition-colors ${
+              className={`relative flex min-h-[248px] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed transition-colors ${
                 isDragging ? "border-[#48bdff] bg-[#10224d]" : "border-transparent bg-transparent"
               }`}
               onClick={() => document.getElementById("pixal3d-image")?.click()}
@@ -879,9 +879,9 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  <p className="text-3xl font-extrabold text-[#b7bdce]">{t.pixal3d.generator.uploadButton}</p>
-                  <p className="mt-5 text-xl font-medium text-[#757f9b]">{t.pixal3d.generator.dragDropPaste}</p>
-                  <div className="mt-8 flex w-full max-w-[390px] items-center gap-4">
+                  <p className="text-[28px] font-extrabold text-[#b7bdce]">{t.pixal3d.generator.uploadButton}</p>
+                  <p className="mt-3 text-lg font-medium text-[#757f9b]">{t.pixal3d.generator.dragDropPaste}</p>
+                  <div className="mt-6 flex w-full max-w-[360px] items-center gap-4">
                     <span className="h-px flex-1 bg-[#26324d]" />
                     <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#7f889e]">
                       {t.pixal3d.generator.orLabel}
@@ -890,20 +890,20 @@ export default function Home() {
                   </div>
                   <Button
                     type="button"
-                    className="mt-8 h-16 w-full max-w-[390px] rounded-full border border-[#313b59] bg-[#141b31] text-2xl font-bold text-[#dbe1f2] hover:bg-[#1a2440]"
+                    className="mt-6 h-14 w-full max-w-[360px] rounded-full border border-[#313b59] bg-[#141b31] text-xl font-bold text-[#dbe1f2] hover:bg-[#1a2440]"
                     disabled={isReadingFile}
                   >
                     {isReadingFile ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : null}
                     {t.pixal3d.generator.selectFileButton}
                   </Button>
-                  <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
-                    <p className="text-xl font-semibold text-[#7f889e]">{t.pixal3d.generator.samplePrompt}</p>
+                  <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row">
+                    <p className="text-lg font-semibold text-[#7f889e]">{t.pixal3d.generator.samplePrompt}</p>
                     <div className="flex flex-wrap justify-center gap-3">
                       {SAMPLE_IMAGES.map((sample) => (
                         <button
                           key={sample.src}
                           type="button"
-                          className="h-[72px] w-[72px] overflow-hidden rounded-2xl border border-[#35415f] bg-[#10182d] p-1 transition hover:border-[#48bdff] hover:bg-[#172341]"
+                          className="h-16 w-16 overflow-hidden rounded-2xl border border-[#35415f] bg-[#10182d] p-1 transition hover:border-[#48bdff] hover:bg-[#172341]"
                           onClick={(event) => {
                             event.stopPropagation();
                             useSampleImage(sample);
@@ -919,7 +919,7 @@ export default function Home() {
               )}
             </div>
 
-            <div className="mt-7 border-t border-[#303a59] pt-6">
+            <div className="mt-5 border-t border-[#303a59] pt-5">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
                 <div className={`grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:max-w-[820px] ${
                   canEditGenerationSettings ? "" : "opacity-55"
@@ -1084,13 +1084,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-5 w-full max-w-[1420px] overflow-hidden rounded-xl border border-[#39476d] bg-[radial-gradient(circle_at_0%_50%,rgba(255,197,96,0.12),transparent_26%),radial-gradient(circle_at_100%_50%,rgba(72,189,255,0.09),transparent_24%),linear-gradient(180deg,#09142f_0%,#081126_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.2)]">
-            <div className="flex flex-col gap-6 p-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+          <div className="mt-6 w-full max-w-[1420px] overflow-hidden rounded-xl border border-[#39476d] bg-[radial-gradient(circle_at_0%_50%,rgba(255,197,96,0.12),transparent_26%),radial-gradient(circle_at_100%_50%,rgba(72,189,255,0.09),transparent_24%),linear-gradient(180deg,#09142f_0%,#081126_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.2)]">
+            <div className="flex flex-col gap-4 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
               <div className="min-w-0 flex-1">
-                <span className="inline-flex items-center rounded-full border border-[#7a6132] bg-[#1c1820] px-3 py-1 text-xs font-extrabold uppercase tracking-[0.22em] text-[#ffd88d]">
-                  {t.pixal3d.generator.freeTrialButton}
-                </span>
-                <p className="mt-4 max-w-3xl text-lg font-semibold leading-8 text-white/92 sm:text-[22px]">
+                <p className="max-w-3xl text-base font-semibold leading-7 text-white/92 sm:text-xl">
                   {highlightedTrialDescription}
                 </p>
               </div>
@@ -1100,7 +1097,7 @@ export default function Home() {
                   data-testid="pixal3d-free-trial-button"
                   type="button"
                   size="lg"
-                  className="h-16 w-full rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff2a8] via-[#ffd47a] to-[#ffb86b] px-10 text-2xl font-extrabold text-[#17111c] shadow-[0_20px_60px_rgba(255,184,107,0.28)] hover:brightness-105 disabled:opacity-60 sm:min-w-[320px] lg:min-w-[360px]"
+                  className="h-14 w-full rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff2a8] via-[#ffd47a] to-[#ffb86b] px-9 text-xl font-extrabold text-[#17111c] shadow-[0_20px_60px_rgba(255,184,107,0.28)] hover:brightness-105 disabled:opacity-60 sm:min-w-[300px] lg:min-w-[340px]"
                   disabled={isOpeningHfTrial}
                   onClick={handleOpenHfTrial}
                 >

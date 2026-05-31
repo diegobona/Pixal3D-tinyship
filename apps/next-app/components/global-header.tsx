@@ -11,6 +11,7 @@ import {
   CREDIT_BALANCE_UPDATED_EVENT,
   getCreditBalanceFromEvent,
 } from "@/lib/credit-balance-events";
+import { shouldShowHeaderUpgradeButton } from "@/lib/header-actions";
 
 interface HeaderProps {
   className?: string;
@@ -47,7 +48,11 @@ export default function Header({ className }: HeaderProps) {
   const featuresHref = `${homeHref}#features`;
   const displayName = user?.name || user?.email || "User";
   const displayEmail = user?.email || "";
-  const shouldShowUpgradeButton = !user || (isCreditStatusLoaded && !subscriptionPlanId);
+  const shouldShowUpgradeButton = shouldShowHeaderUpgradeButton({
+    isAuthenticated: Boolean(user),
+    isCreditStatusLoaded,
+    subscriptionPlanId,
+  });
 
   useEffect(() => {
     if (!isUserMenuOpen && !isLocaleMenuOpen) return;
@@ -378,9 +383,6 @@ export default function Header({ className }: HeaderProps) {
                 <Link href={localizedPath("/signin")} className="text-sm font-semibold text-white/70 transition-colors hover:text-white">
                   {t.header.auth.signIn}
                 </Link>
-                <Link href={localizedPath("/pricing")} className="rounded-full bg-[#48bdff] px-5 py-2 text-base font-bold text-[#04101e] transition-colors hover:bg-[#72ceff]">
-                  {t.pixal3d.generator.upgradeButton}
-                </Link>
               </>
             )}
           </div>
@@ -431,9 +433,6 @@ export default function Header({ className }: HeaderProps) {
                 <>
                   <Link href={localizedPath("/signin")} className="block py-2 text-sm font-semibold text-white/75">
                     {t.header.auth.signIn}
-                  </Link>
-                  <Link href={localizedPath("/pricing")} className="mt-2 block rounded-full bg-[#48bdff] px-5 py-2 text-center text-sm font-bold text-[#04101e]">
-                    {t.pixal3d.generator.upgradeButton}
                   </Link>
                 </>
               )}
