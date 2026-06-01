@@ -167,6 +167,9 @@ export default function Header({ className }: HeaderProps) {
 
   const navigation = (
     <>
+      <Link href={homeHref} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
+        {t.header.navigation.home}
+      </Link>
       <Link href={featuresHref} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
         {t.pixal3d.generator.featuresNav}
       </Link>

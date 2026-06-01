@@ -1,14 +1,23 @@
 import { describe, expect, test } from 'vitest';
+import { en } from '../../../libs/i18n/locales/en';
 import { getPixal3DGenerateDisabledReason } from '../../../apps/next-app/lib/pixal3d-generate-disabled-reason';
 
 const labels = {
   signInRequired: 'Sign in to generate with credits',
-  insufficientCredits: 'Need {required} credits. You have {balance}.',
+  insufficientCredits: 'Not enough credits.',
   imageRequired: 'Upload an image first',
   readingImage: 'Reading image...',
 };
 
 describe('getPixal3DGenerateDisabledReason', () => {
+  test('uses a simple insufficient credits label in the home generator copy', () => {
+    const copy = en.pixal3d.generator.errors.generateDisabledInsufficientCredits;
+
+    expect(copy).toBe('Not enough credits.');
+    expect(copy).not.toContain('{required}');
+    expect(copy).not.toContain('{balance}');
+  });
+
   test('asks unauthenticated users to sign in first', () => {
     expect(getPixal3DGenerateDisabledReason({
       isSessionPending: false,
@@ -22,7 +31,7 @@ describe('getPixal3DGenerateDisabledReason', () => {
     })).toBe('Sign in to generate with credits');
   });
 
-  test('shows the selected resolution cost and current balance when credits are insufficient', () => {
+  test('shows a simple insufficient credits message without exposing cost details', () => {
     expect(getPixal3DGenerateDisabledReason({
       isSessionPending: false,
       isAuthenticated: true,
@@ -32,7 +41,7 @@ describe('getPixal3DGenerateDisabledReason', () => {
       isReadingFile: false,
       isProcessing: false,
       labels,
-    })).toBe('Need 1,600 credits. You have 250.');
+    })).toBe('Not enough credits.');
   });
 
   test('asks users with enough credits to upload an image before generating', () => {

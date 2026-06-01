@@ -22,6 +22,7 @@ export const en: Locale = {
   },
   header: {
     navigation: {
+      home: "Home",
       pricing: "Pricing",
       blog: "Blog"
     },
@@ -149,7 +150,7 @@ export const en: Locale = {
         trialUsed: "Free trial already used",
         trialUsedDescription: "Create an account to continue generating Pixal3D models.",
         generateDisabledSignIn: "Sign in to generate with credits",
-        generateDisabledInsufficientCredits: "Need {required} credits. You have {balance}.",
+        generateDisabledInsufficientCredits: "Not enough credits.",
         generateDisabledImageRequired: "Upload an image first",
         generateDisabledReadingImage: "Reading image...",
         insufficientCredits: "Not enough credits for 3D generation.",

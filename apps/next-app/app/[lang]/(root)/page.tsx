@@ -1,6 +1,7 @@
 "use client";
 
 import { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { GlbPreviewDialog } from "@/components/glb-preview-dialog";
 import {
   PIXAL3D_PROGRESS_STEPS,
@@ -343,6 +344,14 @@ export default function Home() {
       readingImage: t.pixal3d.generator.errors.generateDisabledReadingImage,
     },
   });
+  const showGenerateUpgradeShortcut = Boolean(
+    !canGenerate
+    && generateDisabledReason
+    && isAuthenticated
+    && !hasEnoughCredits
+    && !isSessionPending
+    && taskStatus !== "processing"
+  );
 
   const progressStepLabels = t.pixal3d.generator.progress.steps as Record<Pixal3DProgressStepKey, string>;
   const showGenerationProgress = Boolean(progressSnapshot && taskStatus !== "idle" && taskStatus !== "upload-ready");
@@ -1030,7 +1039,15 @@ export default function Home() {
                       data-testid="pixal3d-generate-disabled-reason"
                       className="mt-2 text-center text-sm font-bold leading-5 text-[#ffb8b8]"
                     >
-                      {generateDisabledReason}
+                      <span>{generateDisabledReason}</span>
+                      {showGenerateUpgradeShortcut ? (
+                        <Link
+                          href={localizedPath("/pricing")}
+                          className="ml-2 inline-flex items-center rounded-full border border-[#ffb8b8]/45 px-3 py-1 text-xs font-extrabold text-[#ffd0d0] transition hover:border-[#ffdddd] hover:bg-[#ffb8b8]/12 hover:text-white"
+                        >
+                          Upgrade
+                        </Link>
+                      ) : null}
                     </p>
                   ) : null}
                 </div>
