@@ -64,7 +64,7 @@ export async function GET(req: Request) {
         {
           success: false,
           error: 'free_trial_limit_reached',
-          message: 'Free trials used. Sign in or upgrade to keep generating.',
+          message: 'Free trials used.Sign in to generate with credits.',
           usage,
         },
         { status: 429 }
@@ -90,7 +90,7 @@ export async function GET(req: Request) {
         {
           success: false,
           error: 'free_trial_limit_reached',
-          message: 'Free trials used. Sign in or upgrade to keep generating.',
+          message: 'Free trials used.Sign in to generate with credits.',
           usage: reservation,
         },
         { status: 429 }

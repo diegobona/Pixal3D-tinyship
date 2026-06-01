@@ -303,6 +303,7 @@ export default function Home() {
   const [hfTrialEndsAt, setHfTrialEndsAt] = useState<number | null>(null);
   const [isOpeningHfTrial, setIsOpeningHfTrial] = useState(false);
   const [isHfTrialFrameLoading, setIsHfTrialFrameLoading] = useState(false);
+  const [isHfTrialLimitReached, setIsHfTrialLimitReached] = useState(false);
   const [activeInspirationId, setActiveInspirationId] = useState<string | null>(null);
   const [creditBalance, setCreditBalance] = useState(0);
   const [subscriptionPlanId, setSubscriptionPlanId] = useState<string | null>(null);
@@ -752,6 +753,8 @@ export default function Home() {
   };
 
   const handleOpenHfTrial = async () => {
+    if (isHfTrialLimitReached) return;
+
     setIsOpeningHfTrial(true);
     setIsHfTrialFrameLoading(false);
     clearPageNotice();
@@ -770,6 +773,7 @@ export default function Home() {
       const data = (await response.json()) as HfInstanceResponse;
 
       if (response.status === 429 && data.error === "free_trial_limit_reached") {
+        setIsHfTrialLimitReached(true);
         showPageNotice("error", t.pixal3d.generator.errors.freeTrialLimitReached, {
           action: {
             label: t.common.viewPlans,
@@ -1088,75 +1092,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-6 w-full max-w-[1420px] overflow-hidden rounded-xl border border-[#39476d] bg-[radial-gradient(circle_at_0%_50%,rgba(255,197,96,0.12),transparent_26%),radial-gradient(circle_at_100%_50%,rgba(72,189,255,0.09),transparent_24%),linear-gradient(180deg,#09142f_0%,#081126_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.2)]">
-            <div className="flex flex-col gap-4 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-              <div className="min-w-0 flex-1">
-                <p className="max-w-3xl text-base font-semibold leading-7 text-white/92 sm:text-xl">
-                  {highlightedTrialDescription}
-                </p>
-              </div>
-
-              <div className="flex w-full shrink-0 flex-col items-stretch lg:w-auto">
-                <Button
-                  data-testid="pixal3d-free-trial-button"
-                  type="button"
-                  size="lg"
-                  className="h-14 w-full rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff2a8] via-[#ffd47a] to-[#ffb86b] px-9 text-xl font-extrabold text-[#17111c] shadow-[0_20px_60px_rgba(255,184,107,0.28)] hover:brightness-105 disabled:opacity-60 sm:min-w-[300px] lg:min-w-[340px]"
-                  disabled={isOpeningHfTrial}
-                  onClick={handleOpenHfTrial}
-                >
-                  {isOpeningHfTrial ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#17111c]/30 border-t-[#17111c]" /> : null}
-                  {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {pageNotice && (
-            <div
-              data-testid="pixal3d-page-notice"
-              role="status"
-              className={`mt-5 flex w-full max-w-[1420px] flex-col gap-3 rounded-lg border px-5 py-4 text-sm font-semibold leading-6 shadow-[0_18px_60px_rgba(0,0,0,0.16)] sm:flex-row sm:items-center sm:justify-between ${
-                pageNotice.type === "error"
-                  ? "border-[#ff6b6b]/55 bg-[#220f1d]/88 text-[#ffb8b8]"
-                  : pageNotice.type === "success"
-                    ? "border-[#2d875f]/55 bg-[#08251d]/88 text-[#8df5c2]"
-                    : "border-[#48bdff]/45 bg-[#0a1430]/88 text-[#b8dfff]"
-              }`}
-            >
-              <div className="min-w-0">
-                <p className="text-base font-extrabold">{pageNotice.title}</p>
-                {pageNotice.description ? (
-                  <p className="mt-1 text-sm font-medium opacity-90">{pageNotice.description}</p>
-                ) : null}
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                {pageNotice.action ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-9 rounded-full bg-[#ffb8b8] px-4 text-sm font-extrabold text-[#220f1d] hover:bg-[#ffd1d1]"
-                    onClick={pageNotice.action.onClick}
-                  >
-                    {pageNotice.action.label}
-                  </Button>
-                ) : null}
-                <button
-                  type="button"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-current/25 text-base font-extrabold opacity-80 transition hover:opacity-100"
-                  onClick={clearPageNotice}
-                  aria-label="Dismiss message"
-                >
-                  x
-                </button>
-              </div>
-            </div>
-          )}
-
           {showGenerationProgress && progressSnapshot && (
             <div
               data-testid="pixal3d-generation-progress"
-              className={`mt-7 w-full max-w-[1420px] rounded-lg border px-5 py-5 shadow-[0_24px_90px_rgba(0,0,0,0.18)] ${
+              className={`mt-6 w-full max-w-[1420px] rounded-lg border px-5 py-5 shadow-[0_24px_90px_rgba(0,0,0,0.18)] ${
                 progressSnapshot.status === "failed"
                   ? "border-[#ff6b6b]/60 bg-[#1e0f1a]/90"
                   : "border-[#25314f] bg-[#080f24]/92"
@@ -1219,6 +1158,71 @@ export default function Home() {
                 </span>
               </div>
 
+            </div>
+          )}
+
+          <div className="mt-6 w-full max-w-[1420px] overflow-hidden rounded-xl border border-[#39476d] bg-[radial-gradient(circle_at_0%_50%,rgba(255,197,96,0.12),transparent_26%),radial-gradient(circle_at_100%_50%,rgba(72,189,255,0.09),transparent_24%),linear-gradient(180deg,#09142f_0%,#081126_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.2)]">
+            <div className="flex flex-col gap-4 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+              <div className="min-w-0 flex-1">
+                <p className="max-w-3xl text-base font-semibold leading-7 text-white/92 sm:text-xl">
+                  {highlightedTrialDescription}
+                </p>
+              </div>
+
+              <div className="flex w-full shrink-0 flex-col items-stretch lg:w-auto">
+                <Button
+                  data-testid="pixal3d-free-trial-button"
+                  type="button"
+                  size="lg"
+                  className="h-14 w-full rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff2a8] via-[#ffd47a] to-[#ffb86b] px-9 text-xl font-extrabold text-[#17111c] shadow-[0_20px_60px_rgba(255,184,107,0.28)] hover:brightness-105 disabled:opacity-60 sm:min-w-[300px] lg:min-w-[340px]"
+                  disabled={isOpeningHfTrial || isHfTrialLimitReached}
+                  onClick={handleOpenHfTrial}
+                >
+                  {isOpeningHfTrial ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#17111c]/30 border-t-[#17111c]" /> : null}
+                  {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {pageNotice && (
+            <div
+              data-testid="pixal3d-page-notice"
+              role="status"
+              className={`mt-5 flex w-full max-w-[1420px] flex-col gap-3 rounded-lg border px-5 py-4 text-sm font-semibold leading-6 shadow-[0_18px_60px_rgba(0,0,0,0.16)] sm:flex-row sm:items-center sm:justify-between ${
+                pageNotice.type === "error"
+                  ? "border-[#ff6b6b]/55 bg-[#220f1d]/88 text-[#ffb8b8]"
+                  : pageNotice.type === "success"
+                    ? "border-[#2d875f]/55 bg-[#08251d]/88 text-[#8df5c2]"
+                    : "border-[#48bdff]/45 bg-[#0a1430]/88 text-[#b8dfff]"
+              }`}
+            >
+              <div className="min-w-0">
+                <p className="text-base font-extrabold">{pageNotice.title}</p>
+                {pageNotice.description ? (
+                  <p className="mt-1 text-sm font-medium opacity-90">{pageNotice.description}</p>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                {pageNotice.action ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-9 rounded-full bg-[#ffb8b8] px-4 text-sm font-extrabold text-[#220f1d] hover:bg-[#ffd1d1]"
+                    onClick={pageNotice.action.onClick}
+                  >
+                    {pageNotice.action.label}
+                  </Button>
+                ) : null}
+                <button
+                  type="button"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-current/25 text-base font-extrabold opacity-80 transition hover:opacity-100"
+                  onClick={clearPageNotice}
+                  aria-label="Dismiss message"
+                >
+                  x
+                </button>
+              </div>
             </div>
           )}
 
