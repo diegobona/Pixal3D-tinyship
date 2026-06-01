@@ -16,7 +16,6 @@ export function TawkToWidget() {
       id="tawk-to-widget"
       src={tawkToEmbedUrl}
       strategy="afterInteractive"
-      crossOrigin="anonymous"
     />
   )
 }
