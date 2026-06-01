@@ -25,13 +25,14 @@ describe("tawk.to widget config", () => {
     expect(wrapperSource).toContain("TawkToWidget");
   });
 
-  it("loads tawk.to as a normal third-party script without forcing CORS", () => {
+  it("loads tawk.to with the official client-side script pattern without forcing CORS", () => {
     const widgetSource = readFileSync(
       join(process.cwd(), "apps", "next-app", "components", "tawk-to-widget.tsx"),
       "utf8",
     );
 
-    expect(widgetSource).toContain('src={tawkToEmbedUrl}');
+    expect(widgetSource).toContain("document.createElement('script')");
     expect(widgetSource).not.toContain("crossOrigin");
+    expect(widgetSource).not.toContain("next/script");
   });
 });
