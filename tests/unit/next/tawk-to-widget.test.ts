@@ -5,6 +5,12 @@ import { describe, expect, it } from "vitest";
 import { buildTawkToEmbedUrl } from "../../../apps/next-app/lib/tawk-to";
 
 describe("tawk.to widget config", () => {
+  it("uses the Pixal3D tawk.to widget by default", () => {
+    expect(buildTawkToEmbedUrl()).toBe(
+      "https://embed.tawk.to/6a1cefde63b1241c2fd4e661/1jq0gi01e",
+    );
+  });
+
   it("builds the official embed URL when both ids are configured", () => {
     expect(buildTawkToEmbedUrl("property123", "widget456")).toBe(
       "https://embed.tawk.to/property123/widget456",
