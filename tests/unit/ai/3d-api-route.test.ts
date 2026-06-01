@@ -119,20 +119,20 @@ describe('Next Pixal3D generation API route', () => {
         credits: {
           fixedConsumption: {
             ai3d: {
-              default: 1100,
+              default: 1000,
               models: {
-                'fal-ai/pixal3d': 1100,
-                'tencentarc/pixal3d': 1100,
+                'fal-ai/pixal3d': 1000,
+                'tencentarc/pixal3d': 1000,
                 'pixal3d-mock-v1': 5,
               },
               modelResolutionCredits: {
                 'fal-ai/pixal3d': {
-                  1024: 1100,
-                  1536: 1600,
+                  1024: 1000,
+                  1536: 1500,
                 },
                 'tencentarc/pixal3d': {
-                  1024: 1100,
-                  1536: 1600,
+                  1024: 1000,
+                  1536: 1500,
                 },
               },
             },
@@ -204,7 +204,7 @@ describe('Next Pixal3D generation API route', () => {
     expect(addCreditsMock).toHaveBeenCalledWith(expect.objectContaining({
       userId: 'user_123',
       type: 'refund',
-      amount: 1100,
+      amount: 1000,
       metadata: expect.objectContaining({
         originalTransactionId: 'tx_123',
         provider: 'fal',
@@ -242,7 +242,7 @@ describe('Next Pixal3D generation API route', () => {
       inputImageUrl: '',
       provider: 'fal',
       model: 'fal-ai/pixal3d',
-      creditCost: 1100,
+      creditCost: 1000,
       consumeTransactionId: 'tx_123',
     }));
     expect(mark3DGenerationProviderTaskMock).toHaveBeenCalledWith(
@@ -285,7 +285,7 @@ describe('Next Pixal3D generation API route', () => {
     expect(addCreditsMock).toHaveBeenCalledWith(expect.objectContaining({
       userId: 'user_123',
       type: 'refund',
-      amount: 1100,
+      amount: 1000,
       metadata: expect.objectContaining({
         originalTransactionId: 'tx_123',
         provider: 'fal',
@@ -298,7 +298,7 @@ describe('Next Pixal3D generation API route', () => {
   test('requires the resolution-specific credit balance before submit', async () => {
     vi.stubEnv('FAL_API_KEY', 'test_fal_key');
     getSessionMock.mockResolvedValue({ user: { id: 'user_123' } });
-    getBalanceMock.mockResolvedValue(1500);
+    getBalanceMock.mockResolvedValue(1400);
 
     const { POST } = await import('../../../apps/next-app/app/api/3d-generate/route');
     const response = await POST(createRequest({
@@ -312,8 +312,8 @@ describe('Next Pixal3D generation API route', () => {
     expect(response.status).toBe(402);
     expect(body).toMatchObject({
       error: 'insufficient_credits',
-      required: 1600,
-      balance: 1500,
+      required: 1500,
+      balance: 1400,
     });
     expect(consumeCreditsMock).not.toHaveBeenCalled();
     expect(addCreditsMock).not.toHaveBeenCalled();
@@ -379,7 +379,7 @@ describe('Next Pixal3D generation API route', () => {
     expect(response.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(consumeCreditsMock).toHaveBeenCalledWith(expect.objectContaining({
-      amount: 1600,
+      amount: 1500,
     }));
   });
 
@@ -426,7 +426,7 @@ describe('Next Pixal3D generation API route', () => {
 
     expect(response.status).toBe(200);
     expect(consumeCreditsMock).toHaveBeenCalledWith(expect.objectContaining({
-      amount: 1600,
+      amount: 1500,
       metadata: expect.objectContaining({
         provider: 'fal',
         model: 'fal-ai/pixal3d',

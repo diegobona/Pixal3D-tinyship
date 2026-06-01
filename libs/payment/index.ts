@@ -17,4 +17,5 @@ export function createPaymentProvider(provider: PaymentProviderType): StripeProv
 
 // Pixal3D v1 only ships Stripe checkout.
 export * from './types';
+export * from './subscription-credit-refresh';
 export { StripeProvider };

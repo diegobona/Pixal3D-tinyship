@@ -138,8 +138,8 @@ const FREE_TRIAL_DURATION_SECONDS = 15 * 60;
 const RESOLUTION_OPTIONS: ResolutionOption[] = [1024, 1536];
 const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096, 8192];
 const RESOLUTION_CREDIT_COST: Record<ResolutionOption, number> = {
-  1024: 1100,
-  1536: 1600,
+  1024: 1000,
+  1536: 1500,
 };
 const DEFAULT_PIXAL3D_SETTINGS: Pixal3DSettings = {
   resolution: 1024,

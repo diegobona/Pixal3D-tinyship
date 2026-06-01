@@ -18,9 +18,9 @@ const monthlyAmount = (plan: Plan) =>
   "months" in plan.duration && plan.duration.months === 12 ? plan.amount / 12 : plan.amount;
 
 const monthlyCredits = (plan: Plan) => {
-  const credits = plan.i18n.en.features.find((feature) => feature.toLowerCase().includes("monthly credits"));
-  const match = credits?.match(/[\d,]+/);
-  return match ? Number(match[0].replace(/,/g, "")) : 0;
+  const credits = (plan as Plan & { credits?: number }).credits;
+  if (!credits) return 0;
+  return credits;
 };
 
 export default function PricingPage() {
@@ -33,15 +33,26 @@ export default function PricingPage() {
   const user = session?.user;
 
   const allPlans = Object.values(config.payment.plans) as unknown as Plan[];
-  const plans = allPlans.filter((plan) => {
+  const visiblePlans = allPlans.filter((plan) => plan.showInPricing !== false);
+  const plans = visiblePlans.filter((plan) => {
     if (plan.id === "free") return true;
     if (!("months" in plan.duration)) return false;
     return billingCycle === "monthly" ? plan.duration.months === 1 : plan.duration.months === 12;
   });
 
-  const monthlyPlans = allPlans.filter(
+  const monthlyPlans = visiblePlans.filter(
     (plan) => "months" in plan.duration && plan.duration.months === 1 && plan.id !== "free",
   );
+
+  const handleContactSales = () => {
+    const maximizeChat = window.Tawk_API?.maximize;
+    if (typeof maximizeChat === "function") {
+      maximizeChat();
+      return;
+    }
+
+    toast.info(t.pricing.contactPlan.chatUnavailable);
+  };
 
   const handleSubscribe = async (plan: Plan) => {
     if (plan.id === "free") return;
@@ -103,7 +114,7 @@ export default function PricingPage() {
               )}
               onClick={() => setBillingCycle("yearly")}
             >
-              Yearly <span className="ml-2 rounded-md bg-yellow-400 px-2 py-0.5 text-xs text-black">-30%</span>
+              Yearly <span className="ml-2 rounded-md bg-yellow-400 px-2 py-0.5 text-xs text-black">{t.pricing.yearlyDiscountBadge}</span>
             </button>
           </div>
         </div>
@@ -113,7 +124,8 @@ export default function PricingPage() {
             const content = plan.i18n[currentLocale] || plan.i18n.en;
             const credits = monthlyCredits(plan);
             const displayMonthlyPrice = monthlyAmount(plan);
-            const billedYearlyPrice = displayMonthlyPrice * 12;
+            const billedYearlyPrice =
+              "months" in plan.duration && plan.duration.months === 12 ? plan.amount : displayMonthlyPrice * 12;
             const monthlyPeer = monthlyPlans.find((item) => item.i18n.en.name === plan.i18n.en.name);
             const crossedPrice = billingCycle === "yearly" ? monthlyAmount(monthlyPeer || plan) : null;
             const creditPrice = credits > 0 ? (displayMonthlyPrice / credits) * 100 : null;
@@ -215,6 +227,34 @@ export default function PricingPage() {
               </article>
             );
           })}
+
+          <article className="relative flex min-h-[620px] flex-col rounded-xl border border-yellow-400/35 bg-card p-7 shadow-[0_22px_80px_rgba(255,205,0,0.08)]">
+            <div>
+              <h2 className="text-2xl font-bold text-yellow-300">{t.pricing.contactPlan.name}</h2>
+              <p className="mt-2 min-h-12 text-sm text-muted-foreground">{t.pricing.contactPlan.description}</p>
+            </div>
+
+            <div className="mt-10">
+              <p className="text-5xl font-bold">{t.pricing.contactPlan.price}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{t.pricing.contactPlan.priceNote}</p>
+            </div>
+
+            <Button
+              className="mt-10 h-14 w-full rounded-full border-0 bg-yellow-400 text-base font-extrabold text-black shadow-[0_18px_50px_rgba(250,204,21,0.2)] transition hover:scale-[1.015] hover:bg-yellow-300"
+              onClick={handleContactSales}
+            >
+              {t.pricing.contactPlan.button}
+            </Button>
+
+            <ul className="mt-10 space-y-4 text-sm">
+              {t.pricing.contactPlan.features.map((feature: string) => (
+                <li key={feature} className="flex gap-3">
+                  <span className="mt-0.5 shrink-0 text-yellow-300" aria-hidden="true">✓</span>
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
         </div>
       </section>
     </main>

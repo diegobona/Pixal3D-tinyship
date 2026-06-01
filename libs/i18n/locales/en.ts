@@ -275,7 +275,24 @@ export const en: Locale = {
       keywords: "pixal3d pricing, ai 3d model credits, image to 3d subscription"
     },
     freeTrialNotice: "Two Free Trial sessions (Each session lasts 15 minutes, no credits required)",
-    billedYearly: "Billed yearly: ${amount}"
+    yearlyDiscountBadge: "Save about 20%",
+    billedYearly: "Billed yearly: ${amount}",
+    contactPlan: {
+      name: "Max Unlimited",
+      description: "For teams with custom volume, workflow support, and priority onboarding.",
+      price: "Contact Us",
+      priceNote: "Custom monthly or yearly terms",
+      button: "Contact Us",
+      chatUnavailable: "Open the chat widget to contact us.",
+      features: [
+        "Custom monthly credits",
+        "Custom concurrent tasks",
+        "Unlimited downloads per day",
+        "Maximum queue priority",
+        "Private asset ownership",
+        "Workflow and onboarding support"
+      ]
+    }
   },
   payment: {
     metadata: {

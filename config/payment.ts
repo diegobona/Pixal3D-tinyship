@@ -61,7 +61,7 @@ export const paymentConfig = {
       id: 'starterMonthly',
       amount: 9,
       currency: 'USD',
-      credits: 10000,
+      credits: 15000,
       duration: { months: 1, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_STARTER_MONTHLY') || getEnv('STRIPE_PRICE_STARTER') || 'price_starter_monthly_replace_me',
       i18n: {
@@ -70,7 +70,7 @@ export const paymentConfig = {
           description: 'A practical starter plan for light image-to-3D work.',
           duration: 'month',
           features: [
-            '10,000 monthly credits',
+            '15,000 credits/month',
             '1 concurrent task',
             '20 downloads per day',
             'Standard queue priority',
@@ -85,7 +85,7 @@ export const paymentConfig = {
           description: 'A practical starter plan for light image-to-3D work.',
           duration: 'month',
           features: [
-            '10,000 monthly credits',
+            '15,000 credits/month',
             '1 concurrent task',
             '20 downloads per day',
             'Standard queue priority',
@@ -102,7 +102,7 @@ export const paymentConfig = {
       id: 'creatorMonthly',
       amount: 19,
       currency: 'USD',
-      credits: 30000,
+      credits: 40000,
       recommended: true,
       duration: { months: 1, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_CREATOR_MONTHLY') || getEnv('STRIPE_PRICE_CREATOR') || 'price_creator_monthly_replace_me',
@@ -112,7 +112,7 @@ export const paymentConfig = {
           description: 'Best value for regular creators and production-ready assets.',
           duration: 'month',
           features: [
-            '30,000 monthly credits',
+            '40,000 credits/month',
             '2 concurrent tasks',
             'Unlimited downloads per day',
             'Priority queue',
@@ -127,7 +127,7 @@ export const paymentConfig = {
           description: 'Best value for regular creators and production-ready assets.',
           duration: 'month',
           features: [
-            '30,000 monthly credits',
+            '40,000 credits/month',
             '2 concurrent tasks',
             'Unlimited downloads per day',
             'Priority queue',
@@ -145,6 +145,7 @@ export const paymentConfig = {
       amount: 49,
       currency: 'USD',
       credits: 100000,
+      showInPricing: false,
       duration: { months: 1, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_PRO_MONTHLY') || getEnv('STRIPE_PRICE_PRO') || 'price_pro_monthly_replace_me',
       i18n: {
@@ -183,9 +184,9 @@ export const paymentConfig = {
     starterYearly: {
       provider: 'stripe',
       id: 'starterYearly',
-      amount: 72,
+      amount: 87,
       currency: 'USD',
-      credits: 10000,
+      credits: 15000,
       duration: { months: 12, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_STARTER_YEARLY') || 'price_starter_yearly_replace_me',
       i18n: {
@@ -194,7 +195,8 @@ export const paymentConfig = {
           description: 'A practical starter plan for light image-to-3D work.',
           duration: 'year',
           features: [
-            '10,000 monthly credits',
+            '15,000 credits/month',
+            'Credits refresh monthly',
             '1 concurrent task',
             '20 downloads per day',
             'Standard queue priority',
@@ -209,7 +211,8 @@ export const paymentConfig = {
           description: 'A practical starter plan for light image-to-3D work.',
           duration: 'year',
           features: [
-            '10,000 monthly credits',
+            '15,000 credits/month',
+            'Credits refresh monthly',
             '1 concurrent task',
             '20 downloads per day',
             'Standard queue priority',
@@ -224,9 +227,9 @@ export const paymentConfig = {
     creatorYearly: {
       provider: 'stripe',
       id: 'creatorYearly',
-      amount: 156,
+      amount: 183,
       currency: 'USD',
-      credits: 30000,
+      credits: 40000,
       recommended: true,
       duration: { months: 12, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_CREATOR_YEARLY') || 'price_creator_yearly_replace_me',
@@ -236,7 +239,8 @@ export const paymentConfig = {
           description: 'Best value for regular creators and production-ready assets.',
           duration: 'year',
           features: [
-            '30,000 monthly credits',
+            '40,000 credits/month',
+            'Credits refresh monthly',
             '2 concurrent tasks',
             'Unlimited downloads per day',
             'Priority queue',
@@ -251,7 +255,8 @@ export const paymentConfig = {
           description: 'Best value for regular creators and production-ready assets.',
           duration: 'year',
           features: [
-            '30,000 monthly credits',
+            '40,000 credits/month',
+            'Credits refresh monthly',
             '2 concurrent tasks',
             'Unlimited downloads per day',
             'Priority queue',
@@ -266,9 +271,10 @@ export const paymentConfig = {
     proYearly: {
       provider: 'stripe',
       id: 'proYearly',
-      amount: 408,
+      amount: 469,
       currency: 'USD',
       credits: 100000,
+      showInPricing: false,
       duration: { months: 12, type: 'recurring' },
       stripePriceId: getEnv('STRIPE_PRICE_PRO_YEARLY') || 'price_pro_yearly_replace_me',
       i18n: {
@@ -277,7 +283,8 @@ export const paymentConfig = {
           description: 'For high-volume teams that need the highest texture detail.',
           duration: 'year',
           features: [
-            '100,000 monthly credits',
+            '100,000 credits/month',
+            'Credits refresh monthly',
             '4 concurrent tasks',
             'Unlimited downloads per day',
             'Maximum queue priority',
@@ -292,7 +299,8 @@ export const paymentConfig = {
           description: 'For high-volume teams that need the highest texture detail.',
           duration: 'year',
           features: [
-            '100,000 monthly credits',
+            '100,000 credits/month',
+            'Credits refresh monthly',
             '4 concurrent tasks',
             'Unlimited downloads per day',
             'Maximum queue priority',

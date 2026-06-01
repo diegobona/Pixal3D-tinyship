@@ -86,14 +86,14 @@ describe('AI 3D generation abstraction', () => {
         credits: {
           fixedConsumption: {
             ai3d: {
-              default: 1100,
+              default: 1000,
               models: {
-                'fal-ai/pixal3d': 1100,
+                'fal-ai/pixal3d': 1000,
               },
               modelResolutionCredits: {
                 'fal-ai/pixal3d': {
-                  1024: 1100,
-                  1536: 1600,
+                  1024: 1000,
+                  1536: 1500,
                 },
               },
             },
@@ -104,8 +104,8 @@ describe('AI 3D generation abstraction', () => {
 
     const { calculate3DCreditCost } = await import('@libs/ai/3d');
 
-    expect(calculate3DCreditCost({ provider: 'fal', resolution: 1024 })).toBe(1100);
-    expect(calculate3DCreditCost({ provider: 'fal', resolution: 1536 })).toBe(1600);
+    expect(calculate3DCreditCost({ provider: 'fal', resolution: 1024 })).toBe(1000);
+    expect(calculate3DCreditCost({ provider: 'fal', resolution: 1536 })).toBe(1500);
   });
 
   test('validates configured 3D providers and models at runtime', async () => {

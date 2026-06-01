@@ -9,20 +9,20 @@ export type FixedConsumptionConfig = number | {
 export const creditsConfig = {
   fixedConsumption: {
     ai3d: {
-      default: 1100,
+      default: 1000,
       models: {
         'pixal3d-mock-v1': 5,
-        'fal-ai/pixal3d': 1100,
-        'tencentarc/pixal3d': 1100,
+        'fal-ai/pixal3d': 1000,
+        'tencentarc/pixal3d': 1000,
       },
       modelResolutionCredits: {
         'fal-ai/pixal3d': {
-          1024: 1100,
-          1536: 1600,
+          1024: 1000,
+          1536: 1500,
         },
         'tencentarc/pixal3d': {
-          1024: 1100,
-          1536: 1600,
+          1024: 1000,
+          1536: 1500,
         },
       },
     } as FixedConsumptionConfig,

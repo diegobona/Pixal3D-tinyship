@@ -170,8 +170,80 @@ child.on("exit", (code, signal) => {
     return;
   }
 
+  if ((code ?? 1) === 0 && args[0] === "build") {
+    try {
+      patchOpenNextCronWorker();
+    } catch (error) {
+      console.error("[opennext] Failed to patch scheduled worker handler:", error);
+      process.exit(1);
+      return;
+    }
+  }
+
   process.exit(code ?? 1);
 });
+
+function patchOpenNextCronWorker() {
+  const workerPath = join(process.cwd(), ".open-next", "worker.js");
+  const source = readFileSync(workerPath, "utf8");
+
+  if (source.includes("[yearly-credit-cron]")) {
+    return;
+  }
+
+  const scheduledMethod = `    scheduled(controller, env, ctx) {
+    const secret = env.CRON_SECRET;
+
+    if (!secret) {
+      console.warn("[yearly-credit-cron] CRON_SECRET is not configured; skipping yearly credit refresh.");
+      return;
+    }
+
+    const origin = env.APP_BASE_URL;
+
+    if (!origin) {
+      console.warn("[yearly-credit-cron] APP_BASE_URL is not configured; skipping yearly credit refresh.");
+      return;
+    }
+
+    const url = new URL("/api/cron/refresh-yearly-credits", origin);
+    const requestInit = {
+      method: "POST",
+      headers: {
+        "x-cron-secret": secret,
+        "x-cron-source": "cloudflare-scheduled",
+        "x-cron-scheduled-time": String(controller.scheduledTime || Date.now()),
+      },
+    };
+
+    ctx.waitUntil(
+      fetch(url.toString(), requestInit)
+        .then(async (response) => {
+          if (!response.ok) {
+            console.error(
+              "[yearly-credit-cron] Refresh failed:",
+              response.status,
+              await response.text(),
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("[yearly-credit-cron] Refresh crashed:", error);
+        }),
+    );
+  },
+`;
+  const patched = source.replace(/export default\s*\{\s*async fetch/, (match) => {
+    const normalizedPrefix = match.replace(/async fetch$/, "");
+    return `${normalizedPrefix}${scheduledMethod}\n    async fetch`;
+  });
+
+  if (patched === source) {
+    throw new Error("Could not find OpenNext default worker export to patch.");
+  }
+
+  writeFileSync(workerPath, patched, "utf8");
+}
 
 function patchOpenNextWindowsCopy() {
   if (process.platform !== "win32") {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { config } from '../../../config';
 
 describe('Pixal3D pricing plans', () => {
-  it('exposes Free plus monthly and yearly Pixal3D credit plans', () => {
+  it('exposes Free plus public Starter and Creator credit plans with yearly monthly refresh', () => {
     const plans = Object.values(config.payment.plans);
 
     expect(plans.map((plan) => plan.id)).toEqual([
@@ -29,12 +29,21 @@ describe('Pixal3D pricing plans', () => {
     expect(paidPlans.filter((plan) => plan.duration.months === 1)).toHaveLength(3);
     expect(paidPlans.filter((plan) => plan.duration.months === 12)).toHaveLength(3);
 
-    expect(config.payment.plans.starterYearly.amount).toBe(72);
-    expect(config.payment.plans.creatorYearly.amount).toBe(156);
-    expect(config.payment.plans.proYearly.amount).toBe(408);
-    expect(config.payment.plans.starterYearly.amount % 12).toBe(0);
-    expect(config.payment.plans.creatorYearly.amount % 12).toBe(0);
-    expect(config.payment.plans.proYearly.amount % 12).toBe(0);
+    expect(config.payment.plans.starterMonthly.credits).toBe(15000);
+    expect(config.payment.plans.creatorMonthly.credits).toBe(40000);
+    expect(config.payment.plans.proMonthly.showInPricing).toBe(false);
+    expect(config.payment.plans.starterYearly.amount).toBe(87);
+    expect(config.payment.plans.creatorYearly.amount).toBe(183);
+    expect(config.payment.plans.proYearly.amount).toBe(469);
+    expect(config.payment.plans.starterYearly.credits).toBe(15000);
+    expect(config.payment.plans.creatorYearly.credits).toBe(40000);
+    expect(config.payment.plans.proYearly.showInPricing).toBe(false);
+    expect(config.payment.plans.starterMonthly.i18n.en.features).toContain('15,000 credits/month');
+    expect(config.payment.plans.creatorMonthly.i18n.en.features).toContain('40,000 credits/month');
+    expect(config.payment.plans.starterYearly.i18n.en.features).toContain('15,000 credits/month');
+    expect(config.payment.plans.creatorYearly.i18n.en.features).toContain('40,000 credits/month');
+    expect(config.payment.plans.starterYearly.i18n.en.features).toContain('Credits refresh monthly');
+    expect(config.payment.plans.creatorYearly.i18n.en.features).toContain('Credits refresh monthly');
 
     expect(plans.every((plan) => plan.i18n.en.name.includes('Stripe'))).toBe(false);
     expect(paidPlans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('credits')))).toBe(true);

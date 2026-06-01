@@ -8,6 +8,7 @@ type BasePlan = {
   amount: number;
   currency: string;
   recommended?: boolean;
+  showInPricing?: boolean;
   i18n: {
     [locale: string]: {
       name: string;
@@ -20,6 +21,7 @@ type BasePlan = {
 
 export type RecurringPlan = BasePlan & {
   duration: { type: 'recurring'; months: number };
+  credits?: number;
   stripePriceId?: string | undefined;
   stripeProductId?: string | undefined;
   creemProductId?: string | undefined;

@@ -22,7 +22,7 @@ The fal request uses JSON and maps `imageUrl` to `image_url`. The completed resu
 
 The shared implementation lives in `libs/ai/3d.ts`. App API routes remain thin adapters that validate auth/input, consume credits, call the shared provider, and create an in-memory task record.
 
-Credits are charged by resolution before provider execution: `1024` costs `1100` credits and `1536` costs `1600` credits. Credits are refunded automatically only when provider task creation fails before the provider accepts execution, for example a missing API key or submit-time validation error. Once fal/Wiro has accepted a task and polling later reports a provider/runtime failure, the site marks the task as failed but does not automatically refund credits because the upstream provider may already have billed the request.
+Credits are charged by resolution before provider execution: `1024` costs `1000` credits and `1536` costs `1500` credits. Credits are refunded automatically only when provider task creation fails before the provider accepts execution, for example a missing API key or submit-time validation error. Once fal/Wiro has accepted a task and polling later reports a provider/runtime failure, the site marks the task as failed but does not automatically refund credits because the upstream provider may already have billed the request.
 
 ## Request Mapping
 
