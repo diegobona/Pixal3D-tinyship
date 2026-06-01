@@ -5,6 +5,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@libs/react-shared/ui/button";
 import { useTranslation } from "@/hooks/use-translation";
+import { dispatchCreditStatusUpdated } from "@/lib/credit-balance-events";
+
+interface CreditStatusResponse {
+  credits?: {
+    balance?: number;
+  };
+  subscription?: {
+    planId?: string;
+  } | null;
+}
 
 function PaymentSuccessContent() {
   const { t, localizedPath } = useTranslation();
@@ -25,6 +35,18 @@ function PaymentSuccessContent() {
         const response = await fetch(`/api/payment/verify/stripe?session_id=${sessionId}`);
         if (!response.ok) throw new Error("Invalid Stripe session");
         await response.json();
+        try {
+          const creditStatusResponse = await fetch("/api/credits/status", { cache: "no-store" });
+          if (creditStatusResponse.ok) {
+            const creditStatus = (await creditStatusResponse.json()) as CreditStatusResponse;
+            dispatchCreditStatusUpdated({
+              balance: Number(creditStatus.credits?.balance || 0),
+              subscriptionPlanId: creditStatus.subscription?.planId || null,
+            });
+          }
+        } catch (error) {
+          console.warn("Credit status refresh after payment success failed:", error);
+        }
         setIsValid(true);
       } catch (error) {
         console.error("Session verification failed:", error);

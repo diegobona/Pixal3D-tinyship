@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, useEffect, useMemo, useRef, useState } from "react";
+import { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GlbPreviewDialog } from "@/components/glb-preview-dialog";
 import {
   PIXAL3D_PROGRESS_STEPS,
@@ -403,39 +403,43 @@ export default function Home() {
     setPageNotice(null);
   };
 
+  const loadCreditStatus = useCallback(async () => {
+    try {
+      const response = await fetch("/api/credits/status", { cache: "no-store" });
+      if (!response.ok) {
+        setCreditBalance(0);
+        setSubscriptionPlanId(null);
+        return;
+      }
+
+      const data = (await response.json()) as CreditStatusResponse;
+      setCreditBalance(Number(data.credits?.balance || 0));
+      setSubscriptionPlanId(data.subscription?.planId || null);
+    } catch {
+      setCreditBalance(0);
+      setSubscriptionPlanId(null);
+    }
+  }, []);
+
   useEffect(() => {
-    let isMounted = true;
+    void loadCreditStatus();
+  }, [loadCreditStatus]);
 
-    const loadCreditStatus = async () => {
-      try {
-        const response = await fetch("/api/credits/status", { cache: "no-store" });
-        if (!response.ok) {
-          if (isMounted) {
-            setCreditBalance(0);
-            setSubscriptionPlanId(null);
-          }
-          return;
-        }
-
-        const data = (await response.json()) as CreditStatusResponse;
-        if (isMounted) {
-          setCreditBalance(Number(data.credits?.balance || 0));
-          setSubscriptionPlanId(data.subscription?.planId || null);
-        }
-      } catch {
-        if (isMounted) {
-          setCreditBalance(0);
-          setSubscriptionPlanId(null);
-        }
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void loadCreditStatus();
       }
     };
 
-    loadCreditStatus();
+    window.addEventListener("focus", loadCreditStatus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      isMounted = false;
+      window.removeEventListener("focus", loadCreditStatus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [loadCreditStatus]);
 
   useEffect(() => {
     if (!planEntitlement) return;

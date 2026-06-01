@@ -10,6 +10,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import {
   CREDIT_BALANCE_UPDATED_EVENT,
   getCreditBalanceFromEvent,
+  getSubscriptionPlanIdFromEvent,
 } from "@/lib/credit-balance-events";
 import { shouldShowHeaderUpgradeButton } from "@/lib/header-actions";
 
@@ -131,9 +132,13 @@ export default function Header({ className }: HeaderProps) {
   useEffect(() => {
     const handleCreditBalanceUpdated = (event: Event) => {
       const nextBalance = getCreditBalanceFromEvent(event);
+      const nextSubscriptionPlanId = getSubscriptionPlanIdFromEvent(event);
       if (nextBalance !== null) {
         setCreditBalance(nextBalance);
         setIsCreditStatusLoaded(true);
+      }
+      if (nextSubscriptionPlanId !== undefined) {
+        setSubscriptionPlanId(nextSubscriptionPlanId);
       }
     };
 
