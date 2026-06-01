@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { en } from '../../../libs/i18n/locales/en';
 
 describe('Next pricing yearly discount label', () => {
-  it('uses an approximate 20 percent yearly discount label', () => {
+  it('uses an approximate 20 percent yearly discount label without recommendation or per-credit copy', () => {
     const source = readFileSync(
       resolve(process.cwd(), 'apps/next-app/app/[lang]/(root)/pricing/page.tsx'),
       'utf8'
@@ -13,5 +13,8 @@ describe('Next pricing yearly discount label', () => {
     expect(en.pricing.yearlyDiscountBadge).toBe('Save about 20%');
     expect(source).toContain('t.pricing.yearlyDiscountBadge');
     expect(source).not.toContain('-30%');
+    expect(source).not.toContain('Recommended');
+    expect(source).not.toContain('creditPrice');
+    expect(source).not.toContain('/ 100 credits');
   });
 });

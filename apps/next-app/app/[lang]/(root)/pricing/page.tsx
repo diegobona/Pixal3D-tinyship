@@ -17,12 +17,6 @@ const formatPrice = (amount: number) =>
 const monthlyAmount = (plan: Plan) =>
   "months" in plan.duration && plan.duration.months === 12 ? plan.amount / 12 : plan.amount;
 
-const monthlyCredits = (plan: Plan) => {
-  const credits = (plan as Plan & { credits?: number }).credits;
-  if (!credits) return 0;
-  return credits;
-};
-
 export default function PricingPage() {
   const { locale: currentLocale, localizedPath, t } = useTranslation();
   const router = useRouter();
@@ -122,29 +116,18 @@ export default function PricingPage() {
         <div className="mt-12 grid gap-6 lg:grid-cols-4">
           {plans.map((plan) => {
             const content = plan.i18n[currentLocale] || plan.i18n.en;
-            const credits = monthlyCredits(plan);
             const displayMonthlyPrice = monthlyAmount(plan);
             const billedYearlyPrice =
               "months" in plan.duration && plan.duration.months === 12 ? plan.amount : displayMonthlyPrice * 12;
             const monthlyPeer = monthlyPlans.find((item) => item.i18n.en.name === plan.i18n.en.name);
             const crossedPrice = billingCycle === "yearly" ? monthlyAmount(monthlyPeer || plan) : null;
-            const creditPrice = credits > 0 ? (displayMonthlyPrice / credits) * 100 : null;
             const isPaidPlan = plan.id !== "free";
 
             return (
               <article
                 key={plan.id}
-                className={cn(
-                  "relative flex min-h-[620px] flex-col rounded-xl border border-border bg-card p-7",
-                  plan.recommended && "border-primary shadow-[0_0_0_1px_hsl(var(--primary))]",
-                )}
+                className="relative flex min-h-[620px] flex-col rounded-xl border border-border bg-card p-7"
               >
-                {plan.recommended && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-bold text-primary-foreground">
-                    Recommended
-                  </div>
-                )}
-
                 <div>
                   <h2 className="text-2xl font-bold text-primary">{content.name}</h2>
                   <p className="mt-2 min-h-12 text-sm text-muted-foreground">{content.description}</p>
@@ -176,11 +159,6 @@ export default function PricingPage() {
                           {t.pricing.billedYearly.replace("{amount}", formatPrice(billedYearlyPrice))}
                         </p>
                       ) : null}
-                      {creditPrice !== null && (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          ${creditPrice.toFixed(2)} / 100 credits
-                        </p>
-                      )}
                     </>
                   )}
                 </div>
@@ -191,7 +169,6 @@ export default function PricingPage() {
                     isPaidPlan
                       ? "border-0 bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] text-[#06111f] shadow-[0_18px_50px_rgba(0,240,138,0.22)] hover:scale-[1.015] hover:brightness-110"
                       : "border border-white/20 bg-[linear-gradient(180deg,#6c727e,#535864)] text-white shadow-[0_14px_36px_rgba(255,255,255,0.08)] ring-2 ring-white/10 disabled:cursor-default disabled:opacity-100",
-                    plan.recommended && isPaidPlan && "shadow-[0_20px_70px_rgba(72,189,255,0.34)] ring-2 ring-[#48bdff]/35",
                   )}
                   disabled={plan.id === "free" || loading === plan.id}
                   onClick={() => handleSubscribe(plan)}

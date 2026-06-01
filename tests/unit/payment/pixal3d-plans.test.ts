@@ -32,8 +32,8 @@ describe('Pixal3D pricing plans', () => {
     expect(config.payment.plans.starterMonthly.credits).toBe(15000);
     expect(config.payment.plans.creatorMonthly.credits).toBe(40000);
     expect(config.payment.plans.proMonthly.showInPricing).toBe(false);
-    expect(config.payment.plans.starterYearly.amount).toBe(87);
-    expect(config.payment.plans.creatorYearly.amount).toBe(183);
+    expect(config.payment.plans.starterYearly.amount).toBe(84);
+    expect(config.payment.plans.creatorYearly.amount).toBe(180);
     expect(config.payment.plans.proYearly.amount).toBe(469);
     expect(config.payment.plans.starterYearly.credits).toBe(15000);
     expect(config.payment.plans.creatorYearly.credits).toBe(40000);
@@ -44,6 +44,7 @@ describe('Pixal3D pricing plans', () => {
     expect(config.payment.plans.creatorYearly.i18n.en.features).toContain('40,000 credits/month');
     expect(config.payment.plans.starterYearly.i18n.en.features).toContain('Credits refresh monthly');
     expect(config.payment.plans.creatorYearly.i18n.en.features).toContain('Credits refresh monthly');
+    expect(plans.every((plan) => plan.recommended !== true)).toBe(true);
 
     expect(plans.every((plan) => plan.i18n.en.name.includes('Stripe'))).toBe(false);
     expect(paidPlans.every((plan) => plan.i18n.en.features.some((feature) => feature.includes('credits')))).toBe(true);
