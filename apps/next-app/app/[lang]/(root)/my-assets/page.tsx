@@ -59,6 +59,7 @@ export default async function MyAssetsPage({
     status: record.status,
     resolution: record.resolution,
     textureSize: record.textureSize,
+    creditsConsumed: record.creditCost,
     createdAtLabel: formatDate(record.createdAt, lang),
   }));
 
@@ -112,6 +113,8 @@ export default async function MyAssetsPage({
                 createdAt: t.card.createdAt,
                 targetResolution: t.card.targetResolution,
                 textureSize: t.card.textureSize,
+                creditsUsed: t.card.creditsUsed,
+                pricingHint: t.card.pricingHint,
                 preview3DModel: t.actions.preview3DModel,
                 previewTitle: translations[locale]?.pixal3d.generator.previewTitle || translations.en.pixal3d.generator.previewTitle,
                 closePreview: translations[locale]?.pixal3d.generator.closePreviewButton || translations.en.pixal3d.generator.closePreviewButton,

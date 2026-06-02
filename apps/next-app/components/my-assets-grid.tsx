@@ -17,6 +17,7 @@ export interface MyAssetItem {
   status: AssetStatus;
   resolution: number;
   textureSize: number;
+  creditsConsumed: number;
   createdAtLabel: string;
 }
 
@@ -26,6 +27,8 @@ interface MyAssetsGridProps {
     createdAt: string;
     targetResolution: string;
     textureSize: string;
+    creditsUsed: string;
+    pricingHint: string;
     preview3DModel: string;
     previewTitle: string;
     closePreview: string;
@@ -126,6 +129,10 @@ export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
 
   return (
     <>
+      <div className="rounded-2xl border border-[#48bdff]/20 bg-[#0d2046]/65 px-5 py-4 text-sm font-semibold leading-6 text-[#8fd7ff]">
+        {labels.pricingHint}
+      </div>
+
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3" data-testid="my-assets-grid">
         {assets.map((item) => (
           <article
@@ -173,6 +180,12 @@ export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
                     {labels.textureSize}
                   </p>
                   <p className="mt-2 text-lg font-bold text-white">{item.textureSize}</p>
+                </div>
+                <div className="col-span-2 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3" data-testid="my-assets-credits-used">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/42">
+                    {labels.creditsUsed}
+                  </p>
+                  <p className="mt-2 text-lg font-bold text-white">{item.creditsConsumed.toLocaleString("en-US")}</p>
                 </div>
               </div>
 

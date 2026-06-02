@@ -9,6 +9,7 @@ const baseItems: MyAssetItem[] = [
     status: 'processing',
     resolution: 1024,
     textureSize: 1024,
+    creditsConsumed: 1000,
     createdAtLabel: 'May 31, 2026',
   },
 ];

@@ -228,9 +228,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ lang
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/45">{t.credits.label}</p>
               <p className="mt-3 text-4xl font-bold text-[#1de9a6]">{creditBalance.toLocaleString("en-US")}</p>
               <p className="mt-2 text-sm text-white/58">{t.credits.description}</p>
-              <p className="mt-3 rounded-lg border border-[#48bdff]/30 bg-[#0d2046] px-3 py-2 text-sm font-semibold leading-6 text-[#8fd7ff]">
-                {t.credits.pricingHint}
-              </p>
             </div>
 
             <div className="rounded-xl border border-[#263653] bg-[#0a1530] p-6">

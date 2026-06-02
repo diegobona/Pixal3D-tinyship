@@ -367,8 +367,7 @@ export const en: Locale = {
     },
     credits: {
       label: "Credits",
-      description: "Available credits for Pixal3D model generation.",
-      pricingHint: "Per-generation credit usage will decrease as provider pricing drops."
+      description: "Available credits for Pixal3D model generation."
     },
     account: {
       label: "Account",
@@ -403,6 +402,8 @@ export const en: Locale = {
       textureSize: "Texture Size",
       createdAt: "Created",
       credits: "Credits",
+      creditsUsed: "Credits Used",
+      pricingHint: "Per-generation credit usage will decrease as provider pricing drops.",
       checkingStatus: "Checking status...",
       status: {
         processing: "Processing",
