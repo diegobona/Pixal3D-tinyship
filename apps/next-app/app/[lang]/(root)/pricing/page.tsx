@@ -83,7 +83,7 @@ export default function PricingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background px-4 py-16 text-foreground sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#071431] px-4 py-16 text-foreground sm:px-6 lg:px-8">
       <section className="mx-auto max-w-7xl">
         <div className="text-center">
           <h1 className="text-4xl font-bold tracking-normal sm:text-5xl">Pricing</h1>
@@ -126,7 +126,7 @@ export default function PricingPage() {
             return (
               <article
                 key={plan.id}
-                className="relative flex min-h-[620px] flex-col rounded-xl border border-border bg-card p-7"
+                className="relative flex min-h-[620px] flex-col rounded-xl border border-[#25314f] bg-[#070d20]/92 p-7 shadow-[0_24px_90px_rgba(0,0,0,0.2)]"
               >
                 <div>
                   <h2 className="text-2xl font-bold text-primary">{content.name}</h2>
@@ -205,14 +205,16 @@ export default function PricingPage() {
             );
           })}
 
-          <article className="relative flex min-h-[620px] flex-col rounded-xl border border-yellow-400/35 bg-card p-7 shadow-[0_22px_80px_rgba(255,205,0,0.08)]">
+          <article className="relative flex min-h-[620px] flex-col rounded-xl border border-[#25314f] bg-[#070d20]/92 p-7 shadow-[0_24px_90px_rgba(0,0,0,0.2)]">
             <div>
               <h2 className="text-2xl font-bold text-yellow-300">{t.pricing.contactPlan.name}</h2>
               <p className="mt-2 min-h-12 text-sm text-muted-foreground">{t.pricing.contactPlan.description}</p>
             </div>
 
             <div className="mt-10">
-              <p className="text-5xl font-bold">{t.pricing.contactPlan.price}</p>
+              <p className="whitespace-nowrap text-4xl font-extrabold tracking-normal text-white">
+                {t.pricing.contactPlan.price}
+              </p>
               <p className="mt-2 text-sm text-muted-foreground">{t.pricing.contactPlan.priceNote}</p>
             </div>
 

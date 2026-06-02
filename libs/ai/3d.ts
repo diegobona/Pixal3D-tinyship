@@ -219,9 +219,6 @@ function getFalResolution(resolution?: ThreeDResolution): 1024 | 1536 {
 }
 
 function getFalTextureSize(textureSize?: ThreeDTextureSize): 1024 | 2048 | 4096 {
-  if (textureSize === 8192) {
-    return 4096;
-  }
   if (textureSize === 1024 || textureSize === 4096) {
     return textureSize;
   }

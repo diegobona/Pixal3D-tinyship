@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { config } from '../../../config';
 import {
   check3DGenerationPlanLimit,
   get3DPlanEntitlement,
@@ -31,13 +32,13 @@ describe('Pixal3D plan entitlements', () => {
     });
   });
 
-  test('allows Pro to use the 8192 texture option', () => {
+  test('caps Pro at the current provider texture maximum', () => {
     const entitlement = get3DPlanEntitlement('proYearly');
 
     expect(entitlement).toMatchObject({
       tier: 'pro',
       maxResolution: 1536,
-      maxTextureSize: 8192,
+      maxTextureSize: 4096,
     });
   });
 
@@ -49,9 +50,9 @@ describe('Pixal3D plan entitlements', () => {
   });
 
   test('maps visible provider texture options to the right upgrade tier', () => {
+    expect(config.ai3d.generationOptions.textureSizes).toEqual([1024, 2048, 4096]);
     expect(getRequired3DTierForTextureSize(1024)).toBe('free');
     expect(getRequired3DTierForTextureSize(2048)).toBe('starter');
     expect(getRequired3DTierForTextureSize(4096)).toBe('creator');
-    expect(getRequired3DTierForTextureSize(8192)).toBe('pro');
   });
 });

@@ -71,7 +71,7 @@ export default async function BlogListPage({ params, searchParams }: Props) {
   const paginatedPosts = posts.slice(offset, offset + PAGE_SIZE);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#071431]">
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center mb-12">

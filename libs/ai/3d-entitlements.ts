@@ -38,7 +38,7 @@ export const threeDPlanEntitlements: Record<ThreeDPlanTier, ThreeDPlanEntitlemen
     tier: 'pro',
     label: 'Pro',
     maxResolution: 1536,
-    maxTextureSize: 8192,
+    maxTextureSize: 4096,
   },
 };
 
@@ -69,8 +69,7 @@ export function getRequired3DTierForResolution(resolution: ThreeDResolution): Th
 export function getRequired3DTierForTextureSize(textureSize: ThreeDTextureSize): ThreeDPlanTier {
   if (textureSize <= 1024) return 'free';
   if (textureSize <= 2048) return 'starter';
-  if (textureSize <= 4096) return 'creator';
-  return 'pro';
+  return 'creator';
 }
 
 export function check3DGenerationPlanLimit(

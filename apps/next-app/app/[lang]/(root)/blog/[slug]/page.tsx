@@ -106,7 +106,7 @@ export default async function BlogDetailPage({ params }: Props) {
 
   if (staticPost) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-[#071431]">
         <article className="mx-auto max-w-3xl px-6 py-16 lg:px-8">
           <Link
             href={`/${lang}/blog`}
@@ -180,7 +180,7 @@ export default async function BlogDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#071431]">
       <article className="mx-auto max-w-3xl px-6 py-16 lg:px-8">
         <Link
           href={`/${lang}/blog`}

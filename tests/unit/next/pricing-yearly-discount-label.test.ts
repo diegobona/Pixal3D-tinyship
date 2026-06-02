@@ -16,5 +16,11 @@ describe('Next pricing yearly discount label', () => {
     expect(source).not.toContain('Recommended');
     expect(source).not.toContain('creditPrice');
     expect(source).not.toContain('/ 100 credits');
+    expect(source).not.toContain('text-5xl font-bold">{t.pricing.contactPlan.price}');
+    expect(source).toContain('whitespace-nowrap');
+    expect(source).not.toContain('border-yellow-400/35');
+    expect(source).not.toContain('bg-card p-7');
+    expect(source).not.toContain('rgba(255,205,0');
+    expect(source).toContain('bg-[#070d20]/92');
   });
 });

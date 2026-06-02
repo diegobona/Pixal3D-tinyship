@@ -29,7 +29,7 @@ import {
 
 type TaskStatus = "idle" | "upload-ready" | "processing" | "checking" | "succeeded" | "failed";
 type ResolutionOption = 1024 | 1536;
-type TextureSizeOption = 1024 | 2048 | 4096 | 8192;
+type TextureSizeOption = 1024 | 2048 | 4096;
 type PageNoticeType = "error" | "info" | "success";
 
 interface PageNotice {
@@ -136,7 +136,7 @@ const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const FREE_TRIAL_DURATION_SECONDS = 15 * 60;
 const RESOLUTION_OPTIONS: ResolutionOption[] = [1024, 1536];
-const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096, 8192];
+const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096];
 const RESOLUTION_CREDIT_COST: Record<ResolutionOption, number> = {
   1024: 1000,
   1536: 1500,
