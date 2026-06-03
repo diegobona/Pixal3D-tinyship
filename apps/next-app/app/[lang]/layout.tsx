@@ -6,6 +6,11 @@ import { use } from 'react';
 import { translations } from "@libs/i18n";
 import { SharedAppWrapper } from "@/components/shared-app-wrapper";
 
+const DEFAULT_APP_URL = "https://pixal3d.net";
+
+function getAppUrl() {
+  return (process.env.APP_BASE_URL || DEFAULT_APP_URL).replace(/\/$/, "");
+}
 
 export async function generateViewport({ params }: { params: Promise<{ lang: string }> }): Promise<Viewport> {
   return {
@@ -16,9 +21,10 @@ export async function generateViewport({ params }: { params: Promise<{ lang: str
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params;
   const t = translations[lang as keyof typeof translations];
+  const appUrl = getAppUrl();
   
   return {
-    metadataBase: new URL(process.env.APP_BASE_URL || 'http://localhost:7001'),
+    metadataBase: new URL(appUrl),
     title: t.home.metadata.title,
     description: t.home.metadata.description,
     keywords: t.home.metadata.keywords,
@@ -51,7 +57,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     openGraph: {
       type: 'website',
       locale: lang,
-      siteName: t.home.metadata.title,
+      url: appUrl,
+      siteName: 'Pixal3D',
       title: t.home.metadata.title,
       description: t.home.metadata.description,
       images: [
@@ -84,10 +91,31 @@ export default function RootLayout({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = use(params);
+  const t = translations[lang as keyof typeof translations];
+  const appUrl = getAppUrl();
+  const webApplicationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Pixal3D",
+    applicationCategory: "DesignApplication",
+    operatingSystem: "Web",
+    url: appUrl,
+    description: t.home.metadata.description,
+    "isBasedOn": {
+      "@type": "SoftwareSourceCode",
+      name: "Pixal3D",
+      url: "https://github.com/TencentARC/Pixal3D",
+      license: "https://github.com/TencentARC/Pixal3D/blob/main/LICENSE",
+    },
+  };
   
   return (
     <html lang={lang} className="dark" suppressHydrationWarning>
       <body className="antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webApplicationJsonLd) }}
+        />
         <SharedAppWrapper>
           {children}
         </SharedAppWrapper>

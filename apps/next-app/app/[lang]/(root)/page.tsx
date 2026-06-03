@@ -828,6 +828,9 @@ export default function Home() {
             <p className="mt-3 text-lg font-medium tracking-normal text-[#9ca4ba] sm:text-[22px]">
               {t.pixal3d.generator.subtitle}
             </p>
+            <p className="mt-3 text-sm font-medium tracking-normal text-[#6fd4ff] sm:text-base">
+              {t.pixal3d.generator.trustLine}
+            </p>
           </div>
 
           <div className="w-full max-w-[1420px] rounded-lg border border-[#4b5575] bg-[#070d20]/92 p-5 shadow-[0_28px_120px_rgba(0,0,0,0.26)] sm:p-6">
