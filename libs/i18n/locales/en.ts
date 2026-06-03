@@ -194,19 +194,19 @@ export const en: Locale = {
       items: {
         generator: {
           question: "Is Pixal3D an AI 3D model generator?",
-          answer: "Pixal3D.net is an online image to 3D model generator for creating faithful 3D models from reference images and exporting GLB outputs."
+          answer: "Pixal3D is an AI image-to-3D generator for creating faithful 3D models from reference images. It is powered by the MIT-licensed Pixal3D project from TencentARC."
         },
         oneImage: {
           question: "Can Pixal3D create a 3D model from one image?",
-          answer: "Yes. Start with a clear reference image, then use the generator to create a 3D model that can be reviewed and used in downstream projects."
+          answer: "Yes. Upload a clear single-object image and Pixal3D can generate a GLB 3D model online."
         },
         bestImages: {
           question: "What images work best for image-to-3D generation?",
-          answer: "Single-object images with a clean background, strong silhouette, and visible shape details usually work better than crowded scenes or heavily occluded subjects."
+          answer: "Single-object images with a clean background, strong silhouette, and visible shape details usually work best."
         },
         formats: {
-          question: "Can I use the result as a GLB file?",
-          answer: "Pixal3D.net is designed around GLB output. Always inspect the generated mesh before using it in production or interactive scenes."
+          question: "Can I export the result as a GLB file?",
+          answer: "Yes. Pixal3D exports generated 3D models as GLB files for preview, download, and downstream 3D workflows."
         }
       }
     }
