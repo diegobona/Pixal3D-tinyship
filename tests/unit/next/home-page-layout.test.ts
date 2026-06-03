@@ -15,7 +15,17 @@ describe("Next home page layout", () => {
     expect(heroTitleClass).toContain("pb-2");
   });
 
-  it("keeps the free trial band slightly separated from the generator card", () => {
-    expect(pageSource).toContain('<div className="mt-6 w-full max-w-[1420px]');
+  it("places a compact free trial callout above the generator card", () => {
+    const freeTrialIndex = pageSource.indexOf('data-testid="pixal3d-free-trial-callout"');
+    const pageNoticeIndex = pageSource.indexOf('data-testid="pixal3d-page-notice"');
+    const generatorCardIndex = pageSource.indexOf('data-testid="pixal3d-generator-card"');
+
+    expect(freeTrialIndex).toBeGreaterThan(-1);
+    expect(pageNoticeIndex).toBeGreaterThan(-1);
+    expect(generatorCardIndex).toBeGreaterThan(-1);
+    expect(freeTrialIndex).toBeLessThan(pageNoticeIndex);
+    expect(pageNoticeIndex).toBeLessThan(generatorCardIndex);
+    expect(freeTrialIndex).toBeLessThan(generatorCardIndex);
+    expect(pageSource).toContain('className="mt-6 w-full max-w-[1420px] overflow-hidden rounded-lg');
   });
 });

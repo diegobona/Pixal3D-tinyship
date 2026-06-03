@@ -304,12 +304,13 @@ export default function Home() {
   const [hfTrialEndsAt, setHfTrialEndsAt] = useState<number | null>(null);
   const [isOpeningHfTrial, setIsOpeningHfTrial] = useState(false);
   const [isHfTrialFrameLoading, setIsHfTrialFrameLoading] = useState(false);
+  const [isHfTrialModalOpen, setIsHfTrialModalOpen] = useState(false);
   const [isHfTrialLimitReached, setIsHfTrialLimitReached] = useState(false);
   const [activeInspirationId, setActiveInspirationId] = useState<string | null>(null);
   const [creditBalance, setCreditBalance] = useState(0);
   const [subscriptionPlanId, setSubscriptionPlanId] = useState<string | null>(null);
   const [pageNotice, setPageNotice] = useState<PageNotice | null>(null);
-  const hfTrialPanelRef = useRef<HTMLDivElement | null>(null);
+  const hfTrialRequestIdRef = useRef(0);
 
   const requiredCredits = RESOLUTION_CREDIT_COST[settings.resolution];
   const isAuthenticated = Boolean(session?.user);
@@ -477,6 +478,7 @@ export default function Home() {
         setHfTrialQueueSize(null);
         setHfTrialEndsAt(null);
         setIsHfTrialFrameLoading(false);
+        setIsHfTrialModalOpen(false);
         showPageNotice("info", t.pixal3d.generator.freeTrialExpired);
       }
     };
@@ -507,12 +509,34 @@ export default function Home() {
   }, [progressPlan, progressStartedAt, taskStatus]);
 
   const closeHfTrial = () => {
+    hfTrialRequestIdRef.current += 1;
+    setIsHfTrialModalOpen(false);
     setHfTrialUrl("");
     setHfTrialQueueSize(null);
     setHfTrialSecondsLeft(0);
     setHfTrialEndsAt(null);
+    setIsOpeningHfTrial(false);
     setIsHfTrialFrameLoading(false);
   };
+
+  useEffect(() => {
+    if (!isHfTrialModalOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeHfTrial();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isHfTrialModalOpen]);
 
   const formatTrialTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -764,15 +788,12 @@ export default function Home() {
   const handleOpenHfTrial = async () => {
     if (isHfTrialLimitReached) return;
 
+    const requestId = hfTrialRequestIdRef.current + 1;
+    hfTrialRequestIdRef.current = requestId;
+    setIsHfTrialModalOpen(true);
     setIsOpeningHfTrial(true);
     setIsHfTrialFrameLoading(false);
     clearPageNotice();
-    window.setTimeout(() => {
-      hfTrialPanelRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 50);
 
     try {
       const response = await fetch("/api/hf-pixal3d-instance", {
@@ -782,7 +803,9 @@ export default function Home() {
       const data = (await response.json()) as HfInstanceResponse;
 
       if (response.status === 429 && data.error === "free_trial_limit_reached") {
+        if (requestId !== hfTrialRequestIdRef.current) return;
         setIsHfTrialLimitReached(true);
+        setIsHfTrialModalOpen(false);
         showPageNotice("error", t.pixal3d.generator.errors.freeTrialLimitReached, {
           action: {
             label: t.common.viewPlans,
@@ -798,22 +821,21 @@ export default function Home() {
         throw new Error(data.message || t.pixal3d.generator.errors.freeTrialBusy);
       }
 
+      if (requestId !== hfTrialRequestIdRef.current) return;
       setHfTrialUrl(data.data.selected.url);
       setIsHfTrialFrameLoading(true);
       setHfTrialQueueSize(data.data.selected.queueSize);
       setHfTrialSecondsLeft(FREE_TRIAL_DURATION_SECONDS);
       setHfTrialEndsAt(Date.now() + FREE_TRIAL_DURATION_SECONDS * 1000);
-      window.setTimeout(() => {
-        hfTrialPanelRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }, 100);
     } catch (error) {
+      if (requestId !== hfTrialRequestIdRef.current) return;
+      setIsHfTrialModalOpen(false);
       const message = error instanceof Error ? error.message : t.pixal3d.generator.errors.freeTrialBusy;
       showPageNotice("error", t.pixal3d.generator.errors.freeTrialBusy, { description: message });
     } finally {
-      setIsOpeningHfTrial(false);
+      if (requestId === hfTrialRequestIdRef.current) {
+        setIsOpeningHfTrial(false);
+      }
     }
   };
 
@@ -833,7 +855,71 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="w-full max-w-[1420px] rounded-lg border border-[#4b5575] bg-[#070d20]/92 p-5 shadow-[0_28px_120px_rgba(0,0,0,0.26)] sm:p-6">
+          <div
+            data-testid="pixal3d-free-trial-callout"
+            className="mt-6 w-full max-w-[1420px] overflow-hidden rounded-lg border border-[#39476d] bg-[radial-gradient(circle_at_0%_50%,rgba(255,197,96,0.1),transparent_26%),radial-gradient(circle_at_100%_50%,rgba(72,189,255,0.08),transparent_24%),linear-gradient(180deg,#09142f_0%,#081126_100%)] shadow-[0_18px_60px_rgba(0,0,0,0.16)]"
+          >
+            <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <p className="min-w-0 text-sm font-semibold leading-6 text-white/90 sm:text-base">
+                {highlightedTrialDescription}
+              </p>
+
+              <Button
+                data-testid="pixal3d-free-trial-button"
+                type="button"
+                size="lg"
+                className="h-11 w-full rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff2a8] via-[#ffd47a] to-[#ffb86b] px-6 text-base font-extrabold text-[#17111c] shadow-[0_14px_42px_rgba(255,184,107,0.22)] hover:brightness-105 disabled:opacity-60 sm:w-auto sm:min-w-[220px]"
+                disabled={isOpeningHfTrial || isHfTrialLimitReached}
+                onClick={handleOpenHfTrial}
+              >
+                {isOpeningHfTrial ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#17111c]/30 border-t-[#17111c]" /> : null}
+                {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
+              </Button>
+            </div>
+          </div>
+
+          {pageNotice && (
+            <div
+              data-testid="pixal3d-page-notice"
+              role="status"
+              className={`mt-5 flex w-full max-w-[1420px] flex-col gap-3 rounded-lg border px-5 py-4 text-sm font-semibold leading-6 shadow-[0_18px_60px_rgba(0,0,0,0.16)] sm:flex-row sm:items-center sm:justify-between ${
+                pageNotice.type === "error"
+                  ? "border-[#ff6b6b]/55 bg-[#220f1d]/88 text-[#ffb8b8]"
+                  : pageNotice.type === "success"
+                    ? "border-[#2d875f]/55 bg-[#08251d]/88 text-[#8df5c2]"
+                    : "border-[#48bdff]/45 bg-[#0a1430]/88 text-[#b8dfff]"
+              }`}
+            >
+              <div className="min-w-0">
+                <p className="text-base font-extrabold">{pageNotice.title}</p>
+                {pageNotice.description ? (
+                  <p className="mt-1 text-sm font-medium opacity-90">{pageNotice.description}</p>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                {pageNotice.action ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-9 rounded-full bg-[#ffb8b8] px-4 text-sm font-extrabold text-[#220f1d] hover:bg-[#ffd1d1]"
+                    onClick={pageNotice.action.onClick}
+                  >
+                    {pageNotice.action.label}
+                  </Button>
+                ) : null}
+                <button
+                  type="button"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-current/25 text-base font-extrabold opacity-80 transition hover:opacity-100"
+                  onClick={clearPageNotice}
+                  aria-label="Dismiss message"
+                >
+                  x
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div data-testid="pixal3d-generator-card" className="mt-6 w-full max-w-[1420px] rounded-lg border border-[#4b5575] bg-[#070d20]/92 p-5 shadow-[0_28px_120px_rgba(0,0,0,0.26)] sm:p-6">
             <div
               className={`relative flex min-h-[248px] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed transition-colors ${
                 isDragging ? "border-[#48bdff] bg-[#10224d]" : "border-transparent bg-transparent"
@@ -1181,71 +1267,6 @@ export default function Home() {
             </div>
           )}
 
-          <div className="mt-6 w-full max-w-[1420px] overflow-hidden rounded-xl border border-[#39476d] bg-[radial-gradient(circle_at_0%_50%,rgba(255,197,96,0.12),transparent_26%),radial-gradient(circle_at_100%_50%,rgba(72,189,255,0.09),transparent_24%),linear-gradient(180deg,#09142f_0%,#081126_100%)] shadow-[0_24px_90px_rgba(0,0,0,0.2)]">
-            <div className="flex flex-col gap-4 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-              <div className="min-w-0 flex-1">
-                <p className="max-w-3xl text-base font-semibold leading-7 text-white/92 sm:text-xl">
-                  {highlightedTrialDescription}
-                </p>
-              </div>
-
-              <div className="flex w-full shrink-0 flex-col items-stretch lg:w-auto">
-                <Button
-                  data-testid="pixal3d-free-trial-button"
-                  type="button"
-                  size="lg"
-                  className="h-14 w-full rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff2a8] via-[#ffd47a] to-[#ffb86b] px-9 text-xl font-extrabold text-[#17111c] shadow-[0_20px_60px_rgba(255,184,107,0.28)] hover:brightness-105 disabled:opacity-60 sm:min-w-[300px] lg:min-w-[340px]"
-                  disabled={isOpeningHfTrial || isHfTrialLimitReached}
-                  onClick={handleOpenHfTrial}
-                >
-                  {isOpeningHfTrial ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#17111c]/30 border-t-[#17111c]" /> : null}
-                  {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {pageNotice && (
-            <div
-              data-testid="pixal3d-page-notice"
-              role="status"
-              className={`mt-5 flex w-full max-w-[1420px] flex-col gap-3 rounded-lg border px-5 py-4 text-sm font-semibold leading-6 shadow-[0_18px_60px_rgba(0,0,0,0.16)] sm:flex-row sm:items-center sm:justify-between ${
-                pageNotice.type === "error"
-                  ? "border-[#ff6b6b]/55 bg-[#220f1d]/88 text-[#ffb8b8]"
-                  : pageNotice.type === "success"
-                    ? "border-[#2d875f]/55 bg-[#08251d]/88 text-[#8df5c2]"
-                    : "border-[#48bdff]/45 bg-[#0a1430]/88 text-[#b8dfff]"
-              }`}
-            >
-              <div className="min-w-0">
-                <p className="text-base font-extrabold">{pageNotice.title}</p>
-                {pageNotice.description ? (
-                  <p className="mt-1 text-sm font-medium opacity-90">{pageNotice.description}</p>
-                ) : null}
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                {pageNotice.action ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-9 rounded-full bg-[#ffb8b8] px-4 text-sm font-extrabold text-[#220f1d] hover:bg-[#ffd1d1]"
-                    onClick={pageNotice.action.onClick}
-                  >
-                    {pageNotice.action.label}
-                  </Button>
-                ) : null}
-                <button
-                  type="button"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-current/25 text-base font-extrabold opacity-80 transition hover:opacity-100"
-                  onClick={clearPageNotice}
-                  aria-label="Dismiss message"
-                >
-                  x
-                </button>
-              </div>
-            </div>
-          )}
-
           {generatedModelUrl && (
             <GlbPreviewDialog
               open={isGlbPreviewOpen}
@@ -1260,21 +1281,27 @@ export default function Home() {
             />
           )}
 
-          {(isOpeningHfTrial || hfTrialUrl) && (
+          {isHfTrialModalOpen && (
             <div
-              ref={hfTrialPanelRef}
-              data-testid="pixal3d-hf-trial-panel"
-              className="mt-7 w-full max-w-[1420px] scroll-mt-20 overflow-hidden rounded-lg border border-[#25314f] bg-[#070d20]/92 shadow-[0_28px_120px_rgba(0,0,0,0.26)]"
+              data-testid="pixal3d-hf-trial-modal"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-[#020715]/85 p-3 backdrop-blur-sm sm:p-6"
             >
-              <div className="flex flex-col gap-4 border-b border-[#25314f] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-w-0">
-                  <h2 className="text-lg font-extrabold text-white">{t.pixal3d.generator.hfTrialTitle}</h2>
-                  <p className="mt-1 whitespace-nowrap text-sm font-medium leading-6 text-[#9ec8ff]">
-                    {t.pixal3d.generator.hfTrialStartHint}
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3 lg:items-end">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="pixal3d-hf-trial-title"
+                className="flex h-[94vh] w-full max-w-[1440px] flex-col overflow-hidden rounded-lg border border-[#25314f] bg-[#070d20] shadow-[0_28px_120px_rgba(0,0,0,0.42)]"
+              >
+                <div className="flex flex-col gap-4 border-b border-[#25314f] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="min-w-0">
+                    <h2 id="pixal3d-hf-trial-title" className="text-lg font-extrabold text-white">
+                      {t.pixal3d.generator.hfTrialTitle}
+                    </h2>
+                    <p className="mt-1 text-sm font-medium leading-6 text-[#9ec8ff] lg:whitespace-nowrap">
+                      {t.pixal3d.generator.hfTrialStartHint}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 lg:items-end">
                     <Button
                       type="button"
                       variant="ghost"
@@ -1286,55 +1313,57 @@ export default function Home() {
                     </Button>
                   </div>
                 </div>
-              </div>
-              <div className="relative min-h-[520px] bg-[#0b0f1a] lg:min-h-[760px]">
-                {hfTrialUrl ? (
-                  <div className="absolute right-5 top-3 z-20 inline-flex min-w-[190px] items-center justify-center rounded-2xl border border-[#2dd6ff]/45 bg-[linear-gradient(135deg,rgba(48,194,255,0.26),rgba(7,18,42,0.9))] px-5 py-3 shadow-[0_0_36px_rgba(72,189,255,0.2)] backdrop-blur-md">
-                    <span className="text-[15px] font-extrabold uppercase tracking-[0.12em] text-[#b5f4ff]">
-                      {t.pixal3d.generator.hfTrialTimeLeft}
-                    </span>
-                    <span className="ml-3 text-[1.55rem] font-extrabold leading-none text-[#59e6ff] sm:text-[1.75rem]">
-                      {formatTrialTime(hfTrialSecondsLeft)}
-                    </span>
-                  </div>
-                ) : null}
-                {hfTrialUrl ? (
-                  <iframe
-                    title={t.pixal3d.generator.hfTrialTitle}
-                    src={hfTrialUrl}
-                    className="h-[860px] w-full bg-[#0b0f1a] lg:h-[960px]"
-                    allow="clipboard-read; clipboard-write"
-                    sandbox="allow-downloads allow-forms allow-modals allow-popups allow-same-origin allow-scripts"
-                    referrerPolicy="no-referrer"
-                    onLoad={() => setIsHfTrialFrameLoading(false)}
-                  />
-                ) : null}
 
-                {(isOpeningHfTrial || isHfTrialFrameLoading) && (
-                  <div
-                    className="absolute inset-0 z-10 flex items-center justify-center bg-[radial-gradient(circle_at_50%_35%,rgba(72,189,255,0.14),rgba(7,13,32,0.96)_58%,rgba(7,13,32,1))] px-6 text-center"
-                    data-testid="pixal3d-hf-trial-loading"
-                  >
-                    <div className="w-full max-w-xl rounded-[28px] border border-[#48bdff]/25 bg-[#0a1530]/88 px-6 py-8 shadow-[0_24px_90px_rgba(0,0,0,0.36)]">
-                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-[#48bdff]/30 bg-[#10264f] shadow-[0_0_42px_rgba(72,189,255,0.22)]">
-                        <span className="h-8 w-8 animate-spin rounded-full border-4 border-[#48bdff]/25 border-t-[#48bdff]" />
-                      </div>
-                      <h3 className="mt-6 text-2xl font-extrabold tracking-normal text-white">
-                        {isOpeningHfTrial
-                          ? t.pixal3d.generator.hfTrialFindingTitle
-                          : t.pixal3d.generator.hfTrialLoadingTitle}
-                      </h3>
-                      <p className="mx-auto mt-3 max-w-md text-base leading-7 text-[#aeb6ca]">
-                        {isOpeningHfTrial
-                          ? t.pixal3d.generator.hfTrialFindingDescription
-                          : t.pixal3d.generator.hfTrialLoadingDescription}
-                      </p>
-                      <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/10">
-                        <div className="h-full w-full animate-pulse rounded-full bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a]" />
+                <div className="relative min-h-0 flex-1 bg-[#0b0f1a]">
+                  {hfTrialUrl ? (
+                    <div className="absolute right-5 top-3 z-20 inline-flex min-w-[190px] items-center justify-center rounded-2xl border border-[#2dd6ff]/45 bg-[linear-gradient(135deg,rgba(48,194,255,0.26),rgba(7,18,42,0.9))] px-5 py-3 shadow-[0_0_36px_rgba(72,189,255,0.2)] backdrop-blur-md">
+                      <span className="text-[15px] font-extrabold uppercase tracking-[0.12em] text-[#b5f4ff]">
+                        {t.pixal3d.generator.hfTrialTimeLeft}
+                      </span>
+                      <span className="ml-3 text-[1.55rem] font-extrabold leading-none text-[#59e6ff] sm:text-[1.75rem]">
+                        {formatTrialTime(hfTrialSecondsLeft)}
+                      </span>
+                    </div>
+                  ) : null}
+                  {hfTrialUrl ? (
+                    <iframe
+                      data-testid="pixal3d-hf-trial-iframe"
+                      title={t.pixal3d.generator.hfTrialTitle}
+                      src={hfTrialUrl}
+                      className="h-full min-h-[520px] w-full bg-[#0b0f1a]"
+                      allow="clipboard-read; clipboard-write"
+                      sandbox="allow-downloads allow-forms allow-modals allow-popups allow-same-origin allow-scripts"
+                      referrerPolicy="no-referrer"
+                      onLoad={() => setIsHfTrialFrameLoading(false)}
+                    />
+                  ) : null}
+
+                  {(isOpeningHfTrial || isHfTrialFrameLoading) && (
+                    <div
+                      className="absolute inset-0 z-10 flex items-center justify-center bg-[radial-gradient(circle_at_50%_35%,rgba(72,189,255,0.14),rgba(7,13,32,0.96)_58%,rgba(7,13,32,1))] px-6 text-center"
+                      data-testid="pixal3d-hf-trial-loading"
+                    >
+                      <div className="w-full max-w-xl rounded-lg border border-[#48bdff]/25 bg-[#0a1530]/88 px-6 py-8 shadow-[0_24px_90px_rgba(0,0,0,0.36)]">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-[#48bdff]/30 bg-[#10264f] shadow-[0_0_42px_rgba(72,189,255,0.22)]">
+                          <span className="h-8 w-8 animate-spin rounded-full border-4 border-[#48bdff]/25 border-t-[#48bdff]" />
+                        </div>
+                        <h3 className="mt-6 text-2xl font-extrabold tracking-normal text-white">
+                          {isOpeningHfTrial
+                            ? t.pixal3d.generator.hfTrialFindingTitle
+                            : t.pixal3d.generator.hfTrialLoadingTitle}
+                        </h3>
+                        <p className="mx-auto mt-3 max-w-md text-base leading-7 text-[#aeb6ca]">
+                          {isOpeningHfTrial
+                            ? t.pixal3d.generator.hfTrialFindingDescription
+                            : t.pixal3d.generator.hfTrialLoadingDescription}
+                        </p>
+                        <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/10">
+                          <div className="h-full w-full animate-pulse rounded-full bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a]" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           )}

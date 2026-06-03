@@ -29,6 +29,15 @@ describe("Next home SEO copy", () => {
     expect(pageSource).toContain("t.pixal3d.generator.trustLine");
   });
 
+  it("uses the requested trial and paid generation prompts", () => {
+    expect(en.pixal3d.generator.trialDescription).toBe(
+      "Try Pixal3D without signing in. Two 15-minute sessions, no credits required.",
+    );
+    expect(en.pixal3d.generator.errors.generateDisabledSignIn).toBe(
+      "Sign in and subscribe to generate",
+    );
+  });
+
   it("emits WebApplication structured data for the Next route", () => {
     expect(layoutSource).toContain('type="application/ld+json"');
     expect(layoutSource).toContain('"@type": "WebApplication"');
