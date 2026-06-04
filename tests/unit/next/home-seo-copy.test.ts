@@ -20,19 +20,17 @@ describe("Next home SEO copy", () => {
     );
   });
 
-  it("uses concise hero copy with the TencentARC trust line", () => {
+  it("uses concise hero copy without the old TencentARC trust line", () => {
     expect(en.pixal3d.generator.heroTitle).toBe("Turn Any Image into a Faithful 3D Model");
     expect(en.pixal3d.generator.subtitle).toBe("Free to try, no sign-in needed");
-    expect(en.pixal3d.generator.trustLine).toBe(
-      "Powered by the MIT-licensed Pixal3D project from TencentARC.",
-    );
-    expect(pageSource).toContain("t.pixal3d.generator.trustLine");
+    expect(pageSource).not.toContain("t.pixal3d.generator.trustLine");
   });
 
   it("uses the requested trial and paid generation prompts", () => {
     expect(en.pixal3d.generator.trialDescription).toBe(
       "Try Pixal3D without signing in. Two 15-minute sessions, no credits required.",
     );
+    expect(pageSource).toContain('const marker = "15-minute";');
     expect(en.pixal3d.generator.errors.generateDisabledSignIn).toBe(
       "Sign in and subscribe to generate",
     );

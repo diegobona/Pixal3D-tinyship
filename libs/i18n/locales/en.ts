@@ -42,7 +42,6 @@ export const en: Locale = {
     generator: {
       heroTitle: "Turn Any Image into a Faithful 3D Model",
       subtitle: "Free to try, no sign-in needed",
-      trustLine: "Powered by the MIT-licensed Pixal3D project from TencentARC.",
       imageHint: "Single image input for the Pixal3D generation pipeline.",
       imagePreviewAlt: "Uploaded reference image",
       uploadButton: "Upload image",

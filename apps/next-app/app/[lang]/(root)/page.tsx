@@ -358,7 +358,7 @@ export default function Home() {
   const showGenerationProgress = Boolean(progressSnapshot && taskStatus !== "idle" && taskStatus !== "upload-ready");
   const trialDescription = t.pixal3d.generator.trialDescription;
   const highlightedTrialDescription = useMemo(() => {
-    const marker = "15";
+    const marker = "15-minute";
     const markerIndex = trialDescription.indexOf(marker);
 
     if (markerIndex === -1) {
@@ -368,7 +368,7 @@ export default function Home() {
     return (
       <>
         {trialDescription.slice(0, markerIndex)}
-        <span className="mx-1 inline-flex min-w-[2.3rem] items-center justify-center px-2 py-0.5 text-[1.08em] font-extrabold leading-none text-[#ffe7a8]">
+        <span className="mx-1 inline-flex items-center justify-center px-2 py-0.5 text-[1.08em] font-extrabold leading-none text-[#ffe7a8]">
           {marker}
         </span>
         {trialDescription.slice(markerIndex + marker.length)}
@@ -849,9 +849,6 @@ export default function Home() {
             </h1>
             <p className="mt-3 text-lg font-medium tracking-normal text-[#9ca4ba] sm:text-[22px]">
               {t.pixal3d.generator.subtitle}
-            </p>
-            <p className="mt-3 text-sm font-medium tracking-normal text-[#6fd4ff] sm:text-base">
-              {t.pixal3d.generator.trustLine}
             </p>
           </div>
 

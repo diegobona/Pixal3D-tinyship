@@ -186,8 +186,14 @@ export default function Header({ className }: HeaderProps) {
     <header className={`sticky top-0 z-40 w-full border-b border-[#26324d] bg-[#050b1d]/95 text-white backdrop-blur-sm ${className || ""}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link href={homeHref} aria-label={config.app.name}>
+          <Link href={homeHref} aria-label={config.app.name} className="flex shrink-0 items-center gap-3">
             <Logo size="lg" />
+            <span
+              data-testid="pixal3d-source-badge"
+              className="hidden rounded-full border border-[#48bdff]/35 bg-[#071a33] px-2.5 py-1 text-[11px] font-extrabold leading-none tracking-normal text-[#7ee7ff] shadow-[0_0_24px_rgba(72,189,255,0.16)] sm:inline-flex"
+            >
+              From TencentARC
+            </span>
           </Link>
 
           <nav className="hidden flex-1 items-center justify-center space-x-16 md:flex">

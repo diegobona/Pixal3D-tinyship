@@ -21,4 +21,9 @@ describe("global header navigation", () => {
     expect(homeIndex).toBeLessThan(featuresIndex);
     expect(headerSource).toContain("href={homeHref}");
   });
+
+  it("shows the TencentARC source badge beside the brand", () => {
+    expect(headerSource).toContain("From TencentARC");
+    expect(headerSource).toContain('data-testid="pixal3d-source-badge"');
+  });
 });
