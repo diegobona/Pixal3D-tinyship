@@ -148,7 +148,7 @@ export const en: Locale = {
         statusStillCheckingDescription: "The task was submitted, but this page could not confirm the final result yet. Check My Assets in a few minutes.",
         timeoutStillChecking: "The task is taking longer than expected. It may still finish in My Assets.",
         freeTrialBusy: "Free trial server is busy, try again later",
-        freeTrialLimitReached: "Free trials used.Sign in to generate with credits.",
+        freeTrialLimitReached: "Free trials used. Sign in and subscribe to generate.",
         trialUsed: "Free trial already used",
         trialUsedDescription: "Create an account to continue generating Pixal3D models.",
         generateDisabledSignIn: "Sign in and subscribe to generate",

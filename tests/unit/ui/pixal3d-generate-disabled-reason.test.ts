@@ -3,7 +3,7 @@ import { en } from '../../../libs/i18n/locales/en';
 import { getPixal3DGenerateDisabledReason } from '../../../apps/next-app/lib/pixal3d-generate-disabled-reason';
 
 const labels = {
-  signInRequired: 'Sign in to generate with credits',
+  signInRequired: 'Sign in and subscribe to generate',
   insufficientCredits: 'Not enough credits.',
   imageRequired: 'Upload an image first',
   readingImage: 'Reading image...',
@@ -28,7 +28,7 @@ describe('getPixal3DGenerateDisabledReason', () => {
       isReadingFile: false,
       isProcessing: false,
       labels,
-    })).toBe('Sign in to generate with credits');
+    })).toBe('Sign in and subscribe to generate');
   });
 
   test('shows a simple insufficient credits message without exposing cost details', () => {
