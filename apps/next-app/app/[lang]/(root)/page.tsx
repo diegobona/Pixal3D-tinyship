@@ -218,7 +218,7 @@ const INSPIRATION_IMAGES: SampleImage[] = [
     name: "Retro computer",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/keyboard.jpg`,
     transparentSrc: "/samples/retro-computer-transparent.png",
-    modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/keyboard.glb`,
+    modelUrl: "/samples/keyboard-preview.glb",
   },
   {
     id: "picnic",
@@ -845,6 +845,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#071431] text-white">
+      <link rel="preconnect" href={PIXAL3D_REFERENCE_ASSET_BASE} crossOrigin="anonymous" />
+      <link
+        rel="preload"
+        href={DEFAULT_EXAMPLE_RESULT.modelUrl}
+        as="fetch"
+        type="model/gltf-binary"
+        crossOrigin="anonymous"
+      />
       <section className="relative min-h-[calc(100vh-4rem)] border-l border-r border-[#2b3657] bg-[radial-gradient(circle_at_50%_-10%,rgba(22,91,173,0.22),transparent_42%),linear-gradient(180deg,#071431_0%,#0a1737_46%,#071431_100%)] px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
         <div className="mx-auto flex w-full max-w-[1420px] flex-col items-center">
           <div className="mb-2 text-center">
@@ -923,7 +931,7 @@ export default function Home() {
           <div data-testid="pixal3d-generator-card" className="mt-4 w-full max-w-[1420px] rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(11,20,43,0.76),rgba(7,13,32,0.9))] p-4 shadow-[0_22px_82px_rgba(0,0,0,0.18)] backdrop-blur sm:p-5">
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(440px,0.65fr)]">
             <div
-              className={`relative flex min-h-[248px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed transition-colors ${
+              className={`relative flex min-h-[320px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-4 py-8 transition-colors lg:min-h-[248px] lg:px-6 lg:py-6 ${
                 isDragging ? "border-[#48bdff]/80 bg-[#10224d]/88" : "border-white/10 bg-[#09142d]/58 hover:border-[#48bdff]/45 hover:bg-[#0b1733]/76"
               }`}
               onClick={() => document.getElementById("pixal3d-image")?.click()}
@@ -1029,7 +1037,7 @@ export default function Home() {
 
             <aside
               data-testid="pixal3d-example-result"
-              className="relative overflow-hidden rounded-xl border border-white/10 bg-[radial-gradient(circle_at_50%_0%,rgba(72,189,255,0.14),transparent_42%),linear-gradient(180deg,rgba(12,25,52,0.86),rgba(7,13,32,0.92))] p-4 shadow-[0_18px_58px_rgba(0,0,0,0.16)]"
+              className="relative flex min-h-[320px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[radial-gradient(circle_at_50%_0%,rgba(72,189,255,0.14),transparent_42%),linear-gradient(180deg,rgba(12,25,52,0.86),rgba(7,13,32,0.92))] p-4 shadow-[0_18px_58px_rgba(0,0,0,0.16)] lg:min-h-[248px]"
             >
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7ee7ff]">
@@ -1037,7 +1045,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="mt-4 grid grid-cols-[minmax(0,0.8fr)_auto_minmax(0,1fr)] items-center gap-3">
+              <div className="grid flex-1 grid-cols-[minmax(0,0.8fr)_auto_minmax(0,1fr)] items-center gap-3 py-4">
                 <div>
                   <div className="aspect-square overflow-visible">
                     <img
@@ -1088,43 +1096,49 @@ export default function Home() {
                 }`}>
                   <label className="flex min-w-0 flex-col gap-2">
                     <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.resolution}</span>
-                    <select
-                      data-testid="pixal3d-resolution-select"
-                      value={settings.resolution}
-                      disabled={!canEditGenerationSettings}
-                      onChange={(event) => updateSetting("resolution", Number(event.target.value) as ResolutionOption)}
-                      className="h-10 rounded-full border border-white/10 bg-[#0d1730]/78 px-4 text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 focus:border-[#48bdff] disabled:opacity-60"
-                    >
-                      {RESOLUTION_OPTIONS.map((option) => (
-                        <option
-                          key={option}
-                          value={option}
-                          disabled={Boolean(planEntitlement && option > planEntitlement.maxResolution)}
-                        >
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        data-testid="pixal3d-resolution-select"
+                        value={settings.resolution}
+                        disabled={!canEditGenerationSettings}
+                        onChange={(event) => updateSetting("resolution", Number(event.target.value) as ResolutionOption)}
+                        className="h-10 w-full appearance-none rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-11 text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 focus:border-[#48bdff] disabled:opacity-60"
+                      >
+                        {RESOLUTION_OPTIONS.map((option) => (
+                          <option
+                            key={option}
+                            value={option}
+                            disabled={Boolean(planEntitlement && option > planEntitlement.maxResolution)}
+                          >
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      <span aria-hidden="true" className="pointer-events-none absolute right-5 top-1/2 h-2.5 w-2.5 -translate-y-[65%] rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78" />
+                    </div>
                   </label>
                   <label className="flex min-w-0 flex-col gap-2">
                     <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.textureSize}</span>
-                    <select
-                      data-testid="pixal3d-texture-size-select"
-                      value={settings.textureSize}
-                      disabled={!canEditGenerationSettings}
-                      onChange={(event) => updateSetting("textureSize", Number(event.target.value) as TextureSizeOption)}
-                      className="h-10 rounded-full border border-white/10 bg-[#0d1730]/78 px-4 text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 focus:border-[#48bdff] disabled:opacity-60"
-                    >
-                      {TEXTURE_SIZE_OPTIONS.map((option) => (
-                        <option
-                          key={option}
-                          value={option}
-                          disabled={Boolean(planEntitlement && option > planEntitlement.maxTextureSize)}
-                        >
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        data-testid="pixal3d-texture-size-select"
+                        value={settings.textureSize}
+                        disabled={!canEditGenerationSettings}
+                        onChange={(event) => updateSetting("textureSize", Number(event.target.value) as TextureSizeOption)}
+                        className="h-10 w-full appearance-none rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-11 text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 focus:border-[#48bdff] disabled:opacity-60"
+                      >
+                        {TEXTURE_SIZE_OPTIONS.map((option) => (
+                          <option
+                            key={option}
+                            value={option}
+                            disabled={Boolean(planEntitlement && option > planEntitlement.maxTextureSize)}
+                          >
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      <span aria-hidden="true" className="pointer-events-none absolute right-5 top-1/2 h-2.5 w-2.5 -translate-y-[65%] rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78" />
+                    </div>
                   </label>
                   <div className="flex min-w-0 flex-col gap-2 sm:col-span-2 lg:col-span-1">
                     <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.advanceSettings}</span>

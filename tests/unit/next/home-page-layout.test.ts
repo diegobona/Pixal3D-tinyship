@@ -37,10 +37,13 @@ describe("Next home page layout", () => {
   it("keeps the generator surface light while de-emphasizing settings", () => {
     expect(pageSource).toContain('data-testid="pixal3d-generator-card" className="mt-4 w-full max-w-[1420px] rounded-2xl border border-white/10');
     expect(pageSource).toContain("lg:grid-cols-[minmax(0,1.35fr)_minmax(440px,0.65fr)]");
-    expect(pageSource).toContain("min-h-[248px]");
+    expect(pageSource).toContain("min-h-[320px]");
+    expect(pageSource).toContain("lg:min-h-[248px]");
+    expect(pageSource).toContain("px-4 py-8");
     expect(pageSource).toContain("border-white/10 bg-[#09142d]/58 hover:border-[#48bdff]/45");
     expect(pageSource).toContain('className="mt-4 rounded-xl bg-white/[0.025] px-3 py-3"');
-    expect(pageSource).toContain("h-10 rounded-full border border-white/10 bg-[#0d1730]/78");
+    expect(pageSource).toContain("h-10 w-full appearance-none rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-11");
+    expect(pageSource).toContain("pointer-events-none absolute right-5 top-1/2 h-2.5 w-2.5");
     expect(pageSource).toContain("text-xs font-bold uppercase tracking-normal text-[#8996b2]");
     expect(pageSource).toContain("hover:-translate-y-0.5 hover:brightness-110");
   });
@@ -54,13 +57,19 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain('name: "Retro computer"');
     expect(pageSource).toContain('transparentSrc: "/samples/retro-computer-transparent.png"');
     expect(pageSource).not.toContain("{DEFAULT_EXAMPLE_RESULT.name}");
-    expect(pageSource).toContain("compa/pixal3d/keyboard.glb");
+    expect(pageSource).toContain('modelUrl: "/samples/keyboard-preview.glb"');
+    expect(pageSource).toContain('rel="preconnect" href={PIXAL3D_REFERENCE_ASSET_BASE}');
+    expect(pageSource).toContain('rel="preload"');
+    expect(pageSource).toContain("href={DEFAULT_EXAMPLE_RESULT.modelUrl}");
+    expect(pageSource).toContain('type="model/gltf-binary"');
     expect(pageSource).not.toContain("poster: DEFAULT_EXAMPLE_RESULT.transparentSrc ?? DEFAULT_EXAMPLE_RESULT.src");
     expect(pageSource).not.toContain("reveal: \"auto\"");
     expect(pageSource).toContain("object-contain");
     expect(pageSource).toContain('className="aspect-square overflow-visible"');
     expect(pageSource).toContain('className="aspect-[1.08] overflow-visible"');
     expect(pageSource).toContain('data-testid="pixal3d-example-result"');
+    expect(pageSource).toContain("relative flex min-h-[320px] flex-col overflow-hidden");
+    expect(pageSource).toContain("grid flex-1 grid-cols-[minmax(0,0.8fr)_auto_minmax(0,1fr)] items-center gap-3 py-4");
     expect(pageSource).toContain('data-testid": "pixal3d-example-model-viewer"');
     expect(pageSource).toContain('"auto-rotate": true');
     expect(pageSource).toContain('className: "block h-full w-full"');
