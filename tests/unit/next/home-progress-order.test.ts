@@ -10,10 +10,16 @@ describe("home free trial modal layout", () => {
 
   it("renders the free trial iframe inside a modal instead of an inline page panel", () => {
     const modalIndex = source.indexOf('data-testid="pixal3d-hf-trial-modal"');
+    const headerIndex = source.indexOf('data-testid="pixal3d-hf-trial-header"');
+    const timerIndex = source.indexOf('data-testid="pixal3d-hf-trial-timer"');
+    const modalBodyIndex = source.indexOf('data-testid="pixal3d-hf-trial-body"');
     const iframeIndex = source.indexOf('data-testid="pixal3d-hf-trial-iframe"');
 
     expect(source).not.toContain('data-testid="pixal3d-hf-trial-panel"');
     expect(modalIndex).toBeGreaterThan(-1);
+    expect(headerIndex).toBeGreaterThan(modalIndex);
+    expect(timerIndex).toBeGreaterThan(headerIndex);
+    expect(modalBodyIndex).toBeGreaterThan(timerIndex);
     expect(iframeIndex).toBeGreaterThan(modalIndex);
     expect(source).toContain("setIsHfTrialModalOpen(true)");
     expect(source).toContain('role="dialog"');

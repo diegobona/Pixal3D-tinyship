@@ -1292,7 +1292,10 @@ export default function Home() {
                 aria-labelledby="pixal3d-hf-trial-title"
                 className="flex h-[94vh] w-full max-w-[1440px] flex-col overflow-hidden rounded-lg border border-[#25314f] bg-[#070d20] shadow-[0_28px_120px_rgba(0,0,0,0.42)]"
               >
-                <div className="flex flex-col gap-4 border-b border-[#25314f] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+                <div
+                  data-testid="pixal3d-hf-trial-header"
+                  className="flex flex-col gap-4 border-b border-[#25314f] px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
+                >
                   <div className="min-w-0">
                     <h2 id="pixal3d-hf-trial-title" className="text-lg font-extrabold text-white">
                       {t.pixal3d.generator.hfTrialTitle}
@@ -1301,7 +1304,20 @@ export default function Home() {
                       {t.pixal3d.generator.hfTrialStartHint}
                     </p>
                   </div>
-                  <div className="flex flex-col gap-3 lg:items-end">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:items-center">
+                    {hfTrialUrl ? (
+                      <div
+                        data-testid="pixal3d-hf-trial-timer"
+                        className="inline-flex min-w-[220px] items-center justify-center rounded-2xl border border-[#2dd6ff]/45 bg-[linear-gradient(135deg,rgba(48,194,255,0.26),rgba(7,18,42,0.9))] px-5 py-3 shadow-[0_0_36px_rgba(72,189,255,0.2)] backdrop-blur-md"
+                      >
+                        <span className="text-[13px] font-extrabold uppercase tracking-[0.12em] text-[#b5f4ff]">
+                          {t.pixal3d.generator.hfTrialTimeLeft}
+                        </span>
+                        <span className="ml-3 text-[1.5rem] font-extrabold leading-none text-[#59e6ff] sm:text-[1.65rem]">
+                          {formatTrialTime(hfTrialSecondsLeft)}
+                        </span>
+                      </div>
+                    ) : null}
                     <Button
                       type="button"
                       variant="ghost"
@@ -1314,17 +1330,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="relative min-h-0 flex-1 bg-[#0b0f1a]">
-                  {hfTrialUrl ? (
-                    <div className="absolute right-5 top-3 z-20 inline-flex min-w-[190px] items-center justify-center rounded-2xl border border-[#2dd6ff]/45 bg-[linear-gradient(135deg,rgba(48,194,255,0.26),rgba(7,18,42,0.9))] px-5 py-3 shadow-[0_0_36px_rgba(72,189,255,0.2)] backdrop-blur-md">
-                      <span className="text-[15px] font-extrabold uppercase tracking-[0.12em] text-[#b5f4ff]">
-                        {t.pixal3d.generator.hfTrialTimeLeft}
-                      </span>
-                      <span className="ml-3 text-[1.55rem] font-extrabold leading-none text-[#59e6ff] sm:text-[1.75rem]">
-                        {formatTrialTime(hfTrialSecondsLeft)}
-                      </span>
-                    </div>
-                  ) : null}
+                <div data-testid="pixal3d-hf-trial-body" className="relative min-h-0 flex-1 bg-[#0b0f1a]">
                   {hfTrialUrl ? (
                     <iframe
                       data-testid="pixal3d-hf-trial-iframe"
