@@ -42,9 +42,13 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain("px-4 py-8");
     expect(pageSource).toContain("border-white/10 bg-[#09142d]/58 hover:border-[#48bdff]/45");
     expect(pageSource).toContain('className="mt-4 rounded-xl bg-white/[0.025] px-3 py-3"');
-    expect(pageSource).toContain("h-10 w-full appearance-none rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-11");
-    expect(pageSource).toContain("pointer-events-none absolute right-5 top-1/2 h-2.5 w-2.5");
+    expect(pageSource).toContain("xl:flex-row xl:items-start xl:justify-between");
+    expect(pageSource).toContain('useState<"resolution" | "textureSize" | null>(null)');
+    expect(pageSource).toContain("flex h-10 w-full items-center justify-between rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-5");
+    expect(pageSource).toContain('role="listbox"');
+    expect(pageSource).toContain("rounded-2xl border border-[#48bdff]/25 bg-[#0b1530]/98");
     expect(pageSource).toContain("text-xs font-bold uppercase tracking-normal text-[#8996b2]");
+    expect(pageSource).toContain("sm:flex-row sm:items-start xl:pt-6");
     expect(pageSource).toContain("hover:-translate-y-0.5 hover:brightness-110");
   });
 

@@ -297,6 +297,7 @@ export default function Home() {
   const [progressStartedAt, setProgressStartedAt] = useState<number | null>(null);
   const [progressSnapshot, setProgressSnapshot] = useState<Pixal3DProgressSnapshot | null>(null);
   const [settings, setSettings] = useState<Pixal3DSettings>(DEFAULT_PIXAL3D_SETTINGS);
+  const [openSettingsMenu, setOpenSettingsMenu] = useState<"resolution" | "textureSize" | null>(null);
   const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false);
   const [taskStatus, setTaskStatus] = useState<TaskStatus>("idle");
   const [taskMessage, setTaskMessage] = useState(t.pixal3d.generator.status.idle);
@@ -1090,54 +1091,120 @@ export default function Home() {
             </div>
 
             <div className="mt-4 rounded-xl bg-white/[0.025] px-3 py-3">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className={`grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:max-w-[820px] ${
                   canEditGenerationSettings ? "" : "opacity-55"
                 }`}>
                   <label className="flex min-w-0 flex-col gap-2">
                     <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.resolution}</span>
-                    <div className="relative">
-                      <select
+                    <div
+                      className="relative"
+                      onBlur={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                          setOpenSettingsMenu(null);
+                        }
+                      }}
+                    >
+                      <button
+                        type="button"
                         data-testid="pixal3d-resolution-select"
-                        value={settings.resolution}
                         disabled={!canEditGenerationSettings}
-                        onChange={(event) => updateSetting("resolution", Number(event.target.value) as ResolutionOption)}
-                        className="h-10 w-full appearance-none rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-11 text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 focus:border-[#48bdff] disabled:opacity-60"
+                        className="flex h-10 w-full items-center justify-between rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-5 text-left text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 hover:bg-[#14213e] focus:border-[#48bdff] disabled:opacity-60"
+                        aria-haspopup="listbox"
+                        aria-expanded={openSettingsMenu === "resolution"}
+                        onClick={() => setOpenSettingsMenu((menu) => (menu === "resolution" ? null : "resolution"))}
                       >
-                        {RESOLUTION_OPTIONS.map((option) => (
-                          <option
-                            key={option}
-                            value={option}
-                            disabled={Boolean(planEntitlement && option > planEntitlement.maxResolution)}
-                          >
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                      <span aria-hidden="true" className="pointer-events-none absolute right-5 top-1/2 h-2.5 w-2.5 -translate-y-[65%] rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78" />
+                        <span>{settings.resolution}</span>
+                        <span aria-hidden="true" className={`h-2.5 w-2.5 rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78 transition-transform ${openSettingsMenu === "resolution" ? "-translate-y-[-2px] rotate-[225deg]" : "-translate-y-0.5"}`} />
+                      </button>
+                      {openSettingsMenu === "resolution" ? (
+                        <div
+                          role="listbox"
+                          className="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-2xl border border-[#48bdff]/25 bg-[#0b1530]/98 p-1 shadow-[0_18px_48px_rgba(0,0,0,0.36),0_0_0_1px_rgba(255,255,255,0.03)] backdrop-blur"
+                        >
+                          {RESOLUTION_OPTIONS.map((option) => {
+                            const isDisabled = Boolean(planEntitlement && option > planEntitlement.maxResolution);
+                            const isSelected = settings.resolution === option;
+                            return (
+                              <button
+                                key={option}
+                                type="button"
+                                role="option"
+                                aria-selected={isSelected}
+                                disabled={isDisabled}
+                                className={`flex h-10 w-full items-center justify-between rounded-xl px-4 text-left text-sm font-bold transition ${
+                                  isSelected
+                                    ? "bg-[#48bdff]/16 text-[#dff7ff]"
+                                    : "text-[#b9c4de] hover:bg-white/[0.06] hover:text-white"
+                                } disabled:cursor-not-allowed disabled:opacity-35`}
+                                onClick={() => {
+                                  updateSetting("resolution", option);
+                                  setOpenSettingsMenu(null);
+                                }}
+                              >
+                                <span>{option}</span>
+                                {isSelected ? <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#48bdff]" /> : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
                     </div>
                   </label>
                   <label className="flex min-w-0 flex-col gap-2">
                     <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.textureSize}</span>
-                    <div className="relative">
-                      <select
+                    <div
+                      className="relative"
+                      onBlur={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                          setOpenSettingsMenu(null);
+                        }
+                      }}
+                    >
+                      <button
+                        type="button"
                         data-testid="pixal3d-texture-size-select"
-                        value={settings.textureSize}
                         disabled={!canEditGenerationSettings}
-                        onChange={(event) => updateSetting("textureSize", Number(event.target.value) as TextureSizeOption)}
-                        className="h-10 w-full appearance-none rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-11 text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 focus:border-[#48bdff] disabled:opacity-60"
+                        className="flex h-10 w-full items-center justify-between rounded-full border border-white/10 bg-[#0d1730]/78 pl-4 pr-5 text-left text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 hover:bg-[#14213e] focus:border-[#48bdff] disabled:opacity-60"
+                        aria-haspopup="listbox"
+                        aria-expanded={openSettingsMenu === "textureSize"}
+                        onClick={() => setOpenSettingsMenu((menu) => (menu === "textureSize" ? null : "textureSize"))}
                       >
-                        {TEXTURE_SIZE_OPTIONS.map((option) => (
-                          <option
-                            key={option}
-                            value={option}
-                            disabled={Boolean(planEntitlement && option > planEntitlement.maxTextureSize)}
-                          >
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                      <span aria-hidden="true" className="pointer-events-none absolute right-5 top-1/2 h-2.5 w-2.5 -translate-y-[65%] rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78" />
+                        <span>{settings.textureSize}</span>
+                        <span aria-hidden="true" className={`h-2.5 w-2.5 rotate-45 border-b-2 border-r-2 border-[#dbe1f2]/78 transition-transform ${openSettingsMenu === "textureSize" ? "-translate-y-[-2px] rotate-[225deg]" : "-translate-y-0.5"}`} />
+                      </button>
+                      {openSettingsMenu === "textureSize" ? (
+                        <div
+                          role="listbox"
+                          className="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-2xl border border-[#48bdff]/25 bg-[#0b1530]/98 p-1 shadow-[0_18px_48px_rgba(0,0,0,0.36),0_0_0_1px_rgba(255,255,255,0.03)] backdrop-blur"
+                        >
+                          {TEXTURE_SIZE_OPTIONS.map((option) => {
+                            const isDisabled = Boolean(planEntitlement && option > planEntitlement.maxTextureSize);
+                            const isSelected = settings.textureSize === option;
+                            return (
+                              <button
+                                key={option}
+                                type="button"
+                                role="option"
+                                aria-selected={isSelected}
+                                disabled={isDisabled}
+                                className={`flex h-10 w-full items-center justify-between rounded-xl px-4 text-left text-sm font-bold transition ${
+                                  isSelected
+                                    ? "bg-[#48bdff]/16 text-[#dff7ff]"
+                                    : "text-[#b9c4de] hover:bg-white/[0.06] hover:text-white"
+                                } disabled:cursor-not-allowed disabled:opacity-35`}
+                                onClick={() => {
+                                  updateSetting("textureSize", option);
+                                  setOpenSettingsMenu(null);
+                                }}
+                              >
+                                <span>{option}</span>
+                                {isSelected ? <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#48bdff]" /> : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
                     </div>
                   </label>
                   <div className="flex min-w-0 flex-col gap-2 sm:col-span-2 lg:col-span-1">
@@ -1175,7 +1242,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start xl:pt-6">
                   <div className="group relative flex w-full flex-col items-stretch sm:w-auto">
                   <Button
                     data-testid="pixal3d-generate-button"
