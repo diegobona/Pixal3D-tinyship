@@ -31,6 +31,9 @@ describe("Next home SEO copy", () => {
       "Try Pixal3D without signing in. Two 15-minute sessions, no credits required.",
     );
     expect(pageSource).toContain('const marker = "15-minute";');
+    expect(en.pixal3d.generator.freeTrialButton).toBe("Start Free Trial");
+    expect(pageSource).toContain("hover:before:opacity-80");
+    expect(pageSource).not.toContain("-&gt;");
     expect(en.pixal3d.generator.errors.generateDisabledSignIn).toBe(
       "Sign in and subscribe to generate",
     );

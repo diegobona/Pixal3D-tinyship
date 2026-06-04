@@ -841,23 +841,23 @@ export default function Home() {
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#071431] text-white">
-      <section className="relative min-h-[calc(100vh-4rem)] border-l border-r border-[#2b3657] bg-[radial-gradient(circle_at_50%_-10%,rgba(22,91,173,0.22),transparent_42%),linear-gradient(180deg,#071431_0%,#0a1737_46%,#071431_100%)] px-4 py-6 sm:px-6 lg:px-8">
+      <section className="relative min-h-[calc(100vh-4rem)] border-l border-r border-[#2b3657] bg-[radial-gradient(circle_at_50%_-10%,rgba(22,91,173,0.22),transparent_42%),linear-gradient(180deg,#071431_0%,#0a1737_46%,#071431_100%)] px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
         <div className="mx-auto flex w-full max-w-[1420px] flex-col items-center">
-          <div className="mb-7 text-center">
-            <h1 className="inline-block bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] bg-clip-text pb-2 text-[44px] font-extrabold leading-[1.12] tracking-normal text-transparent sm:text-[64px]">
+          <div className="mb-2 text-center">
+            <h1 className="inline-block bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] bg-clip-text pb-2 text-[38px] font-extrabold leading-[1.12] tracking-normal text-transparent sm:text-[56px]">
               {t.pixal3d.generator.heroTitle}
             </h1>
-            <p className="mt-3 text-lg font-medium tracking-normal text-[#9ca4ba] sm:text-[22px]">
+            <p className="mt-2 text-base font-medium tracking-normal text-[#9ca4ba] sm:text-xl">
               {t.pixal3d.generator.subtitle}
             </p>
           </div>
 
           <div
             data-testid="pixal3d-free-trial-callout"
-            className="mt-6 w-full max-w-[1420px] overflow-hidden rounded-lg border border-[#39476d] bg-[radial-gradient(circle_at_0%_50%,rgba(255,197,96,0.1),transparent_26%),radial-gradient(circle_at_100%_50%,rgba(72,189,255,0.08),transparent_24%),linear-gradient(180deg,#09142f_0%,#081126_100%)] shadow-[0_18px_60px_rgba(0,0,0,0.16)]"
+            className="mt-4 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.025))] shadow-[0_12px_38px_rgba(0,0,0,0.12)] backdrop-blur"
           >
-            <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-              <p className="min-w-0 text-sm font-semibold leading-6 text-white/90 sm:text-base">
+            <div className="flex flex-col gap-3 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <p className="min-w-0 text-sm font-semibold leading-6 text-[#dce7ff] sm:text-base">
                 {highlightedTrialDescription}
               </p>
 
@@ -865,12 +865,12 @@ export default function Home() {
                 data-testid="pixal3d-free-trial-button"
                 type="button"
                 size="lg"
-                className="h-11 w-full rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff2a8] via-[#ffd47a] to-[#ffb86b] px-6 text-base font-extrabold text-[#17111c] shadow-[0_14px_42px_rgba(255,184,107,0.22)] hover:brightness-105 disabled:opacity-60 sm:w-auto sm:min-w-[220px]"
+                className="relative h-11 w-full overflow-hidden rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff4b8] via-[#ffd878] to-[#ffb25f] px-7 text-base font-extrabold text-[#17111c] shadow-[0_14px_42px_rgba(255,184,107,0.24),inset_0_1px_0_rgba(255,255,255,0.58)] transition duration-300 before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.72),transparent_48%)] before:opacity-45 before:transition-opacity before:duration-500 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_20px_58px_rgba(255,184,107,0.34),0_0_24px_rgba(255,232,160,0.22),inset_0_1px_0_rgba(255,255,255,0.7)] hover:before:opacity-80 disabled:translate-y-0 disabled:opacity-60 sm:w-auto sm:min-w-[240px]"
                 disabled={isOpeningHfTrial || isHfTrialLimitReached}
                 onClick={handleOpenHfTrial}
               >
                 {isOpeningHfTrial ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#17111c]/30 border-t-[#17111c]" /> : null}
-                {isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}
+                <span className="relative z-10">{isOpeningHfTrial ? t.pixal3d.generator.freeTrialLoading : t.pixal3d.generator.freeTrialButton}</span>
               </Button>
             </div>
           </div>
@@ -916,10 +916,10 @@ export default function Home() {
             </div>
           )}
 
-          <div data-testid="pixal3d-generator-card" className="mt-6 w-full max-w-[1420px] rounded-lg border border-[#4b5575] bg-[#070d20]/92 p-5 shadow-[0_28px_120px_rgba(0,0,0,0.26)] sm:p-6">
+          <div data-testid="pixal3d-generator-card" className="mt-4 w-full max-w-[1420px] rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(11,20,43,0.76),rgba(7,13,32,0.9))] p-4 shadow-[0_22px_82px_rgba(0,0,0,0.18)] backdrop-blur sm:p-5">
             <div
-              className={`relative flex min-h-[248px] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed transition-colors ${
-                isDragging ? "border-[#48bdff] bg-[#10224d]" : "border-transparent bg-transparent"
+              className={`relative flex min-h-[232px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed transition-colors ${
+                isDragging ? "border-[#48bdff]/80 bg-[#10224d]/88" : "border-white/10 bg-[#09142d]/58 hover:border-[#48bdff]/45 hover:bg-[#0b1733]/76"
               }`}
               onClick={() => document.getElementById("pixal3d-image")?.click()}
               onDragOver={(event) => {
@@ -977,23 +977,23 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="max-w-[520px] truncate text-2xl font-bold text-[#d9dfef]">{imageName}</p>
-                    <p className="mt-2 text-base text-[#828aa4]">{t.pixal3d.generator.imageHint}</p>
+                    <p className="mt-2 text-base text-[#8f9ab4]">{t.pixal3d.generator.imageHint}</p>
                   </div>
                 </div>
               ) : (
                 <>
-                  <p className="text-[28px] font-extrabold text-[#b7bdce]">{t.pixal3d.generator.uploadButton}</p>
-                  <p className="mt-3 text-lg font-medium text-[#757f9b]">{t.pixal3d.generator.dragDropPaste}</p>
+                  <p className="text-[28px] font-extrabold text-[#d4dbec]">{t.pixal3d.generator.uploadButton}</p>
+                  <p className="mt-2 text-base font-medium text-[#8e99b3]">{t.pixal3d.generator.dragDropPaste}</p>
                   <div className="mt-6 flex w-full max-w-[360px] items-center gap-4">
-                    <span className="h-px flex-1 bg-[#26324d]" />
+                    <span className="h-px flex-1 bg-white/10" />
                     <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#7f889e]">
                       {t.pixal3d.generator.orLabel}
                     </p>
-                    <span className="h-px flex-1 bg-[#26324d]" />
+                    <span className="h-px flex-1 bg-white/10" />
                   </div>
                   <Button
                     type="button"
-                    className="mt-6 h-14 w-full max-w-[360px] rounded-full border border-[#313b59] bg-[#141b31] text-xl font-bold text-[#dbe1f2] hover:bg-[#1a2440]"
+                    className="mt-6 h-14 w-full max-w-[360px] rounded-full border border-[#48bdff]/35 bg-[#101b36] text-xl font-bold text-[#e8f1ff] shadow-[0_14px_38px_rgba(72,189,255,0.08)] transition hover:border-[#48bdff]/70 hover:bg-[#152342] hover:shadow-[0_18px_48px_rgba(72,189,255,0.14)]"
                     disabled={isReadingFile}
                   >
                     {isReadingFile ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : null}
@@ -1006,7 +1006,7 @@ export default function Home() {
                         <button
                           key={sample.src}
                           type="button"
-                          className="h-16 w-16 overflow-hidden rounded-2xl border border-[#35415f] bg-[#10182d] p-1 transition hover:border-[#48bdff] hover:bg-[#172341]"
+                          className="h-16 w-16 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] p-1 transition hover:border-[#48bdff]/70 hover:bg-[#172341]"
                           onClick={(event) => {
                             event.stopPropagation();
                             useSampleImage(sample);
@@ -1022,19 +1022,19 @@ export default function Home() {
               )}
             </div>
 
-            <div className="mt-5 border-t border-[#303a59] pt-5">
-              <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+            <div className="mt-4 rounded-xl bg-white/[0.025] px-3 py-3">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                 <div className={`grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:max-w-[820px] ${
                   canEditGenerationSettings ? "" : "opacity-55"
                 }`}>
                   <label className="flex min-w-0 flex-col gap-2">
-                    <span className="text-sm font-extrabold text-[#d9dfef]">{t.pixal3d.generator.settings.resolution}</span>
+                    <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.resolution}</span>
                     <select
                       data-testid="pixal3d-resolution-select"
                       value={settings.resolution}
                       disabled={!canEditGenerationSettings}
                       onChange={(event) => updateSetting("resolution", Number(event.target.value) as ResolutionOption)}
-                      className="h-12 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-base font-bold text-[#dbe1f2] outline-none transition hover:border-[#48bdff] focus:border-[#48bdff] disabled:opacity-60"
+                      className="h-10 rounded-full border border-white/10 bg-[#0d1730]/78 px-4 text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 focus:border-[#48bdff] disabled:opacity-60"
                     >
                       {RESOLUTION_OPTIONS.map((option) => (
                         <option
@@ -1048,13 +1048,13 @@ export default function Home() {
                     </select>
                   </label>
                   <label className="flex min-w-0 flex-col gap-2">
-                    <span className="text-sm font-extrabold text-[#d9dfef]">{t.pixal3d.generator.settings.textureSize}</span>
+                    <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.textureSize}</span>
                     <select
                       data-testid="pixal3d-texture-size-select"
                       value={settings.textureSize}
                       disabled={!canEditGenerationSettings}
                       onChange={(event) => updateSetting("textureSize", Number(event.target.value) as TextureSizeOption)}
-                      className="h-12 rounded-full border border-[#313b59] bg-[#121a30] px-5 text-base font-bold text-[#dbe1f2] outline-none transition hover:border-[#48bdff] focus:border-[#48bdff] disabled:opacity-60"
+                      className="h-10 rounded-full border border-white/10 bg-[#0d1730]/78 px-4 text-sm font-semibold text-[#dbe1f2] outline-none transition hover:border-[#48bdff]/55 focus:border-[#48bdff] disabled:opacity-60"
                     >
                       {TEXTURE_SIZE_OPTIONS.map((option) => (
                         <option
@@ -1068,15 +1068,15 @@ export default function Home() {
                     </select>
                   </label>
                   <div className="flex min-w-0 flex-col gap-2 sm:col-span-2 lg:col-span-1">
-                    <span className="text-sm font-extrabold text-[#d9dfef]">{t.pixal3d.generator.settings.advanceSettings}</span>
+                    <span className="text-xs font-bold uppercase tracking-normal text-[#8996b2]">{t.pixal3d.generator.settings.advanceSettings}</span>
                     <Button
                       type="button"
                       variant="outline"
                       data-testid="pixal3d-advanced-settings-toggle"
-                      className={`h-12 justify-between rounded-full px-5 text-base font-bold shadow-[0_10px_32px_rgba(0,0,0,0.12)] transition hover:text-white ${
+                      className={`h-10 justify-between rounded-full px-4 text-sm font-semibold shadow-none transition hover:text-white ${
                         isAdvancedSettingsOpen
-                          ? "border-[#48bdff] bg-[#113555] text-white shadow-[0_14px_38px_rgba(72,189,255,0.18)]"
-                          : "border-[#313b59] bg-[#121a30] text-[#dbe1f2] hover:border-[#48bdff] hover:bg-[#172341]"
+                          ? "border-[#48bdff]/70 bg-[#113555]/82 text-white shadow-[0_10px_28px_rgba(72,189,255,0.12)]"
+                          : "border-white/10 bg-[#0d1730]/78 text-[#dbe1f2] hover:border-[#48bdff]/55 hover:bg-[#14213e]"
                       }`}
                       disabled={!canEditGenerationSettings}
                       aria-expanded={isAdvancedSettingsOpen}
@@ -1084,16 +1084,16 @@ export default function Home() {
                     >
                       <span className="flex min-w-0 flex-col items-start leading-none">
                         <span>{isAdvancedSettingsOpen ? t.pixal3d.generator.settings.hideAdvanceSettings : t.pixal3d.generator.settings.showAdvanceSettings}</span>
-                        <span className="mt-1 text-xs font-semibold text-[#aeb6ca]">
+                        <span className="mt-0.5 text-[11px] font-semibold text-[#8996b2]">
                           {t.pixal3d.generator.settings.advancedSettingsSummary}
                         </span>
                       </span>
                       <span
                         aria-hidden="true"
-                        className={`ml-4 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xl leading-none transition ${
+                        className={`ml-4 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-lg leading-none transition ${
                           isAdvancedSettingsOpen
                             ? "border-[#48bdff] bg-[#48bdff] text-[#051021]"
-                            : "border-[#3c4668] bg-[#18223d] text-[#dbe1f2]"
+                            : "border-white/10 bg-white/[0.04] text-[#dbe1f2]"
                         }`}
                       >
                         {isAdvancedSettingsOpen ? "-" : "+"}
@@ -1107,7 +1107,7 @@ export default function Home() {
                   <Button
                     data-testid="pixal3d-generate-button"
                     size="lg"
-                    className="h-14 rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] px-8 text-xl font-extrabold text-[#051021] shadow-[0_18px_55px_rgba(0,240,138,0.18)] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-14 rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] px-8 text-xl font-extrabold text-[#051021] shadow-[0_20px_58px_rgba(0,240,138,0.22)] transition hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_24px_70px_rgba(0,240,138,0.28)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={!canGenerate}
                     aria-describedby={generateDisabledReason ? "pixal3d-generate-disabled-reason" : undefined}
                     onClick={handleGenerate}

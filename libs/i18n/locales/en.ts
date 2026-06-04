@@ -58,7 +58,7 @@ export const en: Locale = {
       cleanTopology: "Clean topology",
       pbrMaterials: "PBR materials",
       upgradeButton: "Upgrade",
-      freeTrialButton: "Free Trial",
+      freeTrialButton: "Start Free Trial",
       freeTrialLoading: "Finding server...",
       freeTrialSelected: "Free trial server is ready.",
       freeTrialExpired: "Free trial session ended.",
