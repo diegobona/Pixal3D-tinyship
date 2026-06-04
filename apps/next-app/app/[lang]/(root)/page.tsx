@@ -66,6 +66,7 @@ interface SampleImage {
   id: string;
   name: string;
   src: string;
+  transparentSrc?: string;
   modelUrl?: string;
 }
 
@@ -216,6 +217,7 @@ const INSPIRATION_IMAGES: SampleImage[] = [
     id: "keyboard",
     name: "Retro computer",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/keyboard.jpg`,
+    transparentSrc: "/samples/retro-computer-transparent.png",
     modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/keyboard.glb`,
   },
   {
@@ -1037,9 +1039,9 @@ export default function Home() {
 
               <div className="mt-4 grid grid-cols-[minmax(0,0.8fr)_auto_minmax(0,1fr)] items-center gap-3">
                 <div>
-                  <div className="aspect-square overflow-hidden rounded-2xl border border-white/10 bg-[#0b1428] p-2 shadow-[0_16px_34px_rgba(0,0,0,0.16)]">
+                  <div className="aspect-square overflow-visible">
                     <img
-                      src={DEFAULT_EXAMPLE_RESULT.src}
+                      src={DEFAULT_EXAMPLE_RESULT.transparentSrc ?? DEFAULT_EXAMPLE_RESULT.src}
                       alt=""
                       className="h-full w-full object-contain"
                     />
@@ -1055,13 +1057,11 @@ export default function Home() {
                 <div>
                   <div
                     data-testid="pixal3d-example-model-viewer-wrap"
-                    className="aspect-[1.08] overflow-hidden rounded-2xl border border-[#48bdff]/20 bg-[radial-gradient(circle_at_50%_18%,rgba(72,189,255,0.16),transparent_44%),#081326] shadow-[0_18px_46px_rgba(72,189,255,0.12)]"
+                    className="aspect-[1.08] overflow-visible"
                   >
                     {createElement("model-viewer", {
                       "data-testid": "pixal3d-example-model-viewer",
                       src: DEFAULT_EXAMPLE_RESULT.modelUrl,
-                      poster: DEFAULT_EXAMPLE_RESULT.src,
-                      reveal: "auto",
                       alt: t.pixal3d.generator.exampleModelLabel,
                       "auto-rotate": true,
                       "auto-rotate-delay": "0",
@@ -1073,7 +1073,7 @@ export default function Home() {
                       "environment-image": "neutral",
                       loading: "eager",
                       className: "block h-full w-full",
-                      style: { width: "100%", height: "100%" },
+                      style: { width: "100%", height: "100%", background: "transparent" },
                     })}
                   </div>
                 </div>

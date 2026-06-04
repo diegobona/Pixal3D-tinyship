@@ -52,11 +52,14 @@ describe("Next home page layout", () => {
 
     expect(pageSource).toContain('item.id === "keyboard"');
     expect(pageSource).toContain('name: "Retro computer"');
+    expect(pageSource).toContain('transparentSrc: "/samples/retro-computer-transparent.png"');
     expect(pageSource).not.toContain("{DEFAULT_EXAMPLE_RESULT.name}");
     expect(pageSource).toContain("compa/pixal3d/keyboard.glb");
-    expect(pageSource).toContain("poster: DEFAULT_EXAMPLE_RESULT.src");
-    expect(pageSource).toContain("reveal: \"auto\"");
+    expect(pageSource).not.toContain("poster: DEFAULT_EXAMPLE_RESULT.transparentSrc ?? DEFAULT_EXAMPLE_RESULT.src");
+    expect(pageSource).not.toContain("reveal: \"auto\"");
     expect(pageSource).toContain("object-contain");
+    expect(pageSource).toContain('className="aspect-square overflow-visible"');
+    expect(pageSource).toContain('className="aspect-[1.08] overflow-visible"');
     expect(pageSource).toContain('data-testid="pixal3d-example-result"');
     expect(pageSource).toContain('data-testid": "pixal3d-example-model-viewer"');
     expect(pageSource).toContain('"auto-rotate": true');
