@@ -36,11 +36,37 @@ describe("Next home page layout", () => {
 
   it("keeps the generator surface light while de-emphasizing settings", () => {
     expect(pageSource).toContain('data-testid="pixal3d-generator-card" className="mt-4 w-full max-w-[1420px] rounded-2xl border border-white/10');
-    expect(pageSource).toContain("min-h-[232px]");
+    expect(pageSource).toContain("lg:grid-cols-[minmax(0,1.35fr)_minmax(440px,0.65fr)]");
+    expect(pageSource).toContain("min-h-[248px]");
     expect(pageSource).toContain("border-white/10 bg-[#09142d]/58 hover:border-[#48bdff]/45");
     expect(pageSource).toContain('className="mt-4 rounded-xl bg-white/[0.025] px-3 py-3"');
     expect(pageSource).toContain("h-10 rounded-full border border-white/10 bg-[#0d1730]/78");
     expect(pageSource).toContain("text-xs font-bold uppercase tracking-normal text-[#8996b2]");
     expect(pageSource).toContain("hover:-translate-y-0.5 hover:brightness-110");
+  });
+
+  it("shows the retro computer example result early in the generator card", () => {
+    const generatorCardIndex = pageSource.indexOf('data-testid="pixal3d-generator-card"');
+    const exampleResultIndex = pageSource.indexOf('data-testid="pixal3d-example-result"');
+    const settingsIndex = pageSource.indexOf('data-testid="pixal3d-resolution-select"');
+
+    expect(pageSource).toContain('item.id === "keyboard"');
+    expect(pageSource).toContain('name: "Retro computer"');
+    expect(pageSource).not.toContain("{DEFAULT_EXAMPLE_RESULT.name}");
+    expect(pageSource).toContain("compa/pixal3d/keyboard.glb");
+    expect(pageSource).toContain("poster: DEFAULT_EXAMPLE_RESULT.src");
+    expect(pageSource).toContain("reveal: \"auto\"");
+    expect(pageSource).toContain("object-contain");
+    expect(pageSource).toContain('data-testid="pixal3d-example-result"');
+    expect(pageSource).toContain('data-testid": "pixal3d-example-model-viewer"');
+    expect(pageSource).toContain('"auto-rotate": true');
+    expect(pageSource).toContain('className: "block h-full w-full"');
+    expect(pageSource).toContain("rotate-45 border-r-2 border-t-2");
+    expect(pageSource).not.toContain("exampleInputLabel");
+    expect(pageSource).not.toContain("exampleUseButton");
+    expect(pageSource).not.toContain('data-testid="pixal3d-example-preview-button"');
+    expect(pageSource).not.toContain("setIsExamplePreviewOpen(true)");
+    expect(exampleResultIndex).toBeGreaterThan(generatorCardIndex);
+    expect(exampleResultIndex).toBeLessThan(settingsIndex);
   });
 });

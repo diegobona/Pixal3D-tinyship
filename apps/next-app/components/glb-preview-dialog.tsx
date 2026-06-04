@@ -184,26 +184,19 @@ export function GlbPreviewDialog({
               </Button>
             </div>
           </div>
-          {/*
-            model-viewer is a custom element loaded lazily above. It provides
-            native camera controls for rotate, pan, and zoom.
-          */}
-          {/*
-            React's JSX type system does not know this custom element, so use
-            createElement-compatible props through a narrow cast.
-          */}
-          <model-viewer
-            ref={modelViewerRef}
-            data-testid="pixal3d-glb-model-viewer"
-            src={modelUrl}
-            camera-controls
-            touch-action="pan-y"
-            auto-rotate
-            shadow-intensity="0.9"
-            exposure="1"
-            environment-image="neutral"
-            style={{ width: "100%", height: "100%" }}
-          />
+          {React.createElement("model-viewer", {
+            ref: modelViewerRef,
+            "data-testid": "pixal3d-glb-model-viewer",
+            src: modelUrl,
+            "camera-controls": true,
+            "touch-action": "pan-y",
+            "auto-rotate": true,
+            "shadow-intensity": "0.9",
+            exposure: "1",
+            "environment-image": "neutral",
+            className: "block h-full w-full",
+            style: { width: "100%", height: "100%" },
+          })}
         </div>
       </div>
     </div>

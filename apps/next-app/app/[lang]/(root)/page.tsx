@@ -214,7 +214,7 @@ const INSPIRATION_IMAGES: SampleImage[] = [
   },
   {
     id: "keyboard",
-    name: "Mechanical keyboard",
+    name: "Retro computer",
     src: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/image/keyboard.jpg`,
     modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/compa/pixal3d/keyboard.glb`,
   },
@@ -273,6 +273,8 @@ const INSPIRATION_IMAGES: SampleImage[] = [
     modelUrl: `${PIXAL3D_REFERENCE_ASSET_BASE}/results/21_mesh.glb`,
   },
 ];
+const DEFAULT_EXAMPLE_RESULT =
+  INSPIRATION_IMAGES.find((item) => item.id === "keyboard") ?? INSPIRATION_IMAGES[0];
 const ADVANTAGE_KEYS = [
   "faithful",
   "pixelAligned",
@@ -917,8 +919,9 @@ export default function Home() {
           )}
 
           <div data-testid="pixal3d-generator-card" className="mt-4 w-full max-w-[1420px] rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(11,20,43,0.76),rgba(7,13,32,0.9))] p-4 shadow-[0_22px_82px_rgba(0,0,0,0.18)] backdrop-blur sm:p-5">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(440px,0.65fr)]">
             <div
-              className={`relative flex min-h-[232px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed transition-colors ${
+              className={`relative flex min-h-[248px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed transition-colors ${
                 isDragging ? "border-[#48bdff]/80 bg-[#10224d]/88" : "border-white/10 bg-[#09142d]/58 hover:border-[#48bdff]/45 hover:bg-[#0b1733]/76"
               }`}
               onClick={() => document.getElementById("pixal3d-image")?.click()}
@@ -1020,6 +1023,62 @@ export default function Home() {
                   </div>
                 </>
               )}
+            </div>
+
+            <aside
+              data-testid="pixal3d-example-result"
+              className="relative overflow-hidden rounded-xl border border-white/10 bg-[radial-gradient(circle_at_50%_0%,rgba(72,189,255,0.14),transparent_42%),linear-gradient(180deg,rgba(12,25,52,0.86),rgba(7,13,32,0.92))] p-4 shadow-[0_18px_58px_rgba(0,0,0,0.16)]"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7ee7ff]">
+                  {t.pixal3d.generator.exampleResultTitle}
+                </p>
+              </div>
+
+              <div className="mt-4 grid grid-cols-[minmax(0,0.8fr)_auto_minmax(0,1fr)] items-center gap-3">
+                <div>
+                  <div className="aspect-square overflow-hidden rounded-2xl border border-white/10 bg-[#0b1428] p-2 shadow-[0_16px_34px_rgba(0,0,0,0.16)]">
+                    <img
+                      src={DEFAULT_EXAMPLE_RESULT.src}
+                      alt=""
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                </div>
+
+                <div aria-hidden="true" className="mt-7 flex h-10 w-10 items-center justify-center rounded-full border border-[#00f08a]/35 bg-[#00f08a]/10 shadow-[0_0_28px_rgba(0,240,138,0.14)]">
+                  <span className="relative block h-0.5 w-5 rounded-full bg-[#82ffd1]">
+                    <span className="absolute right-0 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-45 border-r-2 border-t-2 border-[#82ffd1]" />
+                  </span>
+                </div>
+
+                <div>
+                  <div
+                    data-testid="pixal3d-example-model-viewer-wrap"
+                    className="aspect-[1.08] overflow-hidden rounded-2xl border border-[#48bdff]/20 bg-[radial-gradient(circle_at_50%_18%,rgba(72,189,255,0.16),transparent_44%),#081326] shadow-[0_18px_46px_rgba(72,189,255,0.12)]"
+                  >
+                    {createElement("model-viewer", {
+                      "data-testid": "pixal3d-example-model-viewer",
+                      src: DEFAULT_EXAMPLE_RESULT.modelUrl,
+                      poster: DEFAULT_EXAMPLE_RESULT.src,
+                      reveal: "auto",
+                      alt: t.pixal3d.generator.exampleModelLabel,
+                      "auto-rotate": true,
+                      "auto-rotate-delay": "0",
+                      "rotation-per-second": "24deg",
+                      "camera-orbit": "35deg 72deg auto",
+                      "interaction-prompt": "none",
+                      "shadow-intensity": "0.8",
+                      exposure: "1",
+                      "environment-image": "neutral",
+                      loading: "eager",
+                      className: "block h-full w-full",
+                      style: { width: "100%", height: "100%" },
+                    })}
+                  </div>
+                </div>
+              </div>
+            </aside>
             </div>
 
             <div className="mt-4 rounded-xl bg-white/[0.025] px-3 py-3">

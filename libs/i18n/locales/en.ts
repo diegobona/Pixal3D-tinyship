@@ -51,6 +51,8 @@ export const en: Locale = {
       samplePrompt: "No image? Try these:",
       useSample: "Use sample",
       removeImage: "Remove uploaded image",
+      exampleResultTitle: "Example result",
+      exampleModelLabel: "3D result",
       featuresNav: "Features",
       defaultPrompt: "Create a clean, game-ready 3D asset with accurate proportions, tidy topology, neutral studio lighting, and PBR-friendly materials.",
       trialDescription: "Try Pixal3D without signing in. Two 15-minute sessions, no credits required.",

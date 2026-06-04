@@ -72,6 +72,9 @@ describe('GlbPreviewDialog', () => {
     expect(source).toContain('addEventListener("error"');
     expect(source).toContain('addEventListener("progress"');
     expect(source).toContain('addEventListener("model-visibility"');
+    expect(source).toContain('React.createElement("model-viewer"');
+    expect(source).toContain('src: modelUrl');
+    expect(source).toContain('className: "block h-full w-full"');
     expect(source).not.toContain('onLoad={() => setLoadState("ready")}');
     expect(source).not.toContain('onError={() => setLoadState("error")}');
   });
