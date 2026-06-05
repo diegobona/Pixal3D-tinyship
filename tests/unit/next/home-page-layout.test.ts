@@ -52,6 +52,20 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain("hover:-translate-y-0.5 hover:brightness-110");
   });
 
+  it("offers 8192 as a display option while sending 4096 to the API", () => {
+    expect(pageSource).toContain("type ApiTextureSizeOption = 1024 | 2048 | 4096;");
+    expect(pageSource).toContain("type TextureSizeOption = ApiTextureSizeOption | 8192;");
+    expect(pageSource).toContain("const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096, 8192];");
+    expect(pageSource).toContain("8192: 4096");
+    expect(pageSource).toContain("function getMaxSelectableTextureSize(entitlement: ThreeDPlanEntitlement | null): TextureSizeOption");
+    expect(pageSource).toContain("if (!entitlement) {\n    return 8192;");
+    expect(pageSource).toContain('entitlement.tier === "creator" || entitlement.tier === "pro"');
+    expect(pageSource).toContain("const apiTextureSize = API_TEXTURE_SIZE_BY_UI_TEXTURE_SIZE[settings.textureSize];");
+    expect(pageSource).toContain("textureSize: apiTextureSize");
+    expect(pageSource).toContain("const isDisabled = option > maxSelectableTextureSize;");
+    expect(pageSource).not.toContain("option > planEntitlement.maxTextureSize");
+  });
+
   it("shows the retro computer example result early in the generator card", () => {
     const generatorCardIndex = pageSource.indexOf('data-testid="pixal3d-generator-card"');
     const exampleResultIndex = pageSource.indexOf('data-testid="pixal3d-example-result"');

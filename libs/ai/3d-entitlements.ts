@@ -25,8 +25,8 @@ export const threeDPlanEntitlements: Record<ThreeDPlanTier, ThreeDPlanEntitlemen
   starter: {
     tier: 'starter',
     label: 'Starter',
-    maxResolution: 1024,
-    maxTextureSize: 2048,
+    maxResolution: 1536,
+    maxTextureSize: 4096,
   },
   creator: {
     tier: 'creator',
@@ -63,13 +63,12 @@ export function get3DPlanEntitlement(planId?: string | null): ThreeDPlanEntitlem
 }
 
 export function getRequired3DTierForResolution(resolution: ThreeDResolution): ThreeDPlanTier {
-  return resolution <= 1024 ? 'free' : 'creator';
+  return resolution <= 1024 ? 'free' : 'starter';
 }
 
 export function getRequired3DTierForTextureSize(textureSize: ThreeDTextureSize): ThreeDPlanTier {
   if (textureSize <= 1024) return 'free';
-  if (textureSize <= 2048) return 'starter';
-  return 'creator';
+  return 'starter';
 }
 
 export function check3DGenerationPlanLimit(

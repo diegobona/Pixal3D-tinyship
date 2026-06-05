@@ -7,35 +7,30 @@ import {
 } from '@libs/ai/3d-entitlements';
 
 describe('Pixal3D plan entitlements', () => {
-  test('limits Starter to 1024 resolution and 2048 texture size', () => {
+  test('allows Starter to use the current hosted generation maximum', () => {
     const entitlement = get3DPlanEntitlement('starterMonthly');
 
     expect(check3DGenerationPlanLimit(entitlement, {
-      resolution: 1024,
-      textureSize: 2048,
-    })).toEqual({ allowed: true });
-    expect(check3DGenerationPlanLimit(entitlement, {
       resolution: 1536,
-      textureSize: 2048,
-    })).toMatchObject({
-      allowed: false,
-      reason: 'resolution',
-      requiredTier: 'creator',
-    });
-    expect(check3DGenerationPlanLimit(entitlement, {
-      resolution: 1024,
       textureSize: 4096,
-    })).toMatchObject({
-      allowed: false,
-      reason: 'textureSize',
-      requiredTier: 'creator',
+    })).toEqual({ allowed: true });
+    expect(entitlement).toMatchObject({
+      tier: 'starter',
+      maxResolution: 1536,
+      maxTextureSize: 4096,
     });
   });
 
-  test('caps Pro at the current provider texture maximum', () => {
-    const entitlement = get3DPlanEntitlement('proYearly');
+  test('keeps Creator and Pro capped at the current provider texture maximum', () => {
+    const creatorEntitlement = get3DPlanEntitlement('creatorMonthly');
+    const proEntitlement = get3DPlanEntitlement('proYearly');
 
-    expect(entitlement).toMatchObject({
+    expect(creatorEntitlement).toMatchObject({
+      tier: 'creator',
+      maxResolution: 1536,
+      maxTextureSize: 4096,
+    });
+    expect(proEntitlement).toMatchObject({
       tier: 'pro',
       maxResolution: 1536,
       maxTextureSize: 4096,
@@ -53,6 +48,6 @@ describe('Pixal3D plan entitlements', () => {
     expect(config.ai3d.generationOptions.textureSizes).toEqual([1024, 2048, 4096]);
     expect(getRequired3DTierForTextureSize(1024)).toBe('free');
     expect(getRequired3DTierForTextureSize(2048)).toBe('starter');
-    expect(getRequired3DTierForTextureSize(4096)).toBe('creator');
+    expect(getRequired3DTierForTextureSize(4096)).toBe('starter');
   });
 });

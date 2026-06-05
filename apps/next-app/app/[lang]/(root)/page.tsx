@@ -29,7 +29,8 @@ import {
 
 type TaskStatus = "idle" | "upload-ready" | "processing" | "checking" | "succeeded" | "failed";
 type ResolutionOption = 1024 | 1536;
-type TextureSizeOption = 1024 | 2048 | 4096;
+type ApiTextureSizeOption = 1024 | 2048 | 4096;
+type TextureSizeOption = ApiTextureSizeOption | 8192;
 type PageNoticeType = "error" | "info" | "success";
 
 interface PageNotice {
@@ -137,7 +138,13 @@ const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const FREE_TRIAL_DURATION_SECONDS = 15 * 60;
 const RESOLUTION_OPTIONS: ResolutionOption[] = [1024, 1536];
-const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096];
+const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096, 8192];
+const API_TEXTURE_SIZE_BY_UI_TEXTURE_SIZE: Record<TextureSizeOption, ApiTextureSizeOption> = {
+  1024: 1024,
+  2048: 2048,
+  4096: 4096,
+  8192: 4096,
+};
 const RESOLUTION_CREDIT_COST: Record<ResolutionOption, number> = {
   1024: 1000,
   1536: 1500,
@@ -286,6 +293,18 @@ const ADVANTAGE_KEYS = [
 ] as const;
 const FAQ_KEYS = ["generator", "oneImage", "bestImages", "formats"] as const;
 
+function getMaxSelectableTextureSize(entitlement: ThreeDPlanEntitlement | null): TextureSizeOption {
+  if (!entitlement) {
+    return 8192;
+  }
+
+  if (entitlement.tier === "creator" || entitlement.tier === "pro") {
+    return 8192;
+  }
+
+  return entitlement.maxTextureSize;
+}
+
 export default function Home() {
   const { t, locale, localizedPath } = useTranslation();
   const { data: session, isPending: isSessionPending } = authClientReact.useSession();
@@ -323,6 +342,10 @@ export default function Home() {
   const planEntitlement = useMemo<ThreeDPlanEntitlement | null>(
     () => get3DPlanEntitlement(subscriptionPlanId),
     [subscriptionPlanId]
+  );
+  const maxSelectableTextureSize = useMemo(
+    () => getMaxSelectableTextureSize(planEntitlement),
+    [planEntitlement]
   );
   const canEditGenerationSettings = taskStatus !== "processing";
   const canGenerate = useMemo(() => {
@@ -458,18 +481,16 @@ export default function Home() {
   }, [loadCreditStatus]);
 
   useEffect(() => {
-    if (!planEntitlement) return;
-
     setSettings((current) => ({
       ...current,
-      resolution: current.resolution > planEntitlement.maxResolution
+      resolution: planEntitlement && current.resolution > planEntitlement.maxResolution
         ? planEntitlement.maxResolution
         : current.resolution,
-      textureSize: current.textureSize > planEntitlement.maxTextureSize
-        ? planEntitlement.maxTextureSize
+      textureSize: current.textureSize > maxSelectableTextureSize
+        ? maxSelectableTextureSize
         : current.textureSize,
     }));
-  }, [planEntitlement]);
+  }, [maxSelectableTextureSize, planEntitlement]);
 
   useEffect(() => {
     if (!hfTrialEndsAt || !hfTrialUrl) return;
@@ -694,6 +715,7 @@ export default function Home() {
     setProgressPlan(nextProgressPlan);
     setProgressStartedAt(nextProgressStartedAt);
     setProgressSnapshot(getPixal3DProgressSnapshot(nextProgressPlan, 0, "processing"));
+    const apiTextureSize = API_TEXTURE_SIZE_BY_UI_TEXTURE_SIZE[settings.textureSize];
 
     try {
       const response = await fetch("/api/3d-generate", {
@@ -704,6 +726,7 @@ export default function Home() {
           prompt: t.pixal3d.generator.defaultPrompt,
           quality: "standard",
           ...settings,
+          textureSize: apiTextureSize,
         }),
       });
       const data = (await response.json()) as GenerateResponse;
@@ -1179,7 +1202,7 @@ export default function Home() {
                           className="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-2xl border border-[#48bdff]/25 bg-[#0b1530]/98 p-1 shadow-[0_18px_48px_rgba(0,0,0,0.36),0_0_0_1px_rgba(255,255,255,0.03)] backdrop-blur"
                         >
                           {TEXTURE_SIZE_OPTIONS.map((option) => {
-                            const isDisabled = Boolean(planEntitlement && option > planEntitlement.maxTextureSize);
+                            const isDisabled = option > maxSelectableTextureSize;
                             const isSelected = settings.textureSize === option;
                             return (
                               <button

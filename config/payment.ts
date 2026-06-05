@@ -1,12 +1,10 @@
 import { getEnv, requireEnvForService } from './utils';
 
 const privateOwnership = 'Asset ownership: private';
-const standardGenerationResolution =
-  '3D generation resolution: up to 1024';
 const highGenerationResolution = '3D generation resolution: up to 1536';
 const sampleTextureSize = 'PBR texture size: up to 1K';
-const starterTextureSize = 'PBR texture size: up to 2K';
-const creatorTextureSize = 'PBR texture size: up to 4K';
+const starterTextureSize = 'PBR texture size: up to 4K';
+const creatorTextureSize = 'PBR texture size: up to 8K';
 const proTextureSize = 'PBR texture size: up to 8K';
 
 export const paymentConfig = {
@@ -71,11 +69,11 @@ export const paymentConfig = {
           duration: 'month',
           features: [
             '15,000 credits/month',
-            '1 concurrent task',
-            '20 downloads per day',
+            '2 concurrent tasks',
+            'Unlimited downloads per day',
             'Standard queue priority',
             privateOwnership,
-            standardGenerationResolution,
+            highGenerationResolution,
             starterTextureSize,
             '30-day model history',
           ],
@@ -86,11 +84,11 @@ export const paymentConfig = {
           duration: 'month',
           features: [
             '15,000 credits/month',
-            '1 concurrent task',
-            '20 downloads per day',
+            '2 concurrent tasks',
+            'Unlimited downloads per day',
             'Standard queue priority',
             privateOwnership,
-            standardGenerationResolution,
+            highGenerationResolution,
             starterTextureSize,
             '30-day model history',
           ],
@@ -112,7 +110,7 @@ export const paymentConfig = {
           duration: 'month',
           features: [
             '40,000 credits/month',
-            '2 concurrent tasks',
+            '4 concurrent tasks',
             'Unlimited downloads per day',
             'Priority queue',
             privateOwnership,
@@ -127,7 +125,7 @@ export const paymentConfig = {
           duration: 'month',
           features: [
             '40,000 credits/month',
-            '2 concurrent tasks',
+            '4 concurrent tasks',
             'Unlimited downloads per day',
             'Priority queue',
             privateOwnership,
@@ -196,11 +194,11 @@ export const paymentConfig = {
           features: [
             '15,000 credits/month',
             'Credits refresh monthly',
-            '1 concurrent task',
-            '20 downloads per day',
+            '2 concurrent tasks',
+            'Unlimited downloads per day',
             'Standard queue priority',
             privateOwnership,
-            standardGenerationResolution,
+            highGenerationResolution,
             starterTextureSize,
             '30-day model history',
           ],
@@ -212,11 +210,11 @@ export const paymentConfig = {
           features: [
             '15,000 credits/month',
             'Credits refresh monthly',
-            '1 concurrent task',
-            '20 downloads per day',
+            '2 concurrent tasks',
+            'Unlimited downloads per day',
             'Standard queue priority',
             privateOwnership,
-            standardGenerationResolution,
+            highGenerationResolution,
             starterTextureSize,
             '30-day model history',
           ],
@@ -239,7 +237,7 @@ export const paymentConfig = {
           features: [
             '40,000 credits/month',
             'Credits refresh monthly',
-            '2 concurrent tasks',
+            '4 concurrent tasks',
             'Unlimited downloads per day',
             'Priority queue',
             privateOwnership,
@@ -255,7 +253,7 @@ export const paymentConfig = {
           features: [
             '40,000 credits/month',
             'Credits refresh monthly',
-            '2 concurrent tasks',
+            '4 concurrent tasks',
             'Unlimited downloads per day',
             'Priority queue',
             privateOwnership,
