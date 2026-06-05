@@ -3,7 +3,7 @@ import { en } from '../../../libs/i18n/locales/en';
 import { getPixal3DGenerateDisabledReason } from '../../../apps/next-app/lib/pixal3d-generate-disabled-reason';
 
 const labels = {
-  signInRequired: 'Sign in and subscribe to generate. Free trial is available above.',
+  signInRequired: 'Sign in and subscribe for faster, stable generation, never offline. Free trial is available above.',
   insufficientCredits: 'Not enough credits.',
   imageRequired: 'Upload an image first',
   readingImage: 'Reading image...',
@@ -28,7 +28,7 @@ describe('getPixal3DGenerateDisabledReason', () => {
       isReadingFile: false,
       isProcessing: false,
       labels,
-    })).toBe('Sign in and subscribe to generate. Free trial is available above.');
+    })).toBe('Sign in and subscribe for faster, stable generation, never offline. Free trial is available above.');
   });
 
   test('shows a simple insufficient credits message without exposing cost details', () => {
