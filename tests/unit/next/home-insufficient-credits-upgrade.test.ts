@@ -12,7 +12,16 @@ describe("home insufficient credits upgrade shortcut", () => {
     expect(source).toContain("showGenerateUpgradeShortcut");
     expect(source).toContain("!hasEnoughCredits");
     expect(source).toContain("isAuthenticated");
+    expect(source).toContain("hasPaidSubscription");
     expect(source).toContain('href={localizedPath("/pricing")}');
-    expect(source).toContain("Upgrade");
+    expect(source).toContain("t.pixal3d.generator.upgradeButton");
+  });
+
+  it("shows a subscribe shortcut for signed-in users without a paid subscription", () => {
+    expect(source).toContain("showGenerateSubscribeShortcut");
+    expect(source).toContain("!hasPaidSubscription");
+    expect(source).toContain("t.pixal3d.generator.errors.generateDisabledSubscribeRequired");
+    expect(source).toContain("t.pixal3d.generator.subscribeButton");
+    expect(source).toContain("t.pixal3d.generator.errors.generateDisabledFreeTrialAbove");
   });
 });

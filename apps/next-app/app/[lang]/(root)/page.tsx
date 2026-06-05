@@ -343,6 +343,7 @@ export default function Home() {
     () => get3DPlanEntitlement(subscriptionPlanId),
     [subscriptionPlanId]
   );
+  const hasPaidSubscription = Boolean(planEntitlement && planEntitlement.tier !== "free");
   const maxSelectableTextureSize = useMemo(
     () => getMaxSelectableTextureSize(planEntitlement),
     [planEntitlement]
@@ -373,14 +374,26 @@ export default function Home() {
       readingImage: t.pixal3d.generator.errors.generateDisabledReadingImage,
     },
   });
+  const showGenerateSubscribeShortcut = Boolean(
+    !canGenerate
+    && generateDisabledReason
+    && isAuthenticated
+    && !hasPaidSubscription
+    && !isSessionPending
+    && taskStatus !== "processing"
+  );
   const showGenerateUpgradeShortcut = Boolean(
     !canGenerate
     && generateDisabledReason
     && isAuthenticated
+    && hasPaidSubscription
     && !hasEnoughCredits
     && !isSessionPending
     && taskStatus !== "processing"
   );
+  const generateDisabledDisplayReason = showGenerateSubscribeShortcut
+    ? t.pixal3d.generator.errors.generateDisabledSubscribeRequired
+    : generateDisabledReason;
 
   const progressStepLabels = t.pixal3d.generator.progress.steps as Record<Pixal3DProgressStepKey, string>;
   const showGenerationProgress = Boolean(progressSnapshot && taskStatus !== "idle" && taskStatus !== "upload-ready");
@@ -901,7 +914,7 @@ export default function Home() {
                 data-testid="pixal3d-free-trial-button"
                 type="button"
                 size="lg"
-                className="relative h-11 w-full overflow-hidden rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff4b8] via-[#ffd878] to-[#ffb25f] px-7 text-base font-extrabold text-[#17111c] shadow-[0_14px_42px_rgba(255,184,107,0.24),inset_0_1px_0_rgba(255,255,255,0.58)] transition duration-300 before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.72),transparent_48%)] before:opacity-45 before:transition-opacity before:duration-500 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_20px_58px_rgba(255,184,107,0.34),0_0_24px_rgba(255,232,160,0.22),inset_0_1px_0_rgba(255,255,255,0.7)] hover:before:opacity-80 disabled:translate-y-0 disabled:opacity-60 sm:w-auto sm:min-w-[240px]"
+                className="pixal3d-trial-pulse relative h-11 w-full overflow-hidden rounded-full border border-[#ffe08a] bg-gradient-to-r from-[#fff4b8] via-[#ffd878] to-[#ffb25f] px-7 text-base font-extrabold text-[#17111c] shadow-[0_14px_42px_rgba(255,184,107,0.24),inset_0_1px_0_rgba(255,255,255,0.58)] transition duration-300 before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.72),transparent_48%)] before:opacity-45 before:transition-opacity before:duration-500 hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_20px_58px_rgba(255,184,107,0.34),0_0_24px_rgba(255,232,160,0.22),inset_0_1px_0_rgba(255,255,255,0.7)] hover:before:opacity-80 disabled:translate-y-0 disabled:opacity-60 sm:w-auto sm:min-w-[240px]"
                 disabled={isOpeningHfTrial || isHfTrialLimitReached}
                 onClick={handleOpenHfTrial}
               >
@@ -1282,19 +1295,30 @@ export default function Home() {
                     )}
                     {taskStatus === "processing" ? t.pixal3d.generator.generatingButton : t.pixal3d.generator.generateButton}
                   </Button>
-                  {!canGenerate && generateDisabledReason ? (
+                  {!canGenerate && generateDisabledDisplayReason ? (
                     <p
                       id="pixal3d-generate-disabled-reason"
                       data-testid="pixal3d-generate-disabled-reason"
                       className="mt-2 text-center text-sm font-bold leading-5 text-[#ffb8b8]"
                     >
-                      <span>{generateDisabledReason}</span>
+                      <span>{generateDisabledDisplayReason}</span>
+                      {showGenerateSubscribeShortcut ? (
+                        <>
+                          <Link
+                            href={localizedPath("/pricing")}
+                            className="ml-2 inline-flex items-center rounded-full border border-[#ffb8b8]/45 px-3 py-1 text-xs font-extrabold text-[#ffd0d0] transition hover:border-[#ffdddd] hover:bg-[#ffb8b8]/12 hover:text-white"
+                          >
+                            {t.pixal3d.generator.subscribeButton}
+                          </Link>
+                          <span className="ml-1">. {t.pixal3d.generator.errors.generateDisabledFreeTrialAbove}</span>
+                        </>
+                      ) : null}
                       {showGenerateUpgradeShortcut ? (
                         <Link
                           href={localizedPath("/pricing")}
                           className="ml-2 inline-flex items-center rounded-full border border-[#ffb8b8]/45 px-3 py-1 text-xs font-extrabold text-[#ffd0d0] transition hover:border-[#ffdddd] hover:bg-[#ffb8b8]/12 hover:text-white"
                         >
-                          Upgrade
+                          {t.pixal3d.generator.upgradeButton}
                         </Link>
                       ) : null}
                     </p>

@@ -7,6 +7,10 @@ describe("Next home page layout", () => {
     join(process.cwd(), "apps", "next-app", "app", "[lang]", "(root)", "page.tsx"),
     "utf8",
   );
+  const globalCssSource = readFileSync(
+    join(process.cwd(), "apps", "next-app", "app", "globals.css"),
+    "utf8",
+  );
 
   it("keeps hero title descenders from feeling clipped", () => {
     const heroTitleClass = pageSource.match(/<h1 className="([^"]+)"/)?.[1] ?? "";
@@ -32,6 +36,14 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain('className="mt-4 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-white/10');
     expect(pageSource).toContain('data-testid="pixal3d-generator-card" className="mt-4');
     expect(pageSource).toContain('className="mb-2 text-center"');
+    expect(pageSource).toContain("pixal3d-trial-pulse");
+  });
+
+  it("uses a restrained periodic pulse on the free trial button", () => {
+    expect(globalCssSource).toContain("@keyframes pixal3d-trial-pulse");
+    expect(globalCssSource).toContain("animation: pixal3d-trial-pulse 1s ease-in-out infinite;");
+    expect(globalCssSource).toContain(".pixal3d-trial-pulse:not(:disabled)");
+    expect(globalCssSource).toContain("@media (prefers-reduced-motion: reduce)");
   });
 
   it("keeps the generator surface light while de-emphasizing settings", () => {

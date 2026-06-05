@@ -35,7 +35,14 @@ describe("Next home SEO copy", () => {
     expect(pageSource).toContain("hover:before:opacity-80");
     expect(pageSource).not.toContain("-&gt;");
     expect(en.pixal3d.generator.errors.generateDisabledSignIn).toBe(
-      "Sign in and subscribe to generate",
+      "Sign in and subscribe to generate. Free trial is available above.",
+    );
+    expect(en.pixal3d.generator.errors.generateDisabledSubscribeRequired).toBe(
+      "Subscribe to generate models",
+    );
+    expect(en.pixal3d.generator.subscribeButton).toBe("Subscribe");
+    expect(en.pixal3d.generator.errors.generateDisabledFreeTrialAbove).toBe(
+      "Free trial is available above.",
     );
   });
 
