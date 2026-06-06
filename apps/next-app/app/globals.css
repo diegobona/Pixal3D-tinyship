@@ -91,3 +91,12 @@
     animation: none;
   }
 }
+
+[data-testid="pixal3d-auth-shell"] input:-webkit-autofill,
+[data-testid="pixal3d-auth-shell"] input:-webkit-autofill:hover,
+[data-testid="pixal3d-auth-shell"] input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+  -webkit-box-shadow: 0 0 0 1000px #0d1730 inset;
+  transition: background-color 9999s ease-in-out 0s;
+}

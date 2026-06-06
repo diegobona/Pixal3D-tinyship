@@ -35,14 +35,16 @@ describe("Next home SEO copy", () => {
     expect(pageSource).toContain("hover:before:opacity-80");
     expect(pageSource).not.toContain("-&gt;");
     expect(en.pixal3d.generator.errors.generateDisabledSignIn).toBe(
-      "Sign in and subscribe for faster, stable generation, never offline. Free trial is available above.",
+      "Sign in and subscribe for faster and more stable generation, never offline. Free trial is available above.",
     );
     expect(en.pixal3d.generator.errors.generateDisabledSubscribeRequired).toBe(
       "Subscribe to generate models",
     );
     expect(en.pixal3d.generator.subscribeButton).toBe("Subscribe");
+    expect(en.pixal3d.generator.subscribeToGenerateButton).toBe("Subscribe to Generate");
+    expect(en.pixal3d.generator.upgradeToGenerateButton).toBe("Upgrade to Generate");
     expect(en.pixal3d.generator.errors.generateDisabledFreeTrialAbove).toBe(
-      "Faster, stable generation, never offline. Free trial is available above.",
+      "Faster and more stable generation, never offline. Free trial is available above.",
     );
   });
 

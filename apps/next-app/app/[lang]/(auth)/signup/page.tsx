@@ -57,20 +57,20 @@ export default function SignupPage() {
   }
 
   return (
-    <Card className="w-[420px] max-w-[calc(100vw-2rem)]">
+    <Card className="w-[420px] max-w-[calc(100vw-2rem)] border border-white/10 bg-[linear-gradient(180deg,rgba(11,20,43,0.88),rgba(7,13,32,0.96))] text-[#f5f8ff] shadow-[0_24px_90px_rgba(0,0,0,0.36),0_0_0_1px_rgba(72,189,255,0.06)] backdrop-blur">
       <CardHeader className="text-center">
-        <CardTitle className="text-xl">{t.auth.signup.title}</CardTitle>
-        <CardDescription>{t.auth.signup.description}</CardDescription>
+        <CardTitle className="text-xl text-white">{t.auth.signup.title}</CardTitle>
+        <CardDescription className="text-[#aeb8cf]">{t.auth.signup.description}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <form onSubmit={handleSignUp} className="flex flex-col gap-4">
           {errorMessage ? (
-            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div className="rounded-md border border-[#ff6b6b]/45 bg-[#220f1d]/72 px-3 py-2 text-sm font-semibold text-[#ffb8b8]">
               {errorMessage}
             </div>
           ) : null}
           <div className="grid gap-2">
-            <label htmlFor="signup-name" className="text-sm font-semibold">
+            <label htmlFor="signup-name" className="text-sm font-semibold text-[#edf3ff]">
               {t.auth.signup.name}
             </label>
             <Input
@@ -80,11 +80,12 @@ export default function SignupPage() {
               onChange={(event) => setName(event.target.value)}
               placeholder={t.auth.signup.namePlaceholder}
               autoComplete="name"
+              className="h-11 rounded-lg border-white/10 bg-[#0d1730]/82 text-base font-medium text-white shadow-none placeholder:text-[#667493] focus-visible:border-[#48bdff] focus-visible:ring-[#48bdff]/20"
               required
             />
           </div>
           <div className="grid gap-2">
-            <label htmlFor="signup-email" className="text-sm font-semibold">
+            <label htmlFor="signup-email" className="text-sm font-semibold text-[#edf3ff]">
               {t.auth.signup.email}
             </label>
             <Input
@@ -94,11 +95,12 @@ export default function SignupPage() {
               onChange={(event) => setEmail(event.target.value)}
               placeholder={t.auth.signup.emailPlaceholder}
               autoComplete="email"
+              className="h-11 rounded-lg border-white/10 bg-[#0d1730]/82 text-base font-medium text-white shadow-none placeholder:text-[#667493] focus-visible:border-[#48bdff] focus-visible:ring-[#48bdff]/20"
               required
             />
           </div>
           <div className="grid gap-2">
-            <label htmlFor="signup-password" className="text-sm font-semibold">
+            <label htmlFor="signup-password" className="text-sm font-semibold text-[#edf3ff]">
               {t.auth.signup.password}
             </label>
             <Input
@@ -108,21 +110,22 @@ export default function SignupPage() {
               onChange={(event) => setPassword(event.target.value)}
               placeholder={t.auth.signup.passwordPlaceholder}
               autoComplete="new-password"
+              className="h-11 rounded-lg border-white/10 bg-[#0d1730]/82 text-base font-medium text-white shadow-none placeholder:text-[#667493] focus-visible:border-[#48bdff] focus-visible:ring-[#48bdff]/20"
               minLength={8}
               required
             />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="h-11 w-full rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] text-base font-extrabold text-[#051021] shadow-[0_18px_52px_rgba(0,240,138,0.2)] hover:brightness-110 disabled:opacity-55" disabled={loading}>
             {loading ? t.auth.signup.submitting : t.auth.signup.submit}
           </Button>
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-sm text-[#aeb8cf]">
             {t.auth.signup.haveAccount}{" "}
-            <Link href={localizedPath("/signin")} className="font-semibold text-primary underline-offset-4 hover:underline">
+            <Link href={localizedPath("/signin")} className="font-semibold text-[#77e8ff] underline-offset-4 hover:text-white hover:underline">
               {t.auth.signup.signinLink}
             </Link>
           </p>
         </form>
-        <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
+        <div className="text-center text-xs text-balance text-[#8996b2] *:[a]:underline *:[a]:underline-offset-4 *:[a]:hover:text-[#77e8ff]">
           {t.auth.signin.termsNotice} <a href="#">{t.auth.signin.termsOfService}</a>{" "}
           {t.common.and} <a href="#">{t.auth.signin.privacyPolicy}</a>.
         </div>

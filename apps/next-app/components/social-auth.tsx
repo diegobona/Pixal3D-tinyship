@@ -9,12 +9,14 @@ import { notify as toast } from "@/lib/notify";
 
 interface SocialAuthProps extends React.HTMLAttributes<HTMLDivElement> {
   providers?: SocialProvider[];
+  buttonClassName?: string;
 }
 
 const defaultProviders: SocialProvider[] = ["google"];
 
 export function SocialAuth({
   className,
+  buttonClassName,
   providers = defaultProviders,
   ...props
 }: SocialAuthProps) {
@@ -37,7 +39,6 @@ export function SocialAuth({
       });
 
       if (error) {
-        console.error("Social login error:", error);
         toast.error(error.message || t.common.unexpectedError);
       }
     } finally {
@@ -51,6 +52,7 @@ export function SocialAuth({
         <SocialButton
           key={provider}
           provider={provider}
+          className={buttonClassName}
           onClick={() => handleProviderClick(provider)}
           loading={loadingProvider === provider}
           disabled={loadingProvider !== null && loadingProvider !== provider}

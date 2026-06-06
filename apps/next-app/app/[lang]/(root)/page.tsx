@@ -1,7 +1,6 @@
 "use client";
 
 import { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { GlbPreviewDialog } from "@/components/glb-preview-dialog";
 import {
   PIXAL3D_PROGRESS_STEPS,
@@ -392,8 +391,32 @@ export default function Home() {
     && taskStatus !== "processing"
   );
   const generateDisabledDisplayReason = showGenerateSubscribeShortcut
-    ? t.pixal3d.generator.errors.generateDisabledSubscribeRequired
+    ? t.pixal3d.generator.errors.generateDisabledFreeTrialAbove
     : generateDisabledReason;
+  const canUseGenerateButtonAsPricingShortcut = showGenerateSubscribeShortcut || showGenerateUpgradeShortcut;
+  const isGenerateButtonDisabled = Boolean(
+    taskStatus === "processing"
+    || isReadingFile
+    || isSessionPending
+    || (!imageDataUrl && !canUseGenerateButtonAsPricingShortcut)
+    || (!isAuthenticated && !canUseGenerateButtonAsPricingShortcut)
+  );
+  const generateButtonLabel = taskStatus === "processing"
+    ? t.pixal3d.generator.generatingButton
+    : showGenerateSubscribeShortcut
+      ? t.pixal3d.generator.subscribeToGenerateButton
+      : showGenerateUpgradeShortcut
+        ? t.pixal3d.generator.upgradeToGenerateButton
+        : t.pixal3d.generator.generateButton;
+
+  const handleGenerateButtonClick = () => {
+    if (canUseGenerateButtonAsPricingShortcut) {
+      window.location.href = localizedPath("/pricing");
+      return;
+    }
+
+    void handleGenerate();
+  };
 
   const progressStepLabels = t.pixal3d.generator.progress.steps as Record<Pixal3DProgressStepKey, string>;
   const showGenerationProgress = Boolean(progressSnapshot && taskStatus !== "idle" && taskStatus !== "upload-ready");
@@ -1127,8 +1150,8 @@ export default function Home() {
             </div>
 
             <div className="mt-4 rounded-xl bg-white/[0.025] px-3 py-3">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div className={`grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:max-w-[820px] ${
+              <div className="grid gap-4 xl:grid-cols-[minmax(720px,1fr)_minmax(320px,440px)] xl:items-start">
+                <div className={`grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 ${
                   canEditGenerationSettings ? "" : "opacity-55"
                 }`}>
                   <label className="flex min-w-0 flex-col gap-2">
@@ -1278,22 +1301,22 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start xl:pt-6">
-                  <div className="group relative flex w-full flex-col items-stretch sm:w-auto">
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start xl:justify-end xl:pt-6">
+                  <div className="group relative flex w-full flex-col items-stretch sm:w-auto xl:w-full xl:max-w-[420px]">
                   <Button
                     data-testid="pixal3d-generate-button"
                     size="lg"
-                    className="h-14 rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] px-8 text-xl font-extrabold text-[#051021] shadow-[0_20px_58px_rgba(0,240,138,0.22)] transition hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_24px_70px_rgba(0,240,138,0.28)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={!canGenerate}
-                    aria-describedby={generateDisabledReason ? "pixal3d-generate-disabled-reason" : undefined}
-                    onClick={handleGenerate}
+                    className="h-14 w-full rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] px-8 text-xl font-extrabold text-[#051021] shadow-[0_20px_58px_rgba(0,240,138,0.22)] transition hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_24px_70px_rgba(0,240,138,0.28)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={isGenerateButtonDisabled}
+                    aria-describedby={generateDisabledDisplayReason ? "pixal3d-generate-disabled-reason" : undefined}
+                    onClick={handleGenerateButtonClick}
                   >
                     {taskStatus === "processing" ? (
                       <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#051021]/30 border-t-[#051021]" />
                     ) : (
                       <span aria-hidden="true" className="text-2xl leading-none">+</span>
                     )}
-                    {taskStatus === "processing" ? t.pixal3d.generator.generatingButton : t.pixal3d.generator.generateButton}
+                    {generateButtonLabel}
                   </Button>
                   {!canGenerate && generateDisabledDisplayReason ? (
                     <p
@@ -1302,25 +1325,6 @@ export default function Home() {
                       className="mt-2 text-center text-sm font-bold leading-5 text-[#ffb8b8]"
                     >
                       <span>{generateDisabledDisplayReason}</span>
-                      {showGenerateSubscribeShortcut ? (
-                        <>
-                          <Link
-                            href={localizedPath("/pricing")}
-                            className="ml-2 inline-flex items-center rounded-full border border-[#ffb8b8]/45 px-3 py-1 text-xs font-extrabold text-[#ffd0d0] transition hover:border-[#ffdddd] hover:bg-[#ffb8b8]/12 hover:text-white"
-                          >
-                            {t.pixal3d.generator.subscribeButton}
-                          </Link>
-                          <span className="ml-1">. {t.pixal3d.generator.errors.generateDisabledFreeTrialAbove}</span>
-                        </>
-                      ) : null}
-                      {showGenerateUpgradeShortcut ? (
-                        <Link
-                          href={localizedPath("/pricing")}
-                          className="ml-2 inline-flex items-center rounded-full border border-[#ffb8b8]/45 px-3 py-1 text-xs font-extrabold text-[#ffd0d0] transition hover:border-[#ffdddd] hover:bg-[#ffb8b8]/12 hover:text-white"
-                        >
-                          {t.pixal3d.generator.upgradeButton}
-                        </Link>
-                      ) : null}
                     </p>
                   ) : null}
                 </div>
