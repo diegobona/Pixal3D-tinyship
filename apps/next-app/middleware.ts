@@ -1,5 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import {
+  PIXAL3D_SHOW_MONETIZATION_SURFACES,
+  PIXAL3D_SHOW_USER_LIBRARY_SURFACES,
+} from "./lib/pixal3d-surface-visibility";
 
 const defaultLocale = "en";
 const locales = ["en", "zh-CN"] as const;
@@ -7,6 +11,10 @@ const localePrefixPattern = `(?:\\/(${locales.join("|")}))?`;
 const protectedPagePatterns = [
   pagePattern("/dashboard"),
   pagePattern("/my-assets"),
+];
+const hiddenPagePatterns = [
+  ...(!PIXAL3D_SHOW_MONETIZATION_SURFACES ? [pagePattern("/pricing")] : []),
+  ...(!PIXAL3D_SHOW_USER_LIBRARY_SURFACES ? [pagePattern("/dashboard"), pagePattern("/my-assets")] : []),
 ];
 
 function pagePattern(path: string) {
@@ -45,6 +53,18 @@ function edgeAuthRedirect(request: NextRequest): NextResponse | undefined {
   return undefined;
 }
 
+function edgeHiddenPageRedirect(request: NextRequest): NextResponse | undefined {
+  const pathname = request.nextUrl.pathname;
+  const isHiddenPage = hiddenPagePatterns.some((pattern) => pattern.test(pathname));
+
+  if (!isHiddenPage) {
+    return undefined;
+  }
+
+  const locale = getLocaleFromPathname(pathname);
+  return NextResponse.redirect(new URL(localizedPath("/", locale), request.url));
+}
+
 function edgeLocaleResponse(request: NextRequest): NextResponse | undefined {
   const pathname = request.nextUrl.pathname;
 
@@ -73,6 +93,11 @@ function edgeLocaleResponse(request: NextRequest): NextResponse | undefined {
 }
 
 export function middleware(request: NextRequest) {
+  const hiddenPageResponse = edgeHiddenPageRedirect(request);
+  if (hiddenPageResponse) {
+    return hiddenPageResponse;
+  }
+
   const authResponse = edgeAuthRedirect(request);
   if (authResponse) {
     return authResponse;

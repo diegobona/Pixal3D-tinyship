@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { eq } from "drizzle-orm";
 
 import { getStaticBlogPosts } from "@/lib/static-blog-posts";
+import { PIXAL3D_SHOW_MONETIZATION_SURFACES } from "@/lib/pixal3d-surface-visibility";
 import { blogPost, db } from "@libs/database";
 import { blogPostStatus } from "@libs/database/schema/blog-post";
 
@@ -77,7 +78,9 @@ async function getPublishedDatabaseBlogEntries(): Promise<MetadataRoute.Sitemap>
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     sitemapEntry("/", { changeFrequency: "weekly", priority: 1 }),
-    sitemapEntry("/pricing", { changeFrequency: "monthly", priority: 0.8 }),
+    ...(PIXAL3D_SHOW_MONETIZATION_SURFACES
+      ? [sitemapEntry("/pricing", { changeFrequency: "monthly", priority: 0.8 })]
+      : []),
     sitemapEntry("/blog", { changeFrequency: "weekly", priority: 0.7 }),
   ];
 

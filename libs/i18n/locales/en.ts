@@ -15,8 +15,8 @@ export const en: Locale = {
   },
   home: {
     metadata: {
-      title: "Pixal3D - AI Image to 3D Generator",
-      description: "Create AI 3D models from images with Pixal3D. Powered by the MIT-licensed Pixal3D project from TencentARC, with GLB export.",
+      title: "Pixal3D - Free AI Image to 3D Generator.",
+      description: "Pixal3D is a free AI image-to-3D generator powered by the MIT-licensed Pixal3D project from TencentARC. Upload an image and generate 3D models online.",
       keywords: "pixal3d, image to 3d, ai 3d model generator, 3d model maker, image to glb, ai 3d assets"
     }
   },
@@ -41,7 +41,7 @@ export const en: Locale = {
   pixal3d: {
     generator: {
       heroTitle: "Turn Any Image into a Faithful 3D Model",
-      subtitle: "Free to try, no sign-in needed",
+      subtitle: "Completely free to use",
       imageHint: "Single image input for the Pixal3D generation pipeline.",
       imagePreviewAlt: "Uploaded reference image",
       uploadButton: "Upload image",

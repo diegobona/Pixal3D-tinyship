@@ -22,17 +22,23 @@ describe("Next home page layout", () => {
     expect(heroTitleClass).not.toContain("sm:text-[64px]");
   });
 
-  it("places a compact free trial callout above the generator card", () => {
+  it("places the embedded trial iframe above the hidden legacy generator surfaces", () => {
+    const inlineTrialIndex = pageSource.indexOf('data-testid="pixal3d-inline-trial"');
     const freeTrialIndex = pageSource.indexOf('data-testid="pixal3d-free-trial-callout"');
     const pageNoticeIndex = pageSource.indexOf('data-testid="pixal3d-page-notice"');
     const generatorCardIndex = pageSource.indexOf('data-testid="pixal3d-generator-card"');
 
+    expect(inlineTrialIndex).toBeGreaterThan(-1);
     expect(freeTrialIndex).toBeGreaterThan(-1);
     expect(pageNoticeIndex).toBeGreaterThan(-1);
     expect(generatorCardIndex).toBeGreaterThan(-1);
+    expect(inlineTrialIndex).toBeLessThan(freeTrialIndex);
     expect(freeTrialIndex).toBeLessThan(pageNoticeIndex);
     expect(pageNoticeIndex).toBeLessThan(generatorCardIndex);
     expect(freeTrialIndex).toBeLessThan(generatorCardIndex);
+    expect(pageSource).toContain('src={PIXAL3D_INLINE_TRIAL_IFRAME_URL}');
+    expect(pageSource).toContain("PIXAL3D_SHOW_FREE_TRIAL_CALLOUT ? (");
+    expect(pageSource).toContain("PIXAL3D_SHOW_HOME_GENERATOR ? (");
     expect(pageSource).toContain('className="mt-4 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-white/10');
     expect(pageSource).toContain('data-testid="pixal3d-generator-card" className="mt-4');
     expect(pageSource).toContain('className="mb-2 text-center"');
@@ -111,5 +117,28 @@ describe("Next home page layout", () => {
     expect(pageSource).not.toContain("setIsExamplePreviewOpen(true)");
     expect(exampleResultIndex).toBeGreaterThan(generatorCardIndex);
     expect(exampleResultIndex).toBeLessThan(settingsIndex);
+  });
+
+  it("keeps the frontend visibility flags wired to the home page", () => {
+    const visibilitySource = readFileSync(
+      join(process.cwd(), "apps", "next-app", "lib", "pixal3d-surface-visibility.ts"),
+      "utf8",
+    );
+
+    expect(visibilitySource).toContain("export const PIXAL3D_SHOW_HOME_GENERATOR = false;");
+    expect(visibilitySource).toContain("export const PIXAL3D_SHOW_FREE_TRIAL_CALLOUT = false;");
+    expect(visibilitySource).toContain('export const PIXAL3D_INLINE_TRIAL_IFRAME_URL = "https://tencentarc-pixal3d-server.hf.space";');
+    expect(pageSource).not.toContain('data-testid="pixal3d-inline-trial-header"');
+    expect(pageSource).not.toContain('data-testid="pixal3d-inline-trial-loading"');
+    expect(pageSource).not.toContain("isInlineHfTrialFrameLoading");
+    expect(pageSource).not.toContain("data-testid=\"pixal3d-inline-trial-timer\"");
+    expect(pageSource).toContain('data-testid="pixal3d-inline-trial-auth-overlay"');
+    expect(pageSource).toContain('data-testid="pixal3d-inline-trial-instance-hint"');
+    expect(pageSource).toContain('Click the "Open Instance X" button');
+    expect(pageSource).toContain("pointer-events-none absolute left-1/2");
+    expect(pageSource).toContain("Sign in to use it for free");
+    expect(pageSource).toContain('window.location.href = localizedPath("/signin");');
+    expect(pageSource).toContain("lg:h-[960px] lg:min-h-[960px]");
+    expect(pageSource).not.toContain("lg:h-[1180px]");
   });
 });

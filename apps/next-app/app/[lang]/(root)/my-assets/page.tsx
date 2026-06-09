@@ -6,6 +6,7 @@ import { list3DGenerationRecordsByUserPage } from "@libs/ai/3d-task-store";
 import { translations } from "@libs/i18n";
 import { config } from "@config";
 import { MyAssetsGrid } from "@/components/my-assets-grid";
+import { PIXAL3D_SHOW_USER_LIBRARY_SURFACES } from "@/lib/pixal3d-surface-visibility";
 
 const PAGE_SIZE = 20;
 
@@ -35,6 +36,11 @@ export default async function MyAssetsPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { lang } = await params;
+
+  if (!PIXAL3D_SHOW_USER_LIBRARY_SURFACES) {
+    redirect(localizedPath("/", lang));
+  }
+
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const currentPage = parsePage(resolvedSearchParams.page);
   const locale = lang as keyof typeof translations;

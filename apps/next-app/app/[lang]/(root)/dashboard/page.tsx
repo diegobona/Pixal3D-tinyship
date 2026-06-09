@@ -10,6 +10,7 @@ import { subscription, subscriptionStatus } from "@libs/database/schema/subscrip
 import { user as userTable } from "@libs/database/schema/user";
 import { translations } from "@libs/i18n";
 import { syncStripeSubscriptionFromStripe } from "@libs/payment/stripe-subscription-sync";
+import { PIXAL3D_SHOW_USER_LIBRARY_SURFACES } from "@/lib/pixal3d-surface-visibility";
 
 type PlanContent = {
   name: string;
@@ -109,6 +110,11 @@ function getPlanStatus(
 
 export default async function DashboardPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
+
+  if (!PIXAL3D_SHOW_USER_LIBRARY_SURFACES) {
+    redirect(localizedPath("/", lang));
+  }
+
   const locale = lang as keyof typeof translations;
   const t = translations[locale]?.dashboard || translations.en.dashboard;
   const session = await auth.api.getSession({ headers: await headers() });

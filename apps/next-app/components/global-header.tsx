@@ -13,6 +13,10 @@ import {
   getSubscriptionPlanIdFromEvent,
 } from "@/lib/credit-balance-events";
 import { shouldShowHeaderUpgradeButton } from "@/lib/header-actions";
+import {
+  PIXAL3D_SHOW_MONETIZATION_SURFACES,
+  PIXAL3D_SHOW_USER_LIBRARY_SURFACES,
+} from "@/lib/pixal3d-surface-visibility";
 
 interface HeaderProps {
   className?: string;
@@ -49,11 +53,12 @@ export default function Header({ className }: HeaderProps) {
   const featuresHref = `${homeHref}#features`;
   const displayName = user?.name || user?.email || "User";
   const displayEmail = user?.email || "";
-  const shouldShowUpgradeButton = shouldShowHeaderUpgradeButton({
-    isAuthenticated: Boolean(user),
-    isCreditStatusLoaded,
-    subscriptionPlanId,
-  });
+  const shouldShowUpgradeButton = PIXAL3D_SHOW_MONETIZATION_SURFACES
+    && shouldShowHeaderUpgradeButton({
+      isAuthenticated: Boolean(user),
+      isCreditStatusLoaded,
+      subscriptionPlanId,
+    });
 
   useEffect(() => {
     if (!isUserMenuOpen && !isLocaleMenuOpen) return;
@@ -173,9 +178,11 @@ export default function Header({ className }: HeaderProps) {
       <Link href={featuresHref} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
         {t.pixal3d.generator.featuresNav}
       </Link>
-      <Link href={localizedPath("/pricing")} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
-        {t.header.navigation.pricing}
-      </Link>
+      {PIXAL3D_SHOW_MONETIZATION_SURFACES ? (
+        <Link href={localizedPath("/pricing")} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
+          {t.header.navigation.pricing}
+        </Link>
+      ) : null}
       <Link href={localizedPath("/blog")} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
         {t.header.navigation.blog}
       </Link>
@@ -283,40 +290,42 @@ export default function Header({ className }: HeaderProps) {
                             </div>
                           </div>
                         </div>
-                        <div className="px-3 py-3">
-                          <Link
-                            href={localizedPath("/my-assets")}
-                            target="_blank"
-                            rel="noreferrer"
-                            role="menuitem"
-                            onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
-                          >
-                            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-                              <AssetsIcon />
-                            </span>
-                            <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
-                              <span className="truncate">{t.header.auth.myAssets}</span>
-                              <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
-                            </span>
-                          </Link>
-                          <Link
-                            href={localizedPath("/dashboard")}
-                            target="_blank"
-                            rel="noreferrer"
-                            role="menuitem"
-                            onClick={() => setIsUserMenuOpen(false)}
-                            className="mt-1.5 flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
-                          >
-                            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-                              <DashboardIcon />
-                            </span>
-                            <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
-                              <span className="truncate">{t.header.auth.dashboard}</span>
-                              <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
-                            </span>
-                          </Link>
-                        </div>
+                        {PIXAL3D_SHOW_USER_LIBRARY_SURFACES ? (
+                          <div className="px-3 py-3">
+                            <Link
+                              href={localizedPath("/my-assets")}
+                              target="_blank"
+                              rel="noreferrer"
+                              role="menuitem"
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
+                            >
+                              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                                <AssetsIcon />
+                              </span>
+                              <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                                <span className="truncate">{t.header.auth.myAssets}</span>
+                                <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
+                              </span>
+                            </Link>
+                            <Link
+                              href={localizedPath("/dashboard")}
+                              target="_blank"
+                              rel="noreferrer"
+                              role="menuitem"
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className="mt-1.5 flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold text-white/84 transition-colors hover:bg-white/8 hover:text-white"
+                            >
+                              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                                <DashboardIcon />
+                              </span>
+                              <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                                <span className="truncate">{t.header.auth.dashboard}</span>
+                                <span aria-hidden="true" className="text-white/30">{"\u203A"}</span>
+                              </span>
+                            </Link>
+                          </div>
+                        ) : null}
                         <div className="border-t border-white/8 px-3 py-3">
                           <button
                             type="button"
@@ -428,12 +437,16 @@ export default function Header({ className }: HeaderProps) {
               </button>
               {user ? (
                 <>
-                  <Link href={localizedPath("/my-assets")} target="_blank" rel="noreferrer" className="block py-2 text-sm font-semibold text-white/75">
-                    {t.header.auth.myAssets}
-                  </Link>
-                  <Link href={localizedPath("/dashboard")} target="_blank" rel="noreferrer" className="block py-2 text-sm font-semibold text-white/75">
-                    {t.header.auth.dashboard}
-                  </Link>
+                  {PIXAL3D_SHOW_USER_LIBRARY_SURFACES ? (
+                    <>
+                      <Link href={localizedPath("/my-assets")} target="_blank" rel="noreferrer" className="block py-2 text-sm font-semibold text-white/75">
+                        {t.header.auth.myAssets}
+                      </Link>
+                      <Link href={localizedPath("/dashboard")} target="_blank" rel="noreferrer" className="block py-2 text-sm font-semibold text-white/75">
+                        {t.header.auth.dashboard}
+                      </Link>
+                    </>
+                  ) : null}
                   {shouldShowUpgradeButton ? (
                     <Link href={localizedPath("/pricing")} className="block py-2 text-sm font-semibold text-white/75">
                       {t.pixal3d.generator.upgradeButton}

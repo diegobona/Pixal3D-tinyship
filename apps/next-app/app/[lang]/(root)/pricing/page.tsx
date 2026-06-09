@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { notify as toast } from "@/lib/notify";
 import { config, type Plan } from "@config";
@@ -8,6 +8,7 @@ import { Button } from "@libs/react-shared/ui/button";
 import { authClientReact } from "@libs/auth/authClient";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
+import { PIXAL3D_SHOW_MONETIZATION_SURFACES } from "@/lib/pixal3d-surface-visibility";
 
 type BillingCycle = "monthly" | "yearly";
 
@@ -25,6 +26,16 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null);
   const { data: session } = authClientReact.useSession();
   const user = session?.user;
+
+  useEffect(() => {
+    if (!PIXAL3D_SHOW_MONETIZATION_SURFACES) {
+      router.replace(localizedPath("/"));
+    }
+  }, [localizedPath, router]);
+
+  if (!PIXAL3D_SHOW_MONETIZATION_SURFACES) {
+    return null;
+  }
 
   const allPlans = Object.values(config.payment.plans) as unknown as Plan[];
   const visiblePlans = allPlans.filter((plan) => plan.showInPricing !== false);

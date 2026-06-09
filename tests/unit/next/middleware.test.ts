@@ -40,7 +40,7 @@ describe("Next app middleware entry", () => {
 
   });
 
-  test("redirects protected pages without importing Node auth middleware", async () => {
+  test("redirects hidden library pages before auth checks", async () => {
     vi.doMock("../../../apps/next-app/middlewares/authMiddleware", () => {
       throw new Error("proxy must not import Node auth middleware");
     });
@@ -49,30 +49,30 @@ describe("Next app middleware entry", () => {
     const response = middleware(createRequest("/my-assets") as any);
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/signin");
+    expect(response.headers.get("location")).toBe("http://localhost/");
   });
 
-  test("allows protected pages with a better-auth session cookie to continue to locale rewrite", async () => {
+  test("keeps hidden library pages hidden even with a session cookie", async () => {
     const { middleware } = await import("../../../apps/next-app/middleware");
     const response = middleware(createRequest("/my-assets", ["better-auth.session_token"]) as any);
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("x-middleware-rewrite")).toBe("http://localhost/en/my-assets");
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/");
   });
 
-  test("keeps localized signin redirects for protected pages", async () => {
+  test("keeps localized hidden page redirects on localized library pages", async () => {
     const { middleware } = await import("../../../apps/next-app/middleware");
     const response = middleware(createRequest("/zh-CN/my-assets") as any);
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/zh-CN/signin");
+    expect(response.headers.get("location")).toBe("http://localhost/zh-CN/");
   });
 
-  test("redirects default locale URLs to clean URLs", async () => {
+  test("redirects hidden pricing pages to home", async () => {
     const { middleware } = await import("../../../apps/next-app/middleware");
     const response = middleware(createRequest("/en/pricing") as any);
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/pricing");
+    expect(response.headers.get("location")).toBe("http://localhost/");
   });
 });

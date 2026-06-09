@@ -14,15 +14,15 @@ describe("Next home SEO copy", () => {
   );
 
   it("uses the agreed search result metadata", () => {
-    expect(en.home.metadata.title).toBe("Pixal3D - AI Image to 3D Generator");
+    expect(en.home.metadata.title).toBe("Pixal3D - Free AI Image to 3D Generator.");
     expect(en.home.metadata.description).toBe(
-      "Create AI 3D models from images with Pixal3D. Powered by the MIT-licensed Pixal3D project from TencentARC, with GLB export.",
+      "Pixal3D is a free AI image-to-3D generator powered by the MIT-licensed Pixal3D project from TencentARC. Upload an image and generate 3D models online.",
     );
   });
 
   it("uses concise hero copy without the old TencentARC trust line", () => {
     expect(en.pixal3d.generator.heroTitle).toBe("Turn Any Image into a Faithful 3D Model");
-    expect(en.pixal3d.generator.subtitle).toBe("Free to try, no sign-in needed");
+    expect(en.pixal3d.generator.subtitle).toBe("Completely free to use");
     expect(pageSource).not.toContain("t.pixal3d.generator.trustLine");
   });
 

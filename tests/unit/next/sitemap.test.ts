@@ -10,6 +10,7 @@ describe("Next sitemap", () => {
 
   it("publishes only public SEO routes with localized alternates", () => {
     expect(sitemapSource).toContain('sitemapEntry("/", { changeFrequency: "weekly", priority: 1 })');
+    expect(sitemapSource).toContain("PIXAL3D_SHOW_MONETIZATION_SURFACES");
     expect(sitemapSource).toContain('sitemapEntry("/pricing", { changeFrequency: "monthly", priority: 0.8 })');
     expect(sitemapSource).toContain('sitemapEntry("/blog", { changeFrequency: "weekly", priority: 0.7 })');
     expect(sitemapSource).toContain('sitemapEntry(`/blog/${post.slug}`');

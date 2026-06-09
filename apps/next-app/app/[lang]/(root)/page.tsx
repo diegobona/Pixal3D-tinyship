@@ -25,6 +25,11 @@ import {
   Pixal3DGenerationStatusUnknownError,
   isPixal3DGenerationStatusUnknownError,
 } from "@/lib/pixal3d-generation-errors";
+import {
+  PIXAL3D_INLINE_TRIAL_IFRAME_URL,
+  PIXAL3D_SHOW_FREE_TRIAL_CALLOUT,
+  PIXAL3D_SHOW_HOME_GENERATOR,
+} from "@/lib/pixal3d-surface-visibility";
 
 type TaskStatus = "idle" | "upload-ready" | "processing" | "checking" | "succeeded" | "failed";
 type ResolutionOption = 1024 | 1536;
@@ -924,6 +929,56 @@ export default function Home() {
             </p>
           </div>
 
+          <section
+            data-testid="pixal3d-inline-trial"
+            className="mt-4 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-[#25314f] bg-[#070d20] shadow-[0_28px_110px_rgba(0,0,0,0.26)]"
+          >
+            <div data-testid="pixal3d-inline-trial-body" className="relative min-h-[900px] flex-1 bg-[#0b0f1a] sm:min-h-[940px] lg:min-h-[960px]">
+              <iframe
+                data-testid="pixal3d-inline-trial-iframe"
+                title={t.pixal3d.generator.hfTrialTitle}
+                src={PIXAL3D_INLINE_TRIAL_IFRAME_URL}
+                className="h-[900px] min-h-[900px] w-full bg-[#0b0f1a] sm:h-[940px] sm:min-h-[940px] lg:h-[960px] lg:min-h-[960px]"
+                allow="clipboard-read; clipboard-write"
+                sandbox="allow-downloads allow-forms allow-modals allow-popups allow-same-origin allow-scripts"
+                referrerPolicy="no-referrer"
+              />
+              <div
+                aria-hidden="true"
+                data-testid="pixal3d-inline-trial-instance-hint"
+                className="pointer-events-none absolute left-1/2 top-[176px] z-10 flex h-9 w-[min(920px,calc(100%-2rem))] -translate-x-1/2 items-center justify-center bg-[#0b0f1a] text-center text-base font-extrabold tracking-normal text-[#f6c86a] shadow-[0_0_16px_14px_#0b0f1a] sm:top-[190px] sm:text-lg lg:top-[194px] lg:text-xl"
+              >
+                Click the "Open Instance X" button
+              </div>
+              {!isAuthenticated ? (
+                <div
+                  data-testid="pixal3d-inline-trial-auth-overlay"
+                  className="absolute inset-0 z-20 flex items-center justify-center bg-[#020715]/58 px-6 text-center backdrop-blur-[2px]"
+                >
+                  <div className="w-full max-w-md rounded-2xl border border-[#48bdff]/28 bg-[linear-gradient(180deg,rgba(7,13,32,0.94),rgba(9,20,45,0.94))] px-6 py-7 shadow-[0_28px_90px_rgba(0,0,0,0.36),0_0_48px_rgba(72,189,255,0.16)]">
+                    <p className="text-2xl font-extrabold tracking-normal text-white">
+                      Sign in to use it for free
+                    </p>
+                    <p className="mx-auto mt-3 max-w-sm text-sm font-medium leading-6 text-[#aeb6ca]">
+                      Login unlocks the free Pixal3D workspace on this page.
+                    </p>
+                    <Button
+                      type="button"
+                      size="lg"
+                      className="mt-6 h-12 rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] px-8 text-base font-extrabold text-[#051021] shadow-[0_18px_52px_rgba(0,240,138,0.22)] transition hover:-translate-y-0.5 hover:brightness-110"
+                      onClick={() => {
+                        window.location.href = localizedPath("/signin");
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </section>
+
+          {PIXAL3D_SHOW_FREE_TRIAL_CALLOUT ? (
           <div
             data-testid="pixal3d-free-trial-callout"
             className="mt-4 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.055),rgba(255,255,255,0.025))] shadow-[0_12px_38px_rgba(0,0,0,0.12)] backdrop-blur"
@@ -946,6 +1001,7 @@ export default function Home() {
               </Button>
             </div>
           </div>
+          ) : null}
 
           {pageNotice && (
             <div
@@ -988,6 +1044,7 @@ export default function Home() {
             </div>
           )}
 
+          {PIXAL3D_SHOW_HOME_GENERATOR ? (
           <div data-testid="pixal3d-generator-card" className="mt-4 w-full max-w-[1420px] rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(11,20,43,0.76),rgba(7,13,32,0.9))] p-4 shadow-[0_22px_82px_rgba(0,0,0,0.18)] backdrop-blur sm:p-5">
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(440px,0.65fr)]">
             <div
@@ -1385,6 +1442,7 @@ export default function Home() {
               )}
             </div>
           </div>
+          ) : null}
 
           {showGenerationProgress && progressSnapshot && (
             <div
@@ -1647,11 +1705,6 @@ export default function Home() {
                           </span>
                         ) : null}
                       </span>
-                      {isActive ? (
-                        <span className="absolute -bottom-2 left-1/2 hidden w-[184px] -translate-x-1/2 rounded-lg border border-[#2a5279] bg-[#081425] px-4 py-2 text-xs font-semibold leading-5 text-[#d8f4ff] shadow-[0_12px_30px_rgba(0,0,0,0.22)] md:inline-flex md:justify-center">
-                          {t.pixal3d.inspiration.generateSimilar}
-                        </span>
-                      ) : null}
                     </button>
                   );
                 })()
