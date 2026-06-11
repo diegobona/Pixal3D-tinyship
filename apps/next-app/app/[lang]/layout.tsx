@@ -7,6 +7,7 @@ import { translations } from "@libs/i18n";
 import { SharedAppWrapper } from "@/components/shared-app-wrapper";
 
 const DEFAULT_APP_URL = "https://pixal3d.net";
+const ICON_VERSION = "20260531";
 
 function getAppUrl() {
   return (process.env.APP_BASE_URL || DEFAULT_APP_URL).replace(/\/$/, "");
@@ -30,20 +31,21 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     keywords: t.home.metadata.keywords,
     icons: {
       icon: [
-        { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-        { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-        { url: '/favicon.ico', type: 'image/svg+xml' },
+        { url: `/favicon.ico?v=${ICON_VERSION}`, type: "image/x-icon" },
+        { url: `/favicon-16x16.png?v=${ICON_VERSION}`, sizes: "16x16", type: "image/png" },
+        { url: `/favicon-32x32.png?v=${ICON_VERSION}`, sizes: "32x32", type: "image/png" },
       ],
+      shortcut: [`/favicon.ico?v=${ICON_VERSION}`],
       apple: [
-        { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+        { url: `/apple-touch-icon.png?v=${ICON_VERSION}`, sizes: "180x180", type: "image/png" },
       ],
       other: [
-        { rel: 'mask-icon', url: '/logo.svg', color: '#3b82f6' },
-        { rel: 'icon', url: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
-        { rel: 'icon', url: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
+        { rel: "mask-icon", url: "/logo.svg", color: "#3b82f6" },
+        { rel: "icon", url: `/android-chrome-192x192.png?v=${ICON_VERSION}`, sizes: "192x192", type: "image/png" },
+        { rel: "icon", url: `/android-chrome-512x512.png?v=${ICON_VERSION}`, sizes: "512x512", type: "image/png" },
       ],
     },
-    manifest: '/site.webmanifest',
+    manifest: `/site.webmanifest?v=${ICON_VERSION}`,
     appleWebApp: {
       capable: true,
       statusBarStyle: 'default',
@@ -63,7 +65,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
       description: t.home.metadata.description,
       images: [
         {
-          url: '/android-chrome-512x512.png',
+          url: `/android-chrome-512x512.png?v=${ICON_VERSION}`,
           width: 512,
           height: 512,
           alt: t.home.metadata.title,
@@ -74,7 +76,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
       card: 'summary',
       title: t.home.metadata.title,
       description: t.home.metadata.description,
-      images: ['/android-chrome-512x512.png'],
+      images: [`/android-chrome-512x512.png?v=${ICON_VERSION}`],
     },
   };
 }
