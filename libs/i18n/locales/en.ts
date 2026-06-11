@@ -191,9 +191,10 @@ export const en: Locale = {
       }
     },
     painPoint: {
-      eyebrow: "Feedback",
+      eyebrow: "1-minute feedback",
       title: "What’s blocking you from creating usable 3D models?",
       description: "Tell us what you need most. Your feedback will guide the next product direction.",
+      selectHint: "Select all that apply",
       otherPlaceholder: "Tell us more about your problem...",
       submitButton: "Submit feedback",
       submittingButton: "Submitting...",
@@ -217,8 +218,8 @@ export const en: Locale = {
           description: "I want to run Pixal3D, ComfyUI, Trellis, or other AI 3D tools locally, but setup, models, CUDA, and errors are confusing."
         },
         other: {
-          label: "None of the above — I have another problem",
-          description: "Share the specific workflow or 3D asset problem you want solved."
+          label: "Have another problem to share?",
+          description: "Add any other workflow or 3D asset problem you want solved."
         }
       }
     },

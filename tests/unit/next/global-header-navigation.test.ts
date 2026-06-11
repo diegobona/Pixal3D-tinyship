@@ -26,4 +26,21 @@ describe("global header navigation", () => {
     expect(headerSource).toContain("From TencentARC");
     expect(headerSource).toContain('data-testid="pixal3d-source-badge"');
   });
+
+  it("hides the credits pill when monetization surfaces are disabled", () => {
+    expect(headerSource).toContain("if (!PIXAL3D_SHOW_MONETIZATION_SURFACES)");
+    expect(headerSource).toContain("{PIXAL3D_SHOW_MONETIZATION_SURFACES ? (");
+    expect(headerSource).toContain("<CreditsIcon />");
+  });
+
+  it("hides the language switcher behind a visibility flag", () => {
+    const visibilitySource = readFileSync(
+      join(process.cwd(), "apps", "next-app", "lib", "pixal3d-surface-visibility.ts"),
+      "utf8",
+    );
+
+    expect(visibilitySource).toContain("export const PIXAL3D_SHOW_LANGUAGE_SWITCHER = false;");
+    expect(headerSource).toContain("{PIXAL3D_SHOW_LANGUAGE_SWITCHER ? (");
+    expect(headerSource).toContain("<LocaleIcon />");
+  });
 });

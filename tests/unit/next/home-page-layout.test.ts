@@ -54,6 +54,9 @@ describe("Next home page layout", () => {
 
   it("collects pain point feedback above the advantages section", () => {
     expect(pageSource).toContain('data-testid="pixal3d-pain-point-feedback"');
+    expect(en.pixal3d.painPoint.eyebrow).toBe("1-minute feedback");
+    expect(en.pixal3d.painPoint.description).toBe("Tell us what you need most. Your feedback will guide the next product direction.");
+    expect(en.pixal3d.painPoint.selectHint).toBe("Select all that apply");
     expect(en.pixal3d.painPoint.title).toBe("What’s blocking you from creating usable 3D models?");
     expect(pageSource).toContain('/api/feedback/pain-point');
     expect(en.pixal3d.painPoint.successMessage).toBe("Thank you — this will help us build our next product.");
@@ -62,6 +65,12 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain('type="checkbox"');
     expect(pageSource).toContain("selectedPainPoints");
     expect(pageSource).toContain("painPoints: selectedPainPoints");
+    expect(pageSource).toContain("const canSubmitPainPointFeedback = selectedPainPoints.length > 0 || painPointOtherText.trim().length > 0;");
+    expect(pageSource).toContain("disabled={isPainPointSubmitting || !canSubmitPainPointFeedback}");
+    expect(pageSource).toContain('const isOtherOption = option.key === "other";');
+    expect(pageSource).toContain("{isOtherOption ? null : (");
+    expect(pageSource).toContain("border border-[#48bdff]/35");
+    expect(pageSource).toContain("before:absolute before:inset-x-0 before:top-0 before:h-px");
   });
 
   it("uses a restrained periodic pulse on the free trial button", () => {

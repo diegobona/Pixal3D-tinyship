@@ -53,9 +53,13 @@ export async function POST(req: Request) {
 
   const payload = body && typeof body === "object" ? body as Record<string, unknown> : {};
   const selectedPainPoints = normalizePainPoints(payload);
-  const painPoint = selectedPainPoints[0] || "";
+  const otherText = normalizeOptionalText(payload.otherText, 500);
+  const painPoint = selectedPainPoints[0] || "other";
 
-  if (!selectedPainPoints.length || selectedPainPoints.some((value) => !PAIN_POINT_VALUES.has(value))) {
+  if (
+    (!selectedPainPoints.length && !otherText)
+    || selectedPainPoints.some((value) => !PAIN_POINT_VALUES.has(value))
+  ) {
     return NextResponse.json(
       { success: false, error: "invalid_feedback", message: "Choose a valid feedback option." },
       { status: 400 },
@@ -70,7 +74,7 @@ export async function POST(req: Request) {
     id: `pain_${nanoid(16)}`,
     painPoint,
     selectedPainPoints,
-    otherText: normalizeOptionalText(payload.otherText, 500),
+    otherText,
     userId,
     userEmail,
     pageUrl: normalizeOptionalText(payload.pageUrl, 500),

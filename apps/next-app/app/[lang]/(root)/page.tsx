@@ -504,7 +504,7 @@ export default function Home() {
   const togglePainPoint = (value: PainPointValue) => {
     setSelectedPainPoints((current) => {
       if (current.includes(value)) {
-        return current.length > 1 ? current.filter((item) => item !== value) : current;
+        return current.filter((item) => item !== value);
       }
 
       return [...current, value];
@@ -512,8 +512,10 @@ export default function Home() {
     setPainPointSubmitStatus("idle");
   };
 
+  const canSubmitPainPointFeedback = selectedPainPoints.length > 0 || painPointOtherText.trim().length > 0;
+
   const submitPainPointFeedback = async () => {
-    if (isPainPointSubmitting || selectedPainPoints.length === 0) return;
+    if (isPainPointSubmitting || !canSubmitPainPointFeedback) return;
 
     setIsPainPointSubmitting(true);
     setPainPointSubmitStatus("idle");
@@ -1684,82 +1686,91 @@ export default function Home() {
 
           <section
             data-testid="pixal3d-pain-point-feedback"
-            className="mt-8 w-full max-w-[1420px] rounded-2xl border border-[#25314f] bg-[linear-gradient(180deg,rgba(15,26,52,0.9),rgba(8,15,35,0.92))] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.18)] sm:p-6"
+            className="relative mt-8 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-[#48bdff]/35 bg-[radial-gradient(circle_at_10%_0%,rgba(72,189,255,0.18),transparent_32%),radial-gradient(circle_at_90%_8%,rgba(0,240,138,0.1),transparent_30%),linear-gradient(180deg,rgba(15,31,65,0.96),rgba(8,15,35,0.94))] p-5 shadow-[0_28px_110px_rgba(0,0,0,0.24),0_0_42px_rgba(72,189,255,0.14)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[#7ee7ff]/80 before:to-transparent sm:p-6"
           >
-            <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#7fdaff]">
-                {t.pixal3d.painPoint.eyebrow}
-              </p>
-              <h2 className="mt-3 text-2xl font-extrabold tracking-normal text-white sm:text-3xl">
-                {t.pixal3d.painPoint.title}
-              </h2>
-              <p className="mt-3 max-w-3xl text-base leading-7 text-[#aeb6ca]">
-                {t.pixal3d.painPoint.description}
+            <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="inline-flex rounded-full border border-[#7ee7ff]/35 bg-[#48bdff]/12 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.12em] text-[#9decff] shadow-[0_0_26px_rgba(72,189,255,0.16)]">
+                  {t.pixal3d.painPoint.eyebrow}
+                </p>
+                <h2 className="mt-4 max-w-5xl text-2xl font-extrabold tracking-normal text-white sm:text-3xl">
+                  {t.pixal3d.painPoint.title}
+                </h2>
+                <p className="mt-3 max-w-3xl text-base leading-7 text-[#c4cce0]">
+                  {t.pixal3d.painPoint.description}
+                </p>
+              </div>
+              <p className="inline-flex shrink-0 rounded-full border border-[#00f08a]/25 bg-[#00f08a]/10 px-3 py-1.5 text-xs font-extrabold text-[#a7ffd7] shadow-[0_0_26px_rgba(0,240,138,0.1)]">
+                {t.pixal3d.painPoint.selectHint}
               </p>
             </div>
 
             <form
-              className="mt-5 grid gap-4"
+              className="relative z-10 mt-5 grid gap-4"
               onSubmit={(event) => {
                 event.preventDefault();
                 void submitPainPointFeedback();
               }}
             >
-              <div className="grid gap-3 lg:grid-cols-2">
+              <div className="grid gap-4 lg:grid-cols-2">
                 {PAIN_POINT_OPTIONS.map((option) => {
                   const optionCopy = t.pixal3d.painPoint.options[option.key];
+                  const isOtherOption = option.key === "other";
                   const isSelected = selectedPainPoints.includes(option.value);
 
                   return (
                     <label
                       key={option.value}
-                      className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition ${
-                        isSelected
-                          ? "border-[#48bdff]/70 bg-[#123456]/58 shadow-[0_14px_42px_rgba(72,189,255,0.12)]"
-                          : "border-[#25314f] bg-[#081225]/72 hover:border-[#48bdff]/45 hover:bg-[#0b1832]"
+                      className={`flex gap-3 rounded-xl border p-4 transition ${
+                        isOtherOption
+                          ? "border-[#48bdff]/20 bg-[#081225]/82 lg:col-span-2"
+                          : isSelected
+                          ? "cursor-pointer border-[#48bdff]/80 bg-[#123456]/68 shadow-[0_16px_48px_rgba(72,189,255,0.16)]"
+                          : "cursor-pointer border-[#385078]/58 bg-[#081225]/76 hover:-translate-y-0.5 hover:border-[#48bdff]/60 hover:bg-[#0b1832] hover:shadow-[0_16px_42px_rgba(72,189,255,0.1)]"
                       }`}
                     >
-                      <input
-                        type="checkbox"
-                        name="pixal3d-pain-point"
-                        value={option.value}
-                        checked={isSelected}
-                        onChange={() => {
-                          togglePainPoint(option.value);
-                        }}
-                        className="mt-1 h-4 w-4 shrink-0 accent-[#48bdff]"
-                      />
-                      <span>
+                      {isOtherOption ? null : (
+                        <input
+                          type="checkbox"
+                          name="pixal3d-pain-point"
+                          value={option.value}
+                          checked={isSelected}
+                          onChange={() => {
+                            togglePainPoint(option.value);
+                          }}
+                          className="mt-1 h-4 w-4 shrink-0 accent-[#48bdff]"
+                        />
+                      )}
+                      <span className="min-w-0 flex-1">
                         <span className="block text-base font-extrabold text-white">
                           {optionCopy.label}
                         </span>
                         <span className="mt-2 block text-sm leading-6 text-[#aeb6ca]">
                           {optionCopy.description}
                         </span>
+                        {isOtherOption ? (
+                          <textarea
+                            value={painPointOtherText}
+                            onChange={(event) => {
+                              setPainPointOtherText(event.target.value);
+                              setPainPointSubmitStatus("idle");
+                            }}
+                            maxLength={500}
+                            placeholder={t.pixal3d.painPoint.otherPlaceholder}
+                            className="mt-4 min-h-24 w-full resize-y rounded-xl border border-[#48bdff]/18 bg-[#071025]/88 px-4 py-3 text-base font-medium leading-7 text-white outline-none transition placeholder:text-[#68758f] focus:border-[#48bdff]/70 focus:shadow-[0_0_0_3px_rgba(72,189,255,0.12)]"
+                          />
+                        ) : null}
                       </span>
                     </label>
                   );
                 })}
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-                <label className="block">
-                  <span className="sr-only">{t.pixal3d.painPoint.otherPlaceholder}</span>
-                  <textarea
-                    value={painPointOtherText}
-                    onChange={(event) => {
-                      setPainPointOtherText(event.target.value);
-                      setPainPointSubmitStatus("idle");
-                    }}
-                    maxLength={500}
-                    placeholder={t.pixal3d.painPoint.otherPlaceholder}
-                    className="min-h-24 w-full resize-y rounded-xl border border-[#25314f] bg-[#081225]/88 px-4 py-3 text-base font-medium leading-7 text-white outline-none transition placeholder:text-[#68758f] focus:border-[#48bdff]/70 focus:shadow-[0_0_0_3px_rgba(72,189,255,0.12)]"
-                  />
-                </label>
+              <div className="flex justify-end">
                 <Button
                   type="submit"
-                  disabled={isPainPointSubmitting || selectedPainPoints.length === 0}
-                  className="h-12 rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] px-7 text-base font-extrabold text-[#051021] shadow-[0_18px_52px_rgba(0,240,138,0.18)] transition hover:-translate-y-0.5 hover:brightness-110 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isPainPointSubmitting || !canSubmitPainPointFeedback}
+                  className="h-12 w-full rounded-full bg-gradient-to-r from-[#48bdff] to-[#00f08a] px-7 text-base font-extrabold text-[#051021] shadow-[0_18px_52px_rgba(0,240,138,0.22),0_0_28px_rgba(72,189,255,0.14)] transition hover:-translate-y-0.5 hover:brightness-110 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {isPainPointSubmitting
                     ? t.pixal3d.painPoint.submittingButton

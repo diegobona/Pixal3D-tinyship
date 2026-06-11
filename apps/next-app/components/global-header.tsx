@@ -14,6 +14,7 @@ import {
 } from "@/lib/credit-balance-events";
 import { shouldShowHeaderUpgradeButton } from "@/lib/header-actions";
 import {
+  PIXAL3D_SHOW_LANGUAGE_SWITCHER,
   PIXAL3D_SHOW_MONETIZATION_SURFACES,
   PIXAL3D_SHOW_USER_LIBRARY_SURFACES,
 } from "@/lib/pixal3d-surface-visibility";
@@ -90,6 +91,13 @@ export default function Header({ className }: HeaderProps) {
   }, [isLocaleMenuOpen, isUserMenuOpen]);
 
   useEffect(() => {
+    if (!PIXAL3D_SHOW_MONETIZATION_SURFACES) {
+      setCreditBalance(null);
+      setSubscriptionPlanId(null);
+      setIsCreditStatusLoaded(false);
+      return;
+    }
+
     if (!user) {
       setCreditBalance(null);
       setSubscriptionPlanId(null);
@@ -212,21 +220,23 @@ export default function Header({ className }: HeaderProps) {
               <div className="h-8 w-28 rounded-full bg-white/10" />
             ) : user ? (
               <>
-                <div className="group relative">
-                  <div className="inline-flex h-10 items-center gap-2 rounded-full border border-[#6a4a16] bg-[linear-gradient(180deg,#2a1b06,#1a1207)] px-3 text-[#f7c455] shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
-                    <CreditsIcon />
-                    <span className="min-w-[1ch] text-sm font-bold leading-none">
-                      {creditBalance === null ? "..." : creditBalance.toLocaleString("en-US")}
-                    </span>
+                {PIXAL3D_SHOW_MONETIZATION_SURFACES ? (
+                  <div className="group relative">
+                    <div className="inline-flex h-10 items-center gap-2 rounded-full border border-[#6a4a16] bg-[linear-gradient(180deg,#2a1b06,#1a1207)] px-3 text-[#f7c455] shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
+                      <CreditsIcon />
+                      <span className="min-w-[1ch] text-sm font-bold leading-none">
+                        {creditBalance === null ? "..." : creditBalance.toLocaleString("en-US")}
+                      </span>
+                    </div>
+                    <div
+                      role="tooltip"
+                      className="pointer-events-none absolute left-1/2 top-[calc(100%+10px)] z-30 -translate-x-1/2 rounded-lg border border-[#6a4a16] bg-[#171008]/98 px-3 py-2 text-xs font-semibold text-[#f7c455] opacity-0 shadow-[0_18px_40px_rgba(0,0,0,0.3)] transition duration-150 group-hover:opacity-100"
+                    >
+                      {t.header.auth.myCredits}
+                      <span className="absolute bottom-full left-1/2 h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rotate-45 border-l border-t border-[#6a4a16] bg-[#171008]" />
+                    </div>
                   </div>
-                  <div
-                    role="tooltip"
-                    className="pointer-events-none absolute left-1/2 top-[calc(100%+10px)] z-30 -translate-x-1/2 rounded-lg border border-[#6a4a16] bg-[#171008]/98 px-3 py-2 text-xs font-semibold text-[#f7c455] opacity-0 shadow-[0_18px_40px_rgba(0,0,0,0.3)] transition duration-150 group-hover:opacity-100"
-                  >
-                    {t.header.auth.myCredits}
-                    <span className="absolute bottom-full left-1/2 h-2.5 w-2.5 -translate-x-1/2 translate-y-1/2 rotate-45 border-l border-t border-[#6a4a16] bg-[#171008]" />
-                  </div>
-                </div>
+                ) : null}
                 {shouldShowUpgradeButton ? (
                   <Link
                     href={localizedPath("/pricing")}
@@ -346,6 +356,7 @@ export default function Header({ className }: HeaderProps) {
                     </div>
                   ) : null}
                 </div>
+                {PIXAL3D_SHOW_LANGUAGE_SWITCHER ? (
                 <div
                   ref={localeMenuRef}
                   className="relative"
@@ -400,6 +411,7 @@ export default function Header({ className }: HeaderProps) {
                     </div>
                   ) : null}
                 </div>
+                ) : null}
               </>
             ) : (
               <>
@@ -428,13 +440,15 @@ export default function Header({ className }: HeaderProps) {
               {navigation}
             </div>
             <div className="border-t border-[#26324d] pt-4">
-              <button
-                type="button"
-                onClick={() => setLocale(currentLocale === "en" ? "zh-CN" : "en")}
-                className="block py-2 text-sm font-semibold text-white/75"
-              >
-                {currentLocale === "en" ? t.header.language.english : t.header.language.chinese}
-              </button>
+              {PIXAL3D_SHOW_LANGUAGE_SWITCHER ? (
+                <button
+                  type="button"
+                  onClick={() => setLocale(currentLocale === "en" ? "zh-CN" : "en")}
+                  className="block py-2 text-sm font-semibold text-white/75"
+                >
+                  {currentLocale === "en" ? t.header.language.english : t.header.language.chinese}
+                </button>
+              ) : null}
               {user ? (
                 <>
                   {PIXAL3D_SHOW_USER_LIBRARY_SURFACES ? (

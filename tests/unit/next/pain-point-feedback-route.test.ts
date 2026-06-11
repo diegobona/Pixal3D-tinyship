@@ -119,7 +119,24 @@ describe("Next pain point feedback API route", () => {
     expect(insertValuesMock).not.toHaveBeenCalled();
   });
 
-  test("rejects empty multi-select submissions before inserting", async () => {
+  test("accepts text-only feedback without checkbox selections", async () => {
+    getSessionMock.mockResolvedValue(null);
+
+    const { POST } = await import("../../../apps/next-app/app/api/feedback/pain-point/route");
+    const response = await POST(createRequest({
+      painPoints: [],
+      otherText: "I only want to describe my own workflow problem.",
+    }));
+
+    expect(response.status).toBe(200);
+    expect(insertValuesMock).toHaveBeenCalledWith(expect.objectContaining({
+      painPoint: "other",
+      selectedPainPoints: [],
+      otherText: "I only want to describe my own workflow problem.",
+    }));
+  });
+
+  test("rejects empty feedback before inserting", async () => {
     getSessionMock.mockResolvedValue(null);
 
     const { POST } = await import("../../../apps/next-app/app/api/feedback/pain-point/route");
