@@ -63,6 +63,7 @@ describe("Next home page layout", () => {
     expect(en.pixal3d.painPoint.options.tooExpensive.label).toBe("AI 3D tools are too expensive");
     expect(en.pixal3d.painPoint.options.localSetup.label).toBe("Local AI 3D setup is too complicated");
     expect(pageSource).toContain('type="checkbox"');
+    expect(pageSource).toContain("useState<PainPointValue[]>([])");
     expect(pageSource).toContain("selectedPainPoints");
     expect(pageSource).toContain("painPoints: selectedPainPoints");
     expect(pageSource).toContain("const canSubmitPainPointFeedback = selectedPainPoints.length > 0 || painPointOtherText.trim().length > 0;");

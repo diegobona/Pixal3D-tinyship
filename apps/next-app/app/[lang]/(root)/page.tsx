@@ -352,7 +352,7 @@ export default function Home() {
   const [creditBalance, setCreditBalance] = useState(0);
   const [subscriptionPlanId, setSubscriptionPlanId] = useState<string | null>(null);
   const [pageNotice, setPageNotice] = useState<PageNotice | null>(null);
-  const [selectedPainPoints, setSelectedPainPoints] = useState<PainPointValue[]>(["too_expensive"]);
+  const [selectedPainPoints, setSelectedPainPoints] = useState<PainPointValue[]>([]);
   const [painPointOtherText, setPainPointOtherText] = useState("");
   const [isPainPointSubmitting, setIsPainPointSubmitting] = useState(false);
   const [painPointSubmitStatus, setPainPointSubmitStatus] = useState<"idle" | "success" | "error">("idle");
