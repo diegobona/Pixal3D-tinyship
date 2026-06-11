@@ -190,6 +190,38 @@ export const en: Locale = {
         }
       }
     },
+    painPoint: {
+      eyebrow: "Feedback",
+      title: "What’s blocking you from creating usable 3D models?",
+      description: "Tell us what you need most. Your feedback will guide the next product direction.",
+      otherPlaceholder: "Tell us more about your problem...",
+      submitButton: "Submit feedback",
+      submittingButton: "Submitting...",
+      successMessage: "Thank you — this will help us build our next product.",
+      errorMessage: "Could not submit feedback. Please try again.",
+      options: {
+        tooExpensive: {
+          label: "AI 3D tools are too expensive",
+          description: "I want a cheaper way to generate 3D models, even if they are low-poly, stylized, or voxel-like."
+        },
+        assetPacks: {
+          label: "It’s hard to find consistent 3D asset packs",
+          description: "I don’t just need one model. I need a full set of matching assets, such as animals, trees, RPG items, buildings, or props."
+        },
+        setTooLong: {
+          label: "Creating a consistent set one by one takes too long",
+          description: "I want to generate a full set of 3D models at once, with the same theme and style."
+        },
+        localSetup: {
+          label: "Local AI 3D setup is too complicated",
+          description: "I want to run Pixal3D, ComfyUI, Trellis, or other AI 3D tools locally, but setup, models, CUDA, and errors are confusing."
+        },
+        other: {
+          label: "None of the above — I have another problem",
+          description: "Share the specific workflow or 3D asset problem you want solved."
+        }
+      }
+    },
     inspiration: {
       eyebrow: "Model Inspiration Gallery",
       title: "Explore example 3D model directions for your next generation",

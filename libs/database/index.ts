@@ -180,6 +180,7 @@ export const {
   order,
   subscription,
   pixal3dGeneration,
+  painPointFeedback,
   // Tables from auth schema
   account,
   session,

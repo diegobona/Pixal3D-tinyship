@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { en } from "../../../libs/i18n/locales/en";
 
 describe("Next home page layout", () => {
   const pageSource = readFileSync(
@@ -24,14 +25,20 @@ describe("Next home page layout", () => {
 
   it("places the embedded trial iframe above the hidden legacy generator surfaces", () => {
     const inlineTrialIndex = pageSource.indexOf('data-testid="pixal3d-inline-trial"');
+    const feedbackIndex = pageSource.indexOf('data-testid="pixal3d-pain-point-feedback"');
+    const advantagesIndex = pageSource.indexOf('data-testid="pixal3d-advantages"');
     const freeTrialIndex = pageSource.indexOf('data-testid="pixal3d-free-trial-callout"');
     const pageNoticeIndex = pageSource.indexOf('data-testid="pixal3d-page-notice"');
     const generatorCardIndex = pageSource.indexOf('data-testid="pixal3d-generator-card"');
 
     expect(inlineTrialIndex).toBeGreaterThan(-1);
+    expect(feedbackIndex).toBeGreaterThan(-1);
+    expect(advantagesIndex).toBeGreaterThan(-1);
     expect(freeTrialIndex).toBeGreaterThan(-1);
     expect(pageNoticeIndex).toBeGreaterThan(-1);
     expect(generatorCardIndex).toBeGreaterThan(-1);
+    expect(inlineTrialIndex).toBeLessThan(feedbackIndex);
+    expect(feedbackIndex).toBeLessThan(advantagesIndex);
     expect(inlineTrialIndex).toBeLessThan(freeTrialIndex);
     expect(freeTrialIndex).toBeLessThan(pageNoticeIndex);
     expect(pageNoticeIndex).toBeLessThan(generatorCardIndex);
@@ -43,6 +50,18 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain('data-testid="pixal3d-generator-card" className="mt-4');
     expect(pageSource).toContain('className="mb-2 text-center"');
     expect(pageSource).toContain("pixal3d-trial-pulse");
+  });
+
+  it("collects pain point feedback above the advantages section", () => {
+    expect(pageSource).toContain('data-testid="pixal3d-pain-point-feedback"');
+    expect(en.pixal3d.painPoint.title).toBe("What’s blocking you from creating usable 3D models?");
+    expect(pageSource).toContain('/api/feedback/pain-point');
+    expect(en.pixal3d.painPoint.successMessage).toBe("Thank you — this will help us build our next product.");
+    expect(en.pixal3d.painPoint.options.tooExpensive.label).toBe("AI 3D tools are too expensive");
+    expect(en.pixal3d.painPoint.options.localSetup.label).toBe("Local AI 3D setup is too complicated");
+    expect(pageSource).toContain('type="checkbox"');
+    expect(pageSource).toContain("selectedPainPoints");
+    expect(pageSource).toContain("painPoints: selectedPainPoints");
   });
 
   it("uses a restrained periodic pulse on the free trial button", () => {
