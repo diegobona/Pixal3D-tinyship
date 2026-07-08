@@ -4,4 +4,4 @@ export const PIXAL3D_SHOW_MONETIZATION_SURFACES = false;
 export const PIXAL3D_SHOW_USER_LIBRARY_SURFACES = false;
 export const PIXAL3D_SHOW_LANGUAGE_SWITCHER = false;
 
-export const PIXAL3D_INLINE_TRIAL_IFRAME_URL = "https://tencentarc-pixal3d-server.hf.space";
+export const PIXAL3D_INLINE_TRIAL_IFRAME_URL = "https://victor-pixal3d-studio.hf.space";

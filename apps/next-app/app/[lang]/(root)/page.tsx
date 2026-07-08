@@ -1007,13 +1007,6 @@ export default function Home() {
                 sandbox="allow-downloads allow-forms allow-modals allow-popups allow-same-origin allow-scripts"
                 referrerPolicy="no-referrer"
               />
-              <div
-                aria-hidden="true"
-                data-testid="pixal3d-inline-trial-instance-hint"
-                className="pointer-events-none absolute left-1/2 top-[176px] z-10 flex h-9 w-[min(920px,calc(100%-2rem))] -translate-x-1/2 items-center justify-center bg-[#0b0f1a] text-center text-base font-extrabold tracking-normal text-[#f6c86a] shadow-[0_0_16px_14px_#0b0f1a] sm:top-[190px] sm:text-lg lg:top-[194px] lg:text-xl"
-              >
-                Click the "Open Instance X" button
-              </div>
               {!isAuthenticated ? (
                 <div
                   data-testid="pixal3d-inline-trial-auth-overlay"

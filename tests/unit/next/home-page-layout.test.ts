@@ -156,15 +156,14 @@ describe("Next home page layout", () => {
 
     expect(visibilitySource).toContain("export const PIXAL3D_SHOW_HOME_GENERATOR = false;");
     expect(visibilitySource).toContain("export const PIXAL3D_SHOW_FREE_TRIAL_CALLOUT = false;");
-    expect(visibilitySource).toContain('export const PIXAL3D_INLINE_TRIAL_IFRAME_URL = "https://tencentarc-pixal3d-server.hf.space";');
+    expect(visibilitySource).toContain('export const PIXAL3D_INLINE_TRIAL_IFRAME_URL = "https://victor-pixal3d-studio.hf.space";');
     expect(pageSource).not.toContain('data-testid="pixal3d-inline-trial-header"');
     expect(pageSource).not.toContain('data-testid="pixal3d-inline-trial-loading"');
     expect(pageSource).not.toContain("isInlineHfTrialFrameLoading");
     expect(pageSource).not.toContain("data-testid=\"pixal3d-inline-trial-timer\"");
     expect(pageSource).toContain('data-testid="pixal3d-inline-trial-auth-overlay"');
-    expect(pageSource).toContain('data-testid="pixal3d-inline-trial-instance-hint"');
-    expect(pageSource).toContain('Click the "Open Instance X" button');
-    expect(pageSource).toContain("pointer-events-none absolute left-1/2");
+    expect(pageSource).not.toContain('data-testid="pixal3d-inline-trial-instance-hint"');
+    expect(pageSource).not.toContain('Click the "Open Instance X" button');
     expect(pageSource).toContain("Sign in to use it for free");
     expect(pageSource).toContain('window.location.href = localizedPath("/signin");');
     expect(pageSource).toContain("lg:h-[960px] lg:min-h-[960px]");
