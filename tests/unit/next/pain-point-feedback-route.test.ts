@@ -49,14 +49,13 @@ describe("Next pain point feedback API route", () => {
     }));
   });
 
-  test("accepts anonymous pain point feedback", async () => {
+  test("accepts an anonymous 3D product request", async () => {
     getSessionMock.mockResolvedValue(null);
 
     const { POST } = await import("../../../apps/next-app/app/api/feedback/pain-point/route");
     const response = await POST(createRequest(
       {
-        painPoints: ["too_expensive", "local_setup_complicated"],
-        otherText: "I need a cheaper way to test ideas.",
+        otherText: "I need a stylized low-poly train station for a game.",
         pageUrl: "https://pixal3d.net/",
       },
       {
@@ -71,9 +70,9 @@ describe("Next pain point feedback API route", () => {
     expect(insertMock).toHaveBeenCalledWith({ tableName: "pain_point_feedback" });
     expect(insertValuesMock).toHaveBeenCalledWith(expect.objectContaining({
       id: expect.stringMatching(/^pain_/),
-      painPoint: "too_expensive",
-      selectedPainPoints: ["too_expensive", "local_setup_complicated"],
-      otherText: "I need a cheaper way to test ideas.",
+      painPoint: "other",
+      selectedPainPoints: [],
+      otherText: "I need a stylized low-poly train station for a game.",
       userId: null,
       userEmail: null,
       pageUrl: "https://pixal3d.net/",
@@ -92,48 +91,45 @@ describe("Next pain point feedback API route", () => {
 
     const { POST } = await import("../../../apps/next-app/app/api/feedback/pain-point/route");
     const response = await POST(createRequest({
-      painPoints: ["local_setup_complicated", "hard_to_find_asset_packs"],
+      otherText: "一套适合移动游戏的中国古建筑模型。",
       userEmail: "spoofed@example.com",
-    }));
-
-    expect(response.status).toBe(200);
-    expect(insertValuesMock).toHaveBeenCalledWith(expect.objectContaining({
-      painPoint: "local_setup_complicated",
-      selectedPainPoints: ["local_setup_complicated", "hard_to_find_asset_packs"],
-      userId: "user_123",
-      userEmail: "creator@example.com",
-    }));
-  });
-
-  test("rejects unsupported pain point values before inserting", async () => {
-    getSessionMock.mockResolvedValue(null);
-
-    const { POST } = await import("../../../apps/next-app/app/api/feedback/pain-point/route");
-    const response = await POST(createRequest({
-      painPoints: ["too_expensive", "not_a_real_reason"],
-    }));
-    const body = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(body).toMatchObject({ success: false, error: "invalid_feedback" });
-    expect(insertValuesMock).not.toHaveBeenCalled();
-  });
-
-  test("accepts text-only feedback without checkbox selections", async () => {
-    getSessionMock.mockResolvedValue(null);
-
-    const { POST } = await import("../../../apps/next-app/app/api/feedback/pain-point/route");
-    const response = await POST(createRequest({
-      painPoints: [],
-      otherText: "I only want to describe my own workflow problem.",
     }));
 
     expect(response.status).toBe(200);
     expect(insertValuesMock).toHaveBeenCalledWith(expect.objectContaining({
       painPoint: "other",
       selectedPainPoints: [],
-      otherText: "I only want to describe my own workflow problem.",
+      otherText: "一套适合移动游戏的中国古建筑模型。",
+      userId: "user_123",
+      userEmail: "creator@example.com",
     }));
+  });
+
+  test("accepts exactly 3,000 characters", async () => {
+    getSessionMock.mockResolvedValue(null);
+    const otherText = "模".repeat(3000);
+
+    const { POST } = await import("../../../apps/next-app/app/api/feedback/pain-point/route");
+    const response = await POST(createRequest({
+      otherText,
+    }));
+
+    expect(response.status).toBe(200);
+    expect(insertValuesMock).toHaveBeenCalledWith(expect.objectContaining({ otherText }));
+  });
+
+  test("rejects more than 3,000 characters before inserting", async () => {
+    getSessionMock.mockResolvedValue(null);
+
+    const { POST } = await import("../../../apps/next-app/app/api/feedback/pain-point/route");
+    const response = await POST(createRequest({
+      otherText: "a".repeat(3001),
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toMatchObject({ success: false, error: "feedback_too_long" });
+    expect(insertValuesMock).not.toHaveBeenCalled();
   });
 
   test("rejects empty feedback before inserting", async () => {

@@ -27,6 +27,40 @@ test.describe('Public Pages', () => {
     await expect(page.locator('nav')).toBeVisible();
   });
 
+  test('Home page collects a single 3D product request in any language', async ({ page }) => {
+    const productRequest = 'I need a low-poly city kit，也需要中文标牌。';
+    let submittedPayload: Record<string, unknown> | null = null;
+
+    await page.route('**/api/feedback/pain-point', async (route) => {
+      submittedPayload = route.request().postDataJSON() as Record<string, unknown>;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true }),
+      });
+    });
+
+    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation });
+
+    const feedback = page.getByTestId('pixal3d-pain-point-feedback');
+    const textarea = feedback.getByTestId('pixal3d-product-request-input');
+
+    await expect(feedback.getByRole('heading', {
+      name: 'What kind of 3D product do you need right now?',
+    })).toBeVisible();
+    await expect(feedback.locator('input[type="checkbox"]')).toHaveCount(0);
+    await expect(feedback.locator('textarea')).toHaveCount(1);
+    await expect(textarea).toHaveAttribute('maxlength', '3000');
+    await expect(feedback.getByText('You can write in any language.', { exact: true })).toBeVisible();
+
+    await textarea.fill(productRequest);
+    await feedback.getByRole('button', { name: 'Submit feedback' }).click();
+
+    await expect(feedback.getByText('Thank you — this will help us build our next product.')).toBeVisible();
+    expect(submittedPayload).toMatchObject({ otherText: productRequest });
+    expect(submittedPayload).not.toHaveProperty('painPoints');
+  });
+
   test('Sign in page loads and shows login form', async ({ page }) => {
     await page.goto(PAGES.signin, { timeout: TIMEOUTS.navigation });
 

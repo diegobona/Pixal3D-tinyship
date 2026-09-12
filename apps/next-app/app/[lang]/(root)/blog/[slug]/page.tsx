@@ -6,7 +6,7 @@ import { blogPostStatus } from "@libs/database/schema/blog-post";
 import { eq, and } from "drizzle-orm";
 import { translations } from "@libs/i18n";
 import type { Metadata } from "next";
-import { getStaticBlogPostBySlug, type StaticBlogSection } from "@/lib/static-blog-posts";
+import { getStaticBlogPostBySlug, type StaticBlogSection } from "@libs/blog/static-posts";
 
 type Props = {
   params: Promise<{ lang: string; slug: string }>;
@@ -15,7 +15,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params;
   const t = translations[lang as keyof typeof translations];
-  const staticPost = getStaticBlogPostBySlug(slug);
+  const staticPost = getStaticBlogPostBySlug(slug, lang);
 
   if (staticPost) {
     return {
@@ -65,6 +65,50 @@ function renderStaticSection(section: StaticBlogSection, index: number) {
     );
   }
 
+  if (section.type === "linked-paragraphs") {
+    return (
+      <section key={`${section.heading || "linked-paragraphs"}-${index}`} className="space-y-5">
+        {section.heading ? (
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            {section.heading}
+          </h2>
+        ) : null}
+        {section.paragraphs.map((segments, paragraphIndex) => (
+          <p key={`${index}-${paragraphIndex}`} className="text-base leading-8 text-foreground/90">
+            {segments.map((segment, segmentIndex) => segment.href ? (
+              <a
+                key={`${paragraphIndex}-${segmentIndex}`}
+                href={segment.href}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="font-medium text-[#48bdff] underline decoration-[#48bdff]/40 underline-offset-4 transition-colors hover:text-[#77e8ff]"
+              >
+                {segment.text}
+              </a>
+            ) : (
+              <span key={`${paragraphIndex}-${segmentIndex}`}>{segment.text}</span>
+            ))}
+          </p>
+        ))}
+      </section>
+    );
+  }
+
+  if (section.type === "image") {
+    return (
+      <figure key={`${section.src}-${index}`} className="space-y-3" data-testid="static-blog-figure">
+        <div className="overflow-hidden rounded-xl border border-border bg-muted">
+          <img src={section.src} alt={section.alt} className="h-auto w-full" />
+        </div>
+        {section.caption ? (
+          <figcaption className="text-center text-sm leading-6 text-muted-foreground">
+            {section.caption}
+          </figcaption>
+        ) : null}
+      </figure>
+    );
+  }
+
   if (section.type === "list") {
     return (
       <section key={`${section.heading}-${index}`} className="space-y-4">
@@ -102,7 +146,7 @@ function renderStaticSection(section: StaticBlogSection, index: number) {
 export default async function BlogDetailPage({ params }: Props) {
   const { lang, slug } = await params;
   const t = translations[lang as keyof typeof translations];
-  const staticPost = getStaticBlogPostBySlug(slug);
+  const staticPost = getStaticBlogPostBySlug(slug, lang);
 
   if (staticPost) {
     return (

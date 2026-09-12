@@ -36,14 +36,6 @@ type ResolutionOption = 1024 | 1536;
 type ApiTextureSizeOption = 1024 | 2048 | 4096;
 type TextureSizeOption = ApiTextureSizeOption | 8192;
 type PageNoticeType = "error" | "info" | "success";
-type PainPointOptionKey = "tooExpensive" | "assetPacks" | "setTooLong" | "localSetup" | "other";
-type PainPointValue =
-  | "too_expensive"
-  | "hard_to_find_asset_packs"
-  | "consistent_set_takes_too_long"
-  | "local_setup_complicated"
-  | "other";
-
 interface PageNotice {
   type: PageNoticeType;
   title: string;
@@ -303,14 +295,6 @@ const ADVANTAGE_KEYS = [
   "fast",
 ] as const;
 const FAQ_KEYS = ["generator", "oneImage", "bestImages", "formats"] as const;
-const PAIN_POINT_OPTIONS: Array<{ key: PainPointOptionKey; value: PainPointValue }> = [
-  { key: "tooExpensive", value: "too_expensive" },
-  { key: "assetPacks", value: "hard_to_find_asset_packs" },
-  { key: "setTooLong", value: "consistent_set_takes_too_long" },
-  { key: "localSetup", value: "local_setup_complicated" },
-  { key: "other", value: "other" },
-];
-
 function getMaxSelectableTextureSize(entitlement: ThreeDPlanEntitlement | null): TextureSizeOption {
   if (!entitlement) {
     return 8192;
@@ -352,7 +336,6 @@ export default function Home() {
   const [creditBalance, setCreditBalance] = useState(0);
   const [subscriptionPlanId, setSubscriptionPlanId] = useState<string | null>(null);
   const [pageNotice, setPageNotice] = useState<PageNotice | null>(null);
-  const [selectedPainPoints, setSelectedPainPoints] = useState<PainPointValue[]>([]);
   const [painPointOtherText, setPainPointOtherText] = useState("");
   const [isPainPointSubmitting, setIsPainPointSubmitting] = useState(false);
   const [painPointSubmitStatus, setPainPointSubmitStatus] = useState<"idle" | "success" | "error">("idle");
@@ -501,18 +484,7 @@ export default function Home() {
     setPageNotice(null);
   };
 
-  const togglePainPoint = (value: PainPointValue) => {
-    setSelectedPainPoints((current) => {
-      if (current.includes(value)) {
-        return current.filter((item) => item !== value);
-      }
-
-      return [...current, value];
-    });
-    setPainPointSubmitStatus("idle");
-  };
-
-  const canSubmitPainPointFeedback = selectedPainPoints.length > 0 || painPointOtherText.trim().length > 0;
+  const canSubmitPainPointFeedback = painPointOtherText.trim().length > 0;
 
   const submitPainPointFeedback = async () => {
     if (isPainPointSubmitting || !canSubmitPainPointFeedback) return;
@@ -527,7 +499,6 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          painPoints: selectedPainPoints,
           otherText: painPointOtherText,
           pageUrl: window.location.href,
           referrer: document.referrer,
@@ -1681,7 +1652,7 @@ export default function Home() {
             data-testid="pixal3d-pain-point-feedback"
             className="relative mt-8 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-[#48bdff]/35 bg-[radial-gradient(circle_at_10%_0%,rgba(72,189,255,0.18),transparent_32%),radial-gradient(circle_at_90%_8%,rgba(0,240,138,0.1),transparent_30%),linear-gradient(180deg,rgba(15,31,65,0.96),rgba(8,15,35,0.94))] p-5 shadow-[0_28px_110px_rgba(0,0,0,0.24),0_0_42px_rgba(72,189,255,0.14)] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[#7ee7ff]/80 before:to-transparent sm:p-6"
           >
-            <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="relative z-10">
               <div>
                 <p className="inline-flex rounded-full border border-[#7ee7ff]/35 bg-[#48bdff]/12 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.12em] text-[#9decff] shadow-[0_0_26px_rgba(72,189,255,0.16)]">
                   {t.pixal3d.painPoint.eyebrow}
@@ -1693,9 +1664,6 @@ export default function Home() {
                   {t.pixal3d.painPoint.description}
                 </p>
               </div>
-              <p className="inline-flex shrink-0 rounded-full border border-[#00f08a]/25 bg-[#00f08a]/10 px-3 py-1.5 text-xs font-extrabold text-[#a7ffd7] shadow-[0_0_26px_rgba(0,240,138,0.1)]">
-                {t.pixal3d.painPoint.selectHint}
-              </p>
             </div>
 
             <form
@@ -1705,58 +1673,29 @@ export default function Home() {
                 void submitPainPointFeedback();
               }}
             >
-              <div className="grid gap-4 lg:grid-cols-2">
-                {PAIN_POINT_OPTIONS.map((option) => {
-                  const optionCopy = t.pixal3d.painPoint.options[option.key];
-                  const isOtherOption = option.key === "other";
-                  const isSelected = selectedPainPoints.includes(option.value);
-
-                  return (
-                    <label
-                      key={option.value}
-                      className={`flex gap-3 rounded-xl border p-4 transition ${
-                        isOtherOption
-                          ? "border-[#48bdff]/20 bg-[#081225]/82 lg:col-span-2"
-                          : isSelected
-                          ? "cursor-pointer border-[#48bdff]/80 bg-[#123456]/68 shadow-[0_16px_48px_rgba(72,189,255,0.16)]"
-                          : "cursor-pointer border-[#385078]/58 bg-[#081225]/76 hover:-translate-y-0.5 hover:border-[#48bdff]/60 hover:bg-[#0b1832] hover:shadow-[0_16px_42px_rgba(72,189,255,0.1)]"
-                      }`}
-                    >
-                      {isOtherOption ? null : (
-                        <input
-                          type="checkbox"
-                          name="pixal3d-pain-point"
-                          value={option.value}
-                          checked={isSelected}
-                          onChange={() => {
-                            togglePainPoint(option.value);
-                          }}
-                          className="mt-1 h-4 w-4 shrink-0 accent-[#48bdff]"
-                        />
-                      )}
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-base font-extrabold text-white">
-                          {optionCopy.label}
-                        </span>
-                        <span className="mt-2 block text-sm leading-6 text-[#aeb6ca]">
-                          {optionCopy.description}
-                        </span>
-                        {isOtherOption ? (
-                          <textarea
-                            value={painPointOtherText}
-                            onChange={(event) => {
-                              setPainPointOtherText(event.target.value);
-                              setPainPointSubmitStatus("idle");
-                            }}
-                            maxLength={500}
-                            placeholder={t.pixal3d.painPoint.otherPlaceholder}
-                            className="mt-4 min-h-24 w-full resize-y rounded-xl border border-[#48bdff]/18 bg-[#071025]/88 px-4 py-3 text-base font-medium leading-7 text-white outline-none transition placeholder:text-[#68758f] focus:border-[#48bdff]/70 focus:shadow-[0_0_0_3px_rgba(72,189,255,0.12)]"
-                          />
-                        ) : null}
-                      </span>
-                    </label>
-                  );
-                })}
+              <div className="rounded-xl border border-[#48bdff]/20 bg-[#081225]/82 p-4">
+                <textarea
+                  id="pixal3d-product-request"
+                  name="pixal3d-product-request"
+                  data-testid="pixal3d-product-request-input"
+                  value={painPointOtherText}
+                  onChange={(event) => {
+                    setPainPointOtherText(event.target.value);
+                    setPainPointSubmitStatus("idle");
+                  }}
+                  maxLength={3000}
+                  aria-describedby="pixal3d-product-request-hint"
+                  placeholder={t.pixal3d.painPoint.otherPlaceholder}
+                  className="min-h-36 w-full resize-y rounded-xl border border-[#48bdff]/18 bg-[#071025]/88 px-4 py-3 text-base font-medium leading-7 text-white outline-none transition placeholder:text-[#68758f] focus:border-[#48bdff]/70 focus:shadow-[0_0_0_3px_rgba(72,189,255,0.12)]"
+                />
+                <div className="mt-2 flex flex-col gap-1 text-sm text-[#aeb6ca] sm:flex-row sm:items-center sm:justify-between">
+                  <p id="pixal3d-product-request-hint">
+                    {t.pixal3d.painPoint.inputHint}
+                  </p>
+                  <p className="shrink-0 tabular-nums" aria-live="polite">
+                    {painPointOtherText.length.toLocaleString()} / 3,000
+                  </p>
+                </div>
               </div>
 
               <div className="flex justify-end">

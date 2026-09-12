@@ -5,29 +5,13 @@ import { db, painPointFeedback } from "@libs/database";
 
 export const dynamic = "force-dynamic";
 
-const PAIN_POINT_VALUES = new Set([
-  "too_expensive",
-  "hard_to_find_asset_packs",
-  "consistent_set_takes_too_long",
-  "local_setup_complicated",
-  "other",
-]);
+const MAX_FEEDBACK_LENGTH = 3000;
 
 function normalizeOptionalText(value: unknown, maxLength: number) {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
   return trimmed.slice(0, maxLength);
-}
-
-function normalizePainPoints(payload: Record<string, unknown>) {
-  const rawPainPoints = Array.isArray(payload.painPoints)
-    ? payload.painPoints
-    : typeof payload.painPoint === "string"
-      ? [payload.painPoint]
-      : [];
-
-  return Array.from(new Set(rawPainPoints.filter((value): value is string => typeof value === "string")));
 }
 
 async function getOptionalSession(req: Request) {
@@ -52,16 +36,20 @@ export async function POST(req: Request) {
   }
 
   const payload = body && typeof body === "object" ? body as Record<string, unknown> : {};
-  const selectedPainPoints = normalizePainPoints(payload);
-  const otherText = normalizeOptionalText(payload.otherText, 500);
-  const painPoint = selectedPainPoints[0] || "other";
+  const rawOtherText = typeof payload.otherText === "string" ? payload.otherText.trim() : "";
 
-  if (
-    (!selectedPainPoints.length && !otherText)
-    || selectedPainPoints.some((value) => !PAIN_POINT_VALUES.has(value))
-  ) {
+  if (rawOtherText.length > MAX_FEEDBACK_LENGTH) {
     return NextResponse.json(
-      { success: false, error: "invalid_feedback", message: "Choose a valid feedback option." },
+      { success: false, error: "feedback_too_long", message: "Feedback must not exceed 3,000 characters." },
+      { status: 400 },
+    );
+  }
+
+  const otherText = normalizeOptionalText(rawOtherText, MAX_FEEDBACK_LENGTH);
+
+  if (!otherText) {
+    return NextResponse.json(
+      { success: false, error: "invalid_feedback", message: "Describe the 3D product you need." },
       { status: 400 },
     );
   }
@@ -72,8 +60,8 @@ export async function POST(req: Request) {
 
   await db.insert(painPointFeedback).values({
     id: `pain_${nanoid(16)}`,
-    painPoint,
-    selectedPainPoints,
+    painPoint: "other",
+    selectedPainPoints: [],
     otherText,
     userId,
     userEmail,

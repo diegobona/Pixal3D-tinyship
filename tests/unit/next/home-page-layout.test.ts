@@ -52,24 +52,20 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain("pixal3d-trial-pulse");
   });
 
-  it("collects pain point feedback above the advantages section", () => {
+  it("collects one free-form 3D product request above the advantages section", () => {
     expect(pageSource).toContain('data-testid="pixal3d-pain-point-feedback"');
     expect(en.pixal3d.painPoint.eyebrow).toBe("1-minute feedback");
-    expect(en.pixal3d.painPoint.description).toBe("Tell us what you need most. Your feedback will guide the next product direction.");
-    expect(en.pixal3d.painPoint.selectHint).toBe("Select all that apply");
-    expect(en.pixal3d.painPoint.title).toBe("What’s blocking you from creating usable 3D models?");
+    expect(en.pixal3d.painPoint.title).toBe("What kind of 3D product do you need right now?");
+    expect(en.pixal3d.painPoint.inputHint).toBe("You can write in any language.");
     expect(pageSource).toContain('/api/feedback/pain-point');
     expect(en.pixal3d.painPoint.successMessage).toBe("Thank you — this will help us build our next product.");
-    expect(en.pixal3d.painPoint.options.tooExpensive.label).toBe("AI 3D tools are too expensive");
-    expect(en.pixal3d.painPoint.options.localSetup.label).toBe("Local AI 3D setup is too complicated");
-    expect(pageSource).toContain('type="checkbox"');
-    expect(pageSource).toContain("useState<PainPointValue[]>([])");
-    expect(pageSource).toContain("selectedPainPoints");
-    expect(pageSource).toContain("painPoints: selectedPainPoints");
-    expect(pageSource).toContain("const canSubmitPainPointFeedback = selectedPainPoints.length > 0 || painPointOtherText.trim().length > 0;");
+    expect(pageSource).not.toContain('type="checkbox"');
+    expect(pageSource).not.toContain("PAIN_POINT_OPTIONS");
+    expect(pageSource).not.toContain("selectedPainPoints");
+    expect(pageSource).toContain("const canSubmitPainPointFeedback = painPointOtherText.trim().length > 0;");
+    expect(pageSource).toContain("maxLength={3000}");
+    expect(pageSource).toContain("{t.pixal3d.painPoint.inputHint}");
     expect(pageSource).toContain("disabled={isPainPointSubmitting || !canSubmitPainPointFeedback}");
-    expect(pageSource).toContain('const isOtherOption = option.key === "other";');
-    expect(pageSource).toContain("{isOtherOption ? null : (");
     expect(pageSource).toContain("border border-[#48bdff]/35");
     expect(pageSource).toContain("before:absolute before:inset-x-0 before:top-0 before:h-px");
   });

@@ -750,6 +750,17 @@ PayPal 重定向到 /api/payment/return/paypal?order_id=xxx&token=xxx&PayerID=xx
 |---|---------|---------|
 | 10 | 网站头部导航包含博客链接 | 打开首页 `/` → 验证 `<header>` 中包含 "Blog" 链接 → 点击链接 → 验证 URL 包含 `/blog` |
 
+#### D) Pixal3D 静态指南内容与配图
+
+> 这组场景在当前实际使用的 Next.js 应用中验证。数据库中可能同时存在已发布文章，因此不限定页面卡片总数。
+
+| # | 测试名称 | 具体流程 |
+|---|---------|---------|
+| 11 | 六篇静态指南均显示匹配的高质量配图 | 访问 `/blog` → 验证 `image-to-3d-model`、`ai-3d-model-generator`、`image-to-glb`、`image-to-stl`、`pixal3d-alternative`、`pixal3d-model-uses` 六篇静态文章均存在 → 验证各自封面为对应的 `.webp` 图片而非通用 SVG |
+| 12 | 新用途文章位于旧静态指南之前 | 访问 `/blog` → 获取六篇静态指南卡片的 DOM 顺序 → 验证 `pixal3d-model-uses` 位于其他五篇静态指南之前；允许数据库文章按发布日期插入其前后 |
+| 13 | 第一条用途关联 AnyPoses 链接与图 2 | 打开 `/blog/pixal3d-model-uses` → 验证第一条用途为“搭建 3D 场景时的道具” → 同一用途正文包含指向 `https://anyposes.com` 的外链 → 紧随该正文的 `<figure>` 显示用户提供且未修改的 `anyposes-custom-prop.png` → 验证后续用途位于该图片之后 |
+| 14 | 新用途文章支持英中双语 | 分别打开 `/en/blog/pixal3d-model-uses` 与 `/zh-CN/blog/pixal3d-model-uses` → 验证标题、摘要、用途标题、正文、图注和替代文本使用对应语言，同时 AnyPoses URL 与图 2 保持一致 |
+
 #### 博客管理完整链路图
 
 ```
@@ -779,7 +790,7 @@ PayPal 重定向到 /api/payment/return/paypal?order_id=xxx&token=xxx&PayerID=xx
 | 优先级 | 编号 | 测试名称 | 前置条件 | 预计用例数 |
 |--------|------|----------|----------|-----------|
 | P2 | 19 | 支付宝支付流程 | 支付宝沙盒 App ID/密钥 + 沙盒买家账号 | 3 |
-| ✅ | 20 | 博客功能 | blog_post 表已创建 + 管理员账号 | 11 |
+| ✅ | 20 | 博客功能 | blog_post 表已创建 + 管理员账号（静态文章 3 项无需数据库） | 14 |
 
 ---
 
@@ -804,6 +815,8 @@ PayPal 重定向到 /api/payment/return/paypal?order_id=xxx&token=xxx&PayerID=xx
 | 2026-03-09 | Nuxt.js | 11 | 0 | 0 | 博客增强后回归（blog.spec.ts）— 全部通过（15.9s） |
 | 2026-03-09 | Next.js | 11 | 0 | 0 | 博客增强后回归（blog.spec.ts）— 全部通过（55.5s） |
 | 2026-05-31 | Next.js | 1 | 0 | 0 | My Assets 历史任务测试（my-assets.spec.ts）— 通过（32.0s） |
+| 2026-09-12 | Next.js | 3 | 0 | 0 | Pixal3D 静态博客配图与用途文章（blog.spec.ts）— 通过（5.4s） |
+| 2026-09-12 | Next.js | 1 | 0 | 0 | 首页单一 3D 产品需求问卷（public-pages.spec.ts）— 通过（8.9s） |
 
 _每次测试运行后更新此表。_
 
@@ -816,6 +829,17 @@ _每次测试运行后更新此表。_
 | # | Test name | Flow |
 |---|-----------|------|
 | 1 | HuggingFace free trial embed | Open `/` -> click `pixal3d-free-trial-button` -> backend selects the least busy HuggingFace Pixal3D instance -> verify `pixal3d-hf-trial-panel` iframe appears; if the resolver returns 503, verify the busy toast copy appears |
+
+---
+
+## Pixal3D Product Request Feedback
+
+**File:** `specs/public-pages.spec.ts` | **Priority:** P1 | **Next.js**
+
+| # | Test name | Flow |
+|---|-----------|------|
+| 1 | Single product-request question | Open `/en` → find `pixal3d-pain-point-feedback` → verify the only question is “What kind of 3D product do you need right now?” → verify there are no checkbox options and exactly one textarea |
+| 2 | Multilingual 3,000-character input | Verify the textarea hint says any language is accepted → verify the separate counter and `maxlength=3000` enforce the limit → enter text and submit → verify the success message appears |
 
 ---
 

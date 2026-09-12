@@ -2,11 +2,11 @@ import Link from "next/link";
 
 import { db, blogPost, user } from "@libs/database";
 import { blogPostStatus } from "@libs/database/schema/blog-post";
-import { eq, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { translations } from "@libs/i18n";
 import type { Metadata } from "next";
 import { Button } from "@libs/react-shared/ui/button";
-import { getStaticBlogPosts } from "@/lib/static-blog-posts";
+import { mergeAndPaginateBlogPosts, normalizeBlogPageNumber } from "@libs/blog/static-posts";
 
 const PAGE_SIZE = 12;
 
@@ -31,44 +31,34 @@ export default async function BlogListPage({ params, searchParams }: Props) {
   const { page: pageParam } = await searchParams;
   const t = translations[lang as keyof typeof translations];
 
-  const page = Math.max(1, parseInt(pageParam || "1", 10));
-  const offset = (page - 1) * PAGE_SIZE;
+  const requestedPage = normalizeBlogPageNumber(pageParam, 1);
 
-  const dbPosts = await db
-    .select({
-      id: blogPost.id,
-      title: blogPost.title,
-      slug: blogPost.slug,
-      excerpt: blogPost.excerpt,
-      coverImage: blogPost.coverImage,
-      publishedAt: blogPost.publishedAt,
-      authorName: user.name,
-    })
-    .from(blogPost)
-    .leftJoin(user, eq(blogPost.authorId, user.id))
-    .where(eq(blogPost.status, blogPostStatus.PUBLISHED))
-    .orderBy(desc(blogPost.publishedAt));
+  const dbPosts = await (async () => {
+    try {
+      return await db
+        .select({
+          id: blogPost.id,
+          title: blogPost.title,
+          slug: blogPost.slug,
+          excerpt: blogPost.excerpt,
+          coverImage: blogPost.coverImage,
+          publishedAt: blogPost.publishedAt,
+          authorName: user.name,
+        })
+        .from(blogPost)
+        .leftJoin(user, eq(blogPost.authorId, user.id))
+        .where(eq(blogPost.status, blogPostStatus.PUBLISHED));
+    } catch (error) {
+      console.error("Database blog posts are unavailable; serving static posts only.", error);
+      return [];
+    }
+  })();
 
-  const posts = [
-    ...getStaticBlogPosts().map((post) => ({
-      id: post.id,
-      title: post.title,
-      slug: post.slug,
-      excerpt: post.excerpt,
-      coverImage: post.coverImage,
-      publishedAt: post.publishedAt,
-      authorName: post.authorName,
-    })),
-    ...dbPosts,
-  ].sort((left, right) => {
-    const leftTime = left.publishedAt ? new Date(left.publishedAt).getTime() : 0;
-    const rightTime = right.publishedAt ? new Date(right.publishedAt).getTime() : 0;
-    return rightTime - leftTime;
+  const { posts: paginatedPosts, page, totalPages } = mergeAndPaginateBlogPosts(dbPosts, {
+    locale: lang,
+    page: requestedPage,
+    pageSize: PAGE_SIZE,
   });
-
-  const total = posts.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const paginatedPosts = posts.slice(offset, offset + PAGE_SIZE);
 
   return (
     <div className="min-h-screen bg-[#071431]">
