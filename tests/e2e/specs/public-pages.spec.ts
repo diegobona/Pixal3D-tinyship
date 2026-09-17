@@ -27,6 +27,24 @@ test.describe('Public Pages', () => {
     await expect(page.locator('nav')).toBeVisible();
   });
 
+  test('Public pages link to the AnyPoses reference scene builder from the footer', async ({ page }) => {
+    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation });
+
+    const englishLink = page.getByTestId('anyposes-footer-link');
+    await expect(englishLink).toContainText(
+      'No reference image? Create a custom 3D pose and scene on AnyPoses.',
+    );
+    await expect(englishLink).toHaveAttribute('href', 'https://anyposes.com');
+    await expect(englishLink).toHaveAttribute('target', '_blank');
+    await expect(englishLink).toHaveAttribute('rel', 'noreferrer noopener');
+
+    await page.goto('/zh-CN/blog', { timeout: TIMEOUTS.navigation });
+
+    const chineseLink = page.getByTestId('anyposes-footer-link');
+    await expect(chineseLink).toContainText('没有参考图？去 AnyPoses 自由摆姿并搭建 3D 场景。');
+    await expect(chineseLink).toHaveAttribute('href', 'https://anyposes.com');
+  });
+
   test('Home page collects a single 3D product request in any language', async ({ page }) => {
     const productRequest = 'I need a low-poly city kit，也需要中文标牌。';
     let submittedPayload: Record<string, unknown> | null = null;

@@ -38,6 +38,9 @@ export const en: Locale = {
       chinese: "中文"
     }
   },
+  siteFooter: {
+    anyposesTip: "No reference image? Create a custom 3D pose and scene on AnyPoses."
+  },
   pixal3d: {
     generator: {
       heroTitle: "Turn Any Image into a Faithful 3D Model",

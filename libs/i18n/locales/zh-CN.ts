@@ -3,6 +3,10 @@ import type { Locale } from './types'
 
 export const zhCN: Locale = {
   ...en,
+  siteFooter: {
+    ...en.siteFooter,
+    anyposesTip: "没有参考图？去 AnyPoses 自由摆姿并搭建 3D 场景。"
+  },
   blog: {
     ...en.blog,
     metadata: {
