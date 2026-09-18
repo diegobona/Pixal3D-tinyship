@@ -962,6 +962,22 @@ export default function Home() {
             <p className="mt-2 text-base font-medium tracking-normal text-[#9ca4ba] sm:text-xl">
               {t.pixal3d.generator.subtitle}
             </p>
+            <a
+              data-testid="pixal3d-reference-image-cta"
+              href="https://seedance3-pro.com/app?model=gpt-image-2"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="pixal3d-reference-cta group relative mt-5 inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden rounded-full border border-[#83f7d0]/55 bg-[linear-gradient(110deg,#36baf3_0%,#22d9c5_48%,#00ee8a_100%)] px-6 py-3 text-sm font-extrabold text-[#031425] shadow-[0_14px_40px_rgba(0,240,138,0.22)] outline-none transition-transform duration-200 hover:-translate-y-0.5 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[#8fffe1] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071431] sm:text-base"
+            >
+              <span
+                aria-hidden="true"
+                className="absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-20deg] bg-white/35 blur-sm transition-transform duration-700 group-hover:translate-x-[420%]"
+              />
+              <span className="relative z-10">{t.pixal3d.generator.referenceImageCta}</span>
+              <span aria-hidden="true" className="relative z-10 text-lg leading-none transition-transform duration-200 group-hover:translate-x-0.5">
+                ↗
+              </span>
+            </a>
           </div>
 
           <section

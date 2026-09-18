@@ -3,9 +3,12 @@ import type { Locale } from './types'
 
 export const zhCN: Locale = {
   ...en,
-  siteFooter: {
-    ...en.siteFooter,
-    anyposesTip: "没有参考图？去 AnyPoses 自由摆姿并搭建 3D 场景。"
+  pixal3d: {
+    ...en.pixal3d,
+    generator: {
+      ...en.pixal3d.generator,
+      referenceImageCta: "没有参考图像，去免费生成"
+    }
   },
   blog: {
     ...en.blog,

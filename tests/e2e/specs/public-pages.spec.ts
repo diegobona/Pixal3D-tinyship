@@ -27,22 +27,27 @@ test.describe('Public Pages', () => {
     await expect(page.locator('nav')).toBeVisible();
   });
 
-  test('Public pages link to the AnyPoses reference scene builder from the footer', async ({ page }) => {
+  test('Home hero links to the free reference image generator', async ({ page }) => {
     await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation });
 
-    const englishLink = page.getByTestId('anyposes-footer-link');
-    await expect(englishLink).toContainText(
-      'No reference image? Create a custom 3D pose and scene on AnyPoses.',
+    const englishLink = page.getByTestId('pixal3d-reference-image-cta');
+    await expect(englishLink).toContainText('No reference image? Generate one for free');
+    await expect(englishLink).toHaveAttribute(
+      'href',
+      'https://seedance3-pro.com/app?model=gpt-image-2',
     );
-    await expect(englishLink).toHaveAttribute('href', 'https://anyposes.com');
     await expect(englishLink).toHaveAttribute('target', '_blank');
     await expect(englishLink).toHaveAttribute('rel', 'noreferrer noopener');
+    await expect(page.getByTestId('anyposes-footer-link')).toHaveCount(0);
 
-    await page.goto('/zh-CN/blog', { timeout: TIMEOUTS.navigation });
+    await page.goto('/zh-CN', { timeout: TIMEOUTS.navigation });
 
-    const chineseLink = page.getByTestId('anyposes-footer-link');
-    await expect(chineseLink).toContainText('没有参考图？去 AnyPoses 自由摆姿并搭建 3D 场景。');
-    await expect(chineseLink).toHaveAttribute('href', 'https://anyposes.com');
+    const chineseLink = page.getByTestId('pixal3d-reference-image-cta');
+    await expect(chineseLink).toContainText('没有参考图像，去免费生成');
+    await expect(chineseLink).toHaveAttribute(
+      'href',
+      'https://seedance3-pro.com/app?model=gpt-image-2',
+    );
   });
 
   test('Home page collects a single 3D product request in any language', async ({ page }) => {

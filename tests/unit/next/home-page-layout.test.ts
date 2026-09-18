@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { en } from "../../../libs/i18n/locales/en";
+import { zhCN } from "../../../libs/i18n/locales/zh-CN";
 
 describe("Next home page layout", () => {
   const pageSource = readFileSync(
@@ -21,6 +22,27 @@ describe("Next home page layout", () => {
     expect(heroTitleClass).toContain("text-[38px]");
     expect(heroTitleClass).toContain("sm:text-[56px]");
     expect(heroTitleClass).not.toContain("sm:text-[64px]");
+  });
+
+  it("places an animated free reference-image CTA between the hero and workspace", () => {
+    const subtitleIndex = pageSource.indexOf("t.pixal3d.generator.subtitle");
+    const ctaIndex = pageSource.indexOf('data-testid="pixal3d-reference-image-cta"');
+    const inlineTrialIndex = pageSource.indexOf('data-testid="pixal3d-inline-trial"');
+
+    expect(subtitleIndex).toBeGreaterThan(-1);
+    expect(ctaIndex).toBeGreaterThan(subtitleIndex);
+    expect(ctaIndex).toBeLessThan(inlineTrialIndex);
+    expect(pageSource).toContain('href="https://seedance3-pro.com/app?model=gpt-image-2"');
+    expect(pageSource).toContain('target="_blank"');
+    expect(pageSource).toContain('rel="noreferrer noopener"');
+    expect(pageSource).toContain("t.pixal3d.generator.referenceImageCta");
+    expect(en.pixal3d.generator.referenceImageCta).toBe(
+      "No reference image? Generate one for free",
+    );
+    expect(zhCN.pixal3d.generator.referenceImageCta).toBe("没有参考图像，去免费生成");
+    expect(globalCssSource).toContain("@keyframes pixal3d-reference-cta-glow");
+    expect(globalCssSource).toContain(".pixal3d-reference-cta");
+    expect(globalCssSource).toContain("animation: none;");
   });
 
   it("places the embedded trial iframe above the hidden legacy generator surfaces", () => {
@@ -102,7 +124,7 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain("const TEXTURE_SIZE_OPTIONS: TextureSizeOption[] = [1024, 2048, 4096, 8192];");
     expect(pageSource).toContain("8192: 4096");
     expect(pageSource).toContain("function getMaxSelectableTextureSize(entitlement: ThreeDPlanEntitlement | null): TextureSizeOption");
-    expect(pageSource).toContain("if (!entitlement) {\n    return 8192;");
+    expect(pageSource).toMatch(/if \(!entitlement\) \{\r?\n\s+return 8192;/);
     expect(pageSource).toContain('entitlement.tier === "creator" || entitlement.tier === "pro"');
     expect(pageSource).toContain("const apiTextureSize = API_TEXTURE_SIZE_BY_UI_TEXTURE_SIZE[settings.textureSize];");
     expect(pageSource).toContain("textureSize: apiTextureSize");
