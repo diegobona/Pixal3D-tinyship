@@ -42,7 +42,7 @@ export const en: Locale = {
     generator: {
       heroTitle: "Turn Any Image into a Faithful 3D Model",
       subtitle: "Completely free to use",
-      referenceImageCta: "No reference image? Generate one for free",
+      referenceImageCta: "No image? Create one free",
       imageHint: "Single image input for the Pixal3D generation pipeline.",
       imagePreviewAlt: "Uploaded reference image",
       uploadButton: "Upload image",

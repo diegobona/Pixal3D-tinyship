@@ -24,21 +24,35 @@ describe("Next home page layout", () => {
     expect(heroTitleClass).not.toContain("sm:text-[64px]");
   });
 
-  it("places an animated free reference-image CTA between the hero and workspace", () => {
-    const subtitleIndex = pageSource.indexOf("t.pixal3d.generator.subtitle");
+  it("shows the reference-image CTA only after authentication", () => {
+    expect(pageSource).toMatch(
+      /\{isAuthenticated \? \(\s*<a\s+data-testid="pixal3d-reference-image-cta"/
+    );
+  });
+
+  it("floats a small reference-image CTA on the iframe source-image heading row", () => {
     const ctaIndex = pageSource.indexOf('data-testid="pixal3d-reference-image-cta"');
     const inlineTrialIndex = pageSource.indexOf('data-testid="pixal3d-inline-trial"');
+    const inlineTrialBodyIndex = pageSource.indexOf('data-testid="pixal3d-inline-trial-body"');
+    const iframeIndex = pageSource.indexOf('data-testid="pixal3d-inline-trial-iframe"');
 
-    expect(subtitleIndex).toBeGreaterThan(-1);
-    expect(ctaIndex).toBeGreaterThan(subtitleIndex);
-    expect(ctaIndex).toBeLessThan(inlineTrialIndex);
+    expect(ctaIndex).toBeGreaterThan(inlineTrialIndex);
+    expect(ctaIndex).toBeGreaterThan(inlineTrialBodyIndex);
+    expect(ctaIndex).toBeLessThan(iframeIndex);
+    expect(pageSource).toContain('data-testid="pixal3d-inline-trial"\n            className="relative');
+    expect(pageSource).toContain('className="pixal3d-reference-cta group absolute');
+    expect(pageSource).toContain("left-[112px]");
+    expect(pageSource).toContain("top-[103px]");
+    expect(pageSource).toContain("z-30");
+    expect(pageSource).toContain("h-6");
+    expect(pageSource).toContain("px-2");
+    expect(pageSource).toContain("text-[10px]");
+    expect(pageSource).not.toContain("min-h-9");
     expect(pageSource).toContain('href="https://seedance3-pro.com/app?model=gpt-image-2"');
     expect(pageSource).toContain('target="_blank"');
     expect(pageSource).toContain('rel="noreferrer noopener"');
     expect(pageSource).toContain("t.pixal3d.generator.referenceImageCta");
-    expect(en.pixal3d.generator.referenceImageCta).toBe(
-      "No reference image? Generate one for free",
-    );
+    expect(en.pixal3d.generator.referenceImageCta).toBe("No image? Create one free");
     expect(zhCN.pixal3d.generator.referenceImageCta).toBe("没有参考图像，去免费生成");
     expect(globalCssSource).toContain("@keyframes pixal3d-reference-cta-glow");
     expect(globalCssSource).toContain(".pixal3d-reference-cta");

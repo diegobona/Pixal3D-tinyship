@@ -53,7 +53,7 @@
 | 3 | 注册页加载 | 打开 `/en/signup` → 验证姓名输入框（`#name`）、邮箱输入框、密码输入框、提交按钮均可见 |
 | 4 | 忘记密码页加载 | 打开 `/en/forgot-password` → 验证邮箱输入框可见 → 验证表单内按钮可见 |
 | 5 | 定价页加载 | 打开 `/en/pricing` → 验证标题不含错误 → 验证至少有一个含 ¥ 或 $ 价格的元素可见 |
-| 6 | 首页 Hero 提供免费参考图生成入口 | 分别打开 `/en` 和 `/zh-CN` → 验证醒目按钮位于副标题与内嵌工作台之间 → 英文显示 `No reference image? Generate one for free`，中文显示 `没有参考图像，去免费生成` → 链接指向 `https://seedance3-pro.com/app?model=gpt-image-2`，并在新窗口安全打开 → 页面不再渲染 AnyPoses Footer |
+| 6 | 登录后在内嵌工作台参考图标题行提供免费生成入口 | 未登录打开 `/en` → 登录遮罩可见且免费生成入口不存在；登录后分别打开 `/en` 和 `/zh-CN` → 验证入口以不超过 24px 高的小型辅助按钮浮在 iframe 上层、与 `SOURCE IMAGE` 标题同行且不覆盖上传框 → 英文显示 `No image? Create one free`，中文显示 `没有参考图像，去免费生成` → 链接指向 `https://seedance3-pro.com/app?model=gpt-image-2`，并在新窗口安全打开 → 页面不再渲染 AnyPoses Footer |
 
 ---
 
@@ -818,7 +818,7 @@ PayPal 重定向到 /api/payment/return/paypal?order_id=xxx&token=xxx&PayerID=xx
 | 2026-05-31 | Next.js | 1 | 0 | 0 | My Assets 历史任务测试（my-assets.spec.ts）— 通过（32.0s） |
 | 2026-09-12 | Next.js | 3 | 0 | 0 | Pixal3D 静态博客配图与用途文章（blog.spec.ts）— 通过（5.4s） |
 | 2026-09-12 | Next.js | 1 | 0 | 0 | 首页单一 3D 产品需求问卷（public-pages.spec.ts）— 通过（8.9s） |
-| 2026-09-19 | Next.js | 1 | 0 | 0 | 首页 Hero 免费参考图生成入口（public-pages.spec.ts）— 通过 |
+| 2026-09-19 | Next.js | 1 | 0 | 0 | 登录后显示的参考图标题行免费生成入口（public-pages.spec.ts）— 通过 |
 
 _每次测试运行后更新此表。_
 

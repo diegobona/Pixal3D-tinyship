@@ -962,29 +962,31 @@ export default function Home() {
             <p className="mt-2 text-base font-medium tracking-normal text-[#9ca4ba] sm:text-xl">
               {t.pixal3d.generator.subtitle}
             </p>
-            <a
-              data-testid="pixal3d-reference-image-cta"
-              href="https://seedance3-pro.com/app?model=gpt-image-2"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="pixal3d-reference-cta group relative mt-5 inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden rounded-full border border-[#83f7d0]/55 bg-[linear-gradient(110deg,#36baf3_0%,#22d9c5_48%,#00ee8a_100%)] px-6 py-3 text-sm font-extrabold text-[#031425] shadow-[0_14px_40px_rgba(0,240,138,0.22)] outline-none transition-transform duration-200 hover:-translate-y-0.5 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[#8fffe1] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071431] sm:text-base"
-            >
-              <span
-                aria-hidden="true"
-                className="absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-20deg] bg-white/35 blur-sm transition-transform duration-700 group-hover:translate-x-[420%]"
-              />
-              <span className="relative z-10">{t.pixal3d.generator.referenceImageCta}</span>
-              <span aria-hidden="true" className="relative z-10 text-lg leading-none transition-transform duration-200 group-hover:translate-x-0.5">
-                ↗
-              </span>
-            </a>
           </div>
 
           <section
             data-testid="pixal3d-inline-trial"
-            className="mt-4 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-[#25314f] bg-[#070d20] shadow-[0_28px_110px_rgba(0,0,0,0.26)]"
+            className="relative mt-4 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-[#25314f] bg-[#070d20] shadow-[0_28px_110px_rgba(0,0,0,0.26)]"
           >
             <div data-testid="pixal3d-inline-trial-body" className="relative min-h-[900px] flex-1 bg-[#0b0f1a] sm:min-h-[940px] lg:min-h-[960px]">
+              {isAuthenticated ? (
+                <a
+                  data-testid="pixal3d-reference-image-cta"
+                  href="https://seedance3-pro.com/app?model=gpt-image-2"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="pixal3d-reference-cta group absolute left-[112px] top-[103px] z-30 inline-flex h-6 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-full border border-[#48bdff]/60 bg-[#0a172a]/95 px-2 text-[10px] font-extrabold tracking-[0.01em] text-[#9bffe1] shadow-[0_4px_14px_rgba(0,240,138,0.16)] outline-none transition duration-200 hover:-translate-y-px hover:border-[#83f7d0] hover:bg-[#10253d] hover:text-white focus-visible:ring-2 focus-visible:ring-[#8fffe1] focus-visible:ring-offset-1 focus-visible:ring-offset-[#071431]"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-20deg] bg-white/20 blur-sm transition-transform duration-700 group-hover:translate-x-[420%]"
+                  />
+                  <span className="relative z-10">{t.pixal3d.generator.referenceImageCta}</span>
+                  <span aria-hidden="true" className="relative z-10 text-[11px] leading-none transition-transform duration-200 group-hover:translate-x-0.5">
+                    ↗
+                  </span>
+                </a>
+              ) : null}
               <iframe
                 data-testid="pixal3d-inline-trial-iframe"
                 title={t.pixal3d.generator.hfTrialTitle}

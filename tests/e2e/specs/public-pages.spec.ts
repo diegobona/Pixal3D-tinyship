@@ -27,17 +27,65 @@ test.describe('Public Pages', () => {
     await expect(page.locator('nav')).toBeVisible();
   });
 
-  test('Home hero links to the free reference image generator', async ({ page }) => {
+  test('Embedded workspace shows a small source-image helper only after sign-in', async ({ page }) => {
     await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation });
 
+    await expect(page.getByTestId('pixal3d-inline-trial-auth-overlay')).toBeVisible();
+    await expect(page.getByTestId('pixal3d-reference-image-cta')).toHaveCount(0);
+
+    await page.route('**/api/auth/get-session', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          session: {
+            id: 'test-session',
+            token: 'test-session-token',
+            userId: 'test-user',
+            expiresAt: new Date(Date.now() + 60_000).toISOString(),
+          },
+          user: {
+            id: 'test-user',
+            name: 'Layout Test User',
+            email: 'layout-test@example.com',
+            emailVerified: true,
+          },
+        }),
+      });
+    });
+    await page.route('**/api/credits/status', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ credits: { balance: 0 }, subscription: null }),
+      });
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+
     const englishLink = page.getByTestId('pixal3d-reference-image-cta');
-    await expect(englishLink).toContainText('No reference image? Generate one for free');
+    const workspaceIframe = page.getByTestId('pixal3d-inline-trial-iframe');
+    await expect(page.getByTestId('pixal3d-inline-trial-auth-overlay')).toHaveCount(0);
+    await expect(englishLink).toContainText('No image? Create one free');
     await expect(englishLink).toHaveAttribute(
       'href',
       'https://seedance3-pro.com/app?model=gpt-image-2',
     );
     await expect(englishLink).toHaveAttribute('target', '_blank');
     await expect(englishLink).toHaveAttribute('rel', 'noreferrer noopener');
+    await expect(englishLink).toHaveCSS('position', 'absolute');
+    await expect(englishLink).toHaveCSS('z-index', '30');
+
+    const linkBox = await englishLink.boundingBox();
+    const iframeBox = await workspaceIframe.boundingBox();
+    expect(linkBox).not.toBeNull();
+    expect(iframeBox).not.toBeNull();
+    expect(linkBox!.x - iframeBox!.x).toBeGreaterThanOrEqual(108);
+    expect(linkBox!.x - iframeBox!.x).toBeLessThanOrEqual(116);
+    expect(linkBox!.y - iframeBox!.y).toBeGreaterThanOrEqual(100);
+    expect(linkBox!.y - iframeBox!.y).toBeLessThanOrEqual(106);
+    expect(linkBox!.width).toBeLessThanOrEqual(180);
+    expect(linkBox!.height).toBeLessThanOrEqual(24);
+    expect(linkBox!.y + linkBox!.height).toBeLessThanOrEqual(iframeBox!.y + 130);
     await expect(page.getByTestId('anyposes-footer-link')).toHaveCount(0);
 
     await page.goto('/zh-CN', { timeout: TIMEOUTS.navigation });
