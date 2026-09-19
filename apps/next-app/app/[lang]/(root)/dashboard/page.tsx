@@ -33,9 +33,9 @@ function formatDate(value: Date | string | null | undefined, locale: string) {
   });
 }
 
-function formatCurrency(amount: string | number, currency: string) {
+function formatCurrency(amount: string | number, currency: string, locale: string) {
   const value = typeof amount === "number" ? amount : Number.parseFloat(amount);
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale === "zh-CN" ? "zh-CN" : "en-US", {
     style: "currency",
     currency: currency || "USD",
   }).format(Number.isFinite(value) ? value : 0);
@@ -46,18 +46,18 @@ function getPlanContent(planId: string, locale: string): PlanContent {
   const i18n = plan?.i18n as unknown as Record<string, PlanContent> | undefined;
 
   return i18n?.[locale] || i18n?.en || {
-    name: planId || "Free",
+    name: planId || (locale === "zh-CN" ? "免费版" : "Free"),
     description: "",
     duration: "month",
     features: [],
   };
 }
 
-function getBillingCycle(planId: string, locale: string) {
+function getBillingCycle(planId: string, t: typeof translations.en.dashboard) {
   const plan = config.payment.plans[planId as keyof typeof config.payment.plans];
   if (!plan || !("months" in plan.duration)) return "-";
-  if (plan.duration.months === 12) return locale === "zh-CN" ? "Yearly" : "Yearly";
-  return locale === "zh-CN" ? "Monthly" : "Monthly";
+  if (plan.duration.months === 12) return t.subscription.yearly;
+  return t.subscription.monthly;
 }
 
 function parseMetadata(metadata: string | null) {
@@ -198,7 +198,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ lang
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               <div className="rounded-lg border border-[#263653] bg-[#0d1a38] p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-white/42">{t.subscription.billingCycle}</p>
-                <p className="mt-2 text-lg font-semibold">{currentSubscription ? getBillingCycle(planId, lang) : "-"}</p>
+                <p className="mt-2 text-lg font-semibold">{currentSubscription ? getBillingCycle(planId, t) : "-"}</p>
               </div>
               <div className="rounded-lg border border-[#263653] bg-[#0d1a38] p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-white/42">{t.subscription.periodStart}</p>
@@ -232,7 +232,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ lang
           <div className="grid gap-5">
             <div className="rounded-xl border border-[#263653] bg-[#0a1530] p-6">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/45">{t.credits.label}</p>
-              <p className="mt-3 text-4xl font-bold text-[#1de9a6]">{creditBalance.toLocaleString("en-US")}</p>
+              <p className="mt-3 text-4xl font-bold text-[#1de9a6]">{creditBalance.toLocaleString(lang === "zh-CN" ? "zh-CN" : "en-US")}</p>
               <p className="mt-2 text-sm text-white/58">{t.credits.description}</p>
             </div>
 
@@ -277,7 +277,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ lang
                         <p className="font-semibold text-white">{orderPlan.name}</p>
                         <p className="mt-1 text-xs text-white/45">{item.id}</p>
                       </div>
-                      <span className="font-semibold text-white/75">{formatCurrency(item.amount, item.currency)}</span>
+                      <span className="font-semibold text-white/75">{formatCurrency(item.amount, item.currency, lang)}</span>
                       <span className="capitalize text-white/62">{item.status}</span>
                       <span className="text-white/45 sm:text-right">{formatDate(item.createdAt, lang)}</span>
                     </div>

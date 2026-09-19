@@ -279,15 +279,17 @@ webhook 触发后端 → 查询 plan 的 credits 字段 (100) → 调用 creditS
 
 **文件：** `specs/i18n-switching.spec.ts` ｜ **优先级：** P2 ｜ **无需登录**
 
-验证页面头部的语言切换功能，确保切换后 URL 更新、内容切换且选择持久化。
+验证首次访问的语言判断、页面头部的手动切换、完整本地化内容与选择持久化。语言优先级为：显式语言 URL / 用户手动偏好 cookie ＞ 浏览器 `Accept-Language` ＞ IP 国家请求头兜底 ＞ 英文。
 
 | # | 测试名称 | 具体流程 |
 |---|---------|---------|
-| 1 | 首页使用默认英文语言 | 打开 `/en` → 验证 URL 包含 `/en` |
-| 2 | 从英文切换到中文 | 打开 `/en` → 点击语言下拉菜单 → 选择"中文" → 等待页面跳转到 `/zh-CN/` → 验证 URL 包含 `/zh-CN` |
-| 3 | 从中文切换回英文 | 打开 `/zh-CN` → 点击语言下拉菜单 → 选择 "English" → 等待页面跳转到 `/en/` → 验证 URL 包含 `/en` |
-| 4 | 语言选择跨页面持久化 | 打开 `/zh-CN` → 导航到 `/zh-CN/pricing` → 验证 URL 仍是中文 → 导航到 `/zh-CN/signin` → 验证 URL 仍是中文 |
-| 5 | 子页面双语言均可访问 | 访问英文定价页 `/en/pricing` → 验证标题可见 → 访问中文定价页 `/zh-CN/pricing` → 验证标题可见 |
+| 1 | 英文浏览器使用干净英文 URL | 无语言 cookie，以 `Accept-Language: en-US` 打开 `/` → URL 保持 `/` → Hero、导航和登录提示均为英文 |
+| 2 | 中文浏览器首次访问自动进入中文站 | 无语言 cookie，以 `Accept-Language: zh-CN` 打开 `/` → 跳转 `/zh-CN` → Hero、导航和登录提示均为自然中文 → 自动跳转不写 `NEXT_LOCALE` |
+| 3 | IP 国家仅作为弱兜底 | 无语言 cookie，以不支持的浏览器语言及 `CF-IPCountry: CN` 打开 `/` → 跳转 `/zh-CN`；若浏览器明确为英文，即使国家为 CN 也保持英文 |
+| 4 | 登录前也能手动切换 | 未登录打开 `/` → 语言按钮可见 → 选择“简体中文” → 跳转 `/zh-CN` → 写入一年期 `NEXT_LOCALE=zh-CN`（Path=/、SameSite=Lax、HttpOnly） |
+| 5 | 手动偏好覆盖自动判断 | 已有 `NEXT_LOCALE=en`，以中文浏览器和 CN 国家头打开 `/` → 仍显示英文；从中文站切回 English 后保持当前路径和查询参数 |
+| 6 | 中文站不夹杂英文产品文案 | 访问 `/zh-CN`、`/zh-CN/signin`、`/zh-CN/blog`，并在功能开启时访问定价/资产页 → 验证核心标题、按钮、状态、日期与数字格式为中文本地化内容 |
+| 7 | 中英文 SEO 和不可索引页面正确 | 公开页面输出对应 canonical 与互相指向的 hreflang；未翻译的数据库文章没有中文 alternate；登录、账户、资产和支付结果页输出 `noindex,nofollow` |
 
 ---
 
@@ -819,6 +821,7 @@ PayPal 重定向到 /api/payment/return/paypal?order_id=xxx&token=xxx&PayerID=xx
 | 2026-09-12 | Next.js | 3 | 0 | 0 | Pixal3D 静态博客配图与用途文章（blog.spec.ts）— 通过（5.4s） |
 | 2026-09-12 | Next.js | 1 | 0 | 0 | 首页单一 3D 产品需求问卷（public-pages.spec.ts）— 通过（8.9s） |
 | 2026-09-19 | Next.js | 1 | 0 | 0 | 登录后显示的参考图标题行免费生成入口（public-pages.spec.ts）— 通过 |
+| 2026-09-19 | Next.js | 7 | 0 | 0 | 中英双语、自动语言判断、手动偏好与 SEO（i18n-switching.spec.ts）— 全部通过（1.5m） |
 
 _每次测试运行后更新此表。_
 

@@ -370,6 +370,7 @@ export default function Home() {
     hasImage: Boolean(imageDataUrl),
     creditBalance,
     requiredCredits,
+    locale,
     isReadingFile,
     isProcessing: taskStatus === "processing",
     labels: {
@@ -1003,10 +1004,10 @@ export default function Home() {
                 >
                   <div className="w-full max-w-md rounded-2xl border border-[#48bdff]/28 bg-[linear-gradient(180deg,rgba(7,13,32,0.94),rgba(9,20,45,0.94))] px-6 py-7 shadow-[0_28px_90px_rgba(0,0,0,0.36),0_0_48px_rgba(72,189,255,0.16)]">
                     <p className="text-2xl font-extrabold tracking-normal text-white">
-                      Sign in to use it for free
+                      {t.pixal3d.generator.signedOutTitle}
                     </p>
                     <p className="mx-auto mt-3 max-w-sm text-sm font-medium leading-6 text-[#aeb6ca]">
-                      Login unlocks the free Pixal3D workspace on this page.
+                      {t.pixal3d.generator.signedOutDescription}
                     </p>
                     <Button
                       type="button"
@@ -1016,7 +1017,7 @@ export default function Home() {
                         window.location.href = localizedPath("/signin");
                       }}
                     >
-                      Sign In
+                      {t.pixal3d.generator.signedOutButton}
                     </Button>
                   </div>
                 </div>
@@ -1082,7 +1083,7 @@ export default function Home() {
                   type="button"
                   className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-current/25 text-base font-extrabold opacity-80 transition hover:opacity-100"
                   onClick={clearPageNotice}
-                  aria-label="Dismiss message"
+                  aria-label={t.common.dismissMessage}
                 >
                   x
                 </button>
@@ -1178,20 +1179,23 @@ export default function Home() {
                   <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row">
                     <p className="text-lg font-semibold text-[#7f889e]">{t.pixal3d.generator.samplePrompt}</p>
                     <div className="flex flex-wrap justify-center gap-3">
-                      {SAMPLE_IMAGES.map((sample) => (
+                      {SAMPLE_IMAGES.map((sample, index) => {
+                        const localizedSample = { ...sample, name: t.pixal3d.inspiration.items[index] ?? sample.name };
+                        return (
                         <button
                           key={sample.src}
                           type="button"
                           className="h-16 w-16 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] p-1 transition hover:border-[#48bdff]/70 hover:bg-[#172341]"
                           onClick={(event) => {
                             event.stopPropagation();
-                            useSampleImage(sample);
+                            useSampleImage(localizedSample);
                           }}
-                          aria-label={`${t.pixal3d.generator.useSample} ${sample.name}`}
+                          aria-label={`${t.pixal3d.generator.useSample} ${localizedSample.name}`}
                         >
                           <img src={sample.src} alt="" className="h-full w-full rounded-xl object-cover" />
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </>
@@ -1778,6 +1782,7 @@ export default function Home() {
             <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:gap-x-8">
               {INSPIRATION_IMAGES.map((item, index) => (
                 (() => {
+                  const localizedItem = { ...item, name: t.pixal3d.inspiration.items[index + SAMPLE_IMAGES.length] ?? item.name };
                   const isActive = activeInspirationId === item.id;
                   return (
                     <button
@@ -1789,10 +1794,10 @@ export default function Home() {
                       onFocus={() => setActiveInspirationId(item.id)}
                       onBlur={() => setActiveInspirationId((current) => (current === item.id ? null : current))}
                       onClick={() => {
-                        useSampleImage(item);
+                        useSampleImage(localizedItem);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
-                      aria-label={`${t.pixal3d.inspiration.generateSimilar} ${item.name}`}
+                      aria-label={`${t.pixal3d.inspiration.generateSimilar} ${localizedItem.name}`}
                     >
                       <span className={`absolute inset-x-7 bottom-4 h-12 rounded-full blur-2xl transition-opacity ${
                         isActive ? "bg-[#48bdff]/30 opacity-100" : "bg-[#00f08a]/10 opacity-0 group-hover:opacity-100"

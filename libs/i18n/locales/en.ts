@@ -6,7 +6,14 @@ export const en: Locale = {
     and: "and",
     loading: "Loading...",
     unexpectedError: "An unexpected error occurred",
-    viewPlans: "View Plans"
+    viewPlans: "View Plans",
+    dismissMessage: "Dismiss message",
+    notifications: {
+      success: "Success",
+      error: "Error",
+      notice: "Notice",
+      dismiss: "Dismiss notification"
+    }
   },
   actions: {
     previous: "Previous",
@@ -24,18 +31,22 @@ export const en: Locale = {
     navigation: {
       home: "Home",
       pricing: "Pricing",
-      blog: "Blog"
+      blog: "Blog",
+      openMenu: "Open main menu"
     },
+    sourceBadge: "From TencentARC",
     auth: {
       signIn: "Sign In",
       signOut: "Sign Out",
       dashboard: "Dashboard",
       myAssets: "My Assets",
-      myCredits: "My Credits"
+      myCredits: "My Credits",
+      userFallback: "User"
     },
     language: {
       english: "English",
-      chinese: "中文"
+      chinese: "简体中文",
+      openMenu: "Choose language"
     }
   },
   pixal3d: {
@@ -43,6 +54,9 @@ export const en: Locale = {
       heroTitle: "Turn Any Image into a Faithful 3D Model",
       subtitle: "Completely free to use",
       referenceImageCta: "No image? Create one free",
+      signedOutTitle: "Sign in to use it for free",
+      signedOutDescription: "Login unlocks the free Pixal3D workspace on this page.",
+      signedOutButton: "Sign In",
       imageHint: "Single image input for the Pixal3D generation pipeline.",
       imagePreviewAlt: "Uploaded reference image",
       uploadButton: "Upload image",
@@ -205,7 +219,8 @@ export const en: Locale = {
     inspiration: {
       eyebrow: "Model Inspiration Gallery",
       title: "Explore example 3D model directions for your next generation",
-      generateSimilar: "Click to generate a similar 3D model"
+      generateSimilar: "Click to generate a similar 3D model",
+      items: ["Retro terminal", "Treehouse", "Dessert scene", "Creature concept", "Stylized chair", "Floating city", "Retro computer", "Picnic basket", "Pizza slice", "Treehouse", "Windmill house", "Armored turtle", "Fantasy relic", "Creature concept", "Fantasy building", "Scene concept"]
     },
     faq: {
       title: "FAQ",
@@ -293,6 +308,14 @@ export const en: Locale = {
       description: "Choose Pixal3D credits for image-to-3D generation, GLB downloads, queue priority, and private asset ownership.",
       keywords: "pixal3d pricing, ai 3d model credits, image to 3d subscription"
     },
+    title: "Pricing",
+    description: "Choose the credits plan that fits your 3D workflow.",
+    monthly: "Monthly",
+    yearly: "Yearly",
+    perMonth: "/ month",
+    currentPlan: "Current plan",
+    subscribeNow: "Subscribe Now",
+    checkoutError: "Unable to start checkout. Please try again.",
     freeTrialNotice: "Two Free Trial sessions (Each session lasts 15 minutes, no credits required)",
     yearlyDiscountBadge: "Save about 20%",
     billedYearly: "Billed yearly: ${amount}",
@@ -455,6 +478,8 @@ export const en: Locale = {
       expired: "Expired",
       cancelAtPeriodEnd: "Cancels at period end",
       billingCycle: "Billing cycle",
+      monthly: "Monthly",
+      yearly: "Yearly",
       periodStart: "Started",
       validUntil: "Valid until",
       lifetime: "Lifetime",

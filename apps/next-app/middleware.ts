@@ -1,13 +1,22 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { config as appConfig } from "../../config";
+import { resolvePreferredLocale } from "../../libs/i18n/locale-negotiation";
 import {
   PIXAL3D_SHOW_MONETIZATION_SURFACES,
   PIXAL3D_SHOW_USER_LIBRARY_SURFACES,
 } from "./lib/pixal3d-surface-visibility";
 
-const defaultLocale = "en";
-const locales = ["en", "zh-CN"] as const;
+const { defaultLocale, locales, cookieKey } = appConfig.app.i18n;
+type SupportedLocale = (typeof locales)[number];
 const localePrefixPattern = `(?:\\/(${locales.join("|")}))?`;
+const localeVaryHeaders = [
+  "Cookie",
+  "Accept-Language",
+  "CF-IPCountry",
+  "X-Vercel-IP-Country",
+  "CloudFront-Viewer-Country",
+];
 const protectedPagePatterns = [
   pagePattern("/dashboard"),
   pagePattern("/my-assets"),
@@ -21,13 +30,45 @@ function pagePattern(path: string) {
   return new RegExp(`^${localePrefixPattern}${path}$`);
 }
 
-function getLocaleFromPathname(pathname: string) {
+function getExplicitLocale(pathname: string): SupportedLocale | undefined {
   const segment = pathname.split("/")[1];
-  return locales.includes(segment as any) ? segment : defaultLocale;
+  return locales.includes(segment as SupportedLocale)
+    ? segment as SupportedLocale
+    : undefined;
 }
 
-function localizedPath(path: string, locale: string) {
+function localizedPath(path: string, locale: SupportedLocale) {
   return locale === defaultLocale ? path : `/${locale}${path}`;
+}
+
+function getCountryCode(request: NextRequest) {
+  return request.headers.get("cf-ipcountry")
+    ?? request.headers.get("x-vercel-ip-country")
+    ?? request.headers.get("cloudfront-viewer-country");
+}
+
+function getRequestLocale(request: NextRequest): SupportedLocale {
+  return getExplicitLocale(request.nextUrl.pathname) ?? resolvePreferredLocale({
+    cookieLocale: request.cookies.get(cookieKey)?.value,
+    acceptLanguage: request.headers.get("accept-language"),
+    countryCode: getCountryCode(request),
+  });
+}
+
+function applyLocaleCacheHeaders(response: NextResponse) {
+  response.headers.set("Cache-Control", "private, no-store");
+  response.headers.set("Vary", localeVaryHeaders.join(", "));
+  return response;
+}
+
+function redirectToLocalizedPath(
+  request: NextRequest,
+  path: string,
+  locale: SupportedLocale,
+) {
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = localizedPath(path, locale);
+  return applyLocaleCacheHeaders(NextResponse.redirect(redirectUrl));
 }
 
 function hasBetterAuthSessionCookie(request: NextRequest) {
@@ -46,8 +87,7 @@ function edgeAuthRedirect(request: NextRequest): NextResponse | undefined {
   const isProtectedPage = protectedPagePatterns.some((pattern) => pattern.test(pathname));
 
   if (isProtectedPage && !hasBetterAuthSessionCookie(request)) {
-    const locale = getLocaleFromPathname(pathname);
-    return NextResponse.redirect(new URL(localizedPath("/signin", locale), request.url));
+    return redirectToLocalizedPath(request, "/signin", getRequestLocale(request));
   }
 
   return undefined;
@@ -61,8 +101,7 @@ function edgeHiddenPageRedirect(request: NextRequest): NextResponse | undefined 
     return undefined;
   }
 
-  const locale = getLocaleFromPathname(pathname);
-  return NextResponse.redirect(new URL(localizedPath("/", locale), request.url));
+  return redirectToLocalizedPath(request, "/", getRequestLocale(request));
 }
 
 function edgeLocaleResponse(request: NextRequest): NextResponse | undefined {
@@ -84,9 +123,16 @@ function edgeLocaleResponse(request: NextRequest): NextResponse | undefined {
   );
 
   if (!pathnameHasLocale) {
+    const locale = getRequestLocale(request);
+    if (locale !== defaultLocale) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
+      return applyLocaleCacheHeaders(NextResponse.redirect(redirectUrl));
+    }
+
     const rewriteUrl = request.nextUrl.clone();
     rewriteUrl.pathname = `/${defaultLocale}${pathname === "/" ? "" : pathname}`;
-    return NextResponse.rewrite(rewriteUrl);
+    return applyLocaleCacheHeaders(NextResponse.rewrite(rewriteUrl));
   }
 
   return undefined;

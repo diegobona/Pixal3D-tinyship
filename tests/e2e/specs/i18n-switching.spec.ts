@@ -1,122 +1,100 @@
 import { test, expect } from '@playwright/test';
-import { PAGES, TIMEOUTS, BASE } from '../helpers/constants';
+import { TIMEOUTS } from '../helpers/constants';
 
-/**
- * i18n Language Switching E2E Tests
- *
- * Verifies that the language switcher in the header works correctly:
- * - Default locale loads properly (English)
- * - Can switch from English to Chinese via the language dropdown
- * - URL updates to /zh-CN/...
- * - Can switch back to English
- * - Cookie persists the locale preference
- */
+const ORIGIN = 'http://localhost:7001';
 
-test.describe('i18n Language Switching', () => {
-  test('home page loads with English locale by default', async ({ page }) => {
-    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation });
+test.describe('English and Simplified Chinese localization', () => {
+  test('keeps clean canonical URLs for an English browser', async ({ page }) => {
+    await page.goto('/', { timeout: TIMEOUTS.navigation });
 
-    // Page should be at /en (or /en/)
-    expect(page.url()).toContain('/en');
-
-    // Verify some English text is visible (e.g. header navigation)
-    await expect(page.locator('body')).toBeVisible();
+    await expect(page).toHaveURL(`${ORIGIN}/`);
+    await expect(page.getByRole('heading', {
+      level: 1,
+      name: 'Turn Any Image into a Faithful 3D Model',
+    })).toBeVisible();
+    await expect(page.getByTestId('locale-switcher')).toBeVisible();
   });
 
-  test('can switch from English to Chinese via header language dropdown', async ({
-    page,
-  }) => {
-    test.slow(); // Allow time for hydration + dropdown interaction
-    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation });
+  test('automatically redirects a first-time Chinese browser without storing a manual preference', async ({ browser }) => {
+    const context = await browser.newContext({ locale: 'zh-CN' });
+    const page = await context.newPage();
 
-    // Wait for client-side hydration so dropdown handlers are attached
-    await page.waitForTimeout(2000);
+    await page.goto(`${ORIGIN}/`, { timeout: TIMEOUTS.navigation });
+    await expect(page).toHaveURL(`${ORIGIN}/zh-CN`);
+    await expect(page.getByRole('heading', { level: 1, name: '把任意图片变成高还原度 3D 模型' })).toBeVisible();
+    await expect(page.getByText('登录后即可免费使用', { exact: true })).toBeVisible();
+    expect((await context.cookies()).find((cookie) => cookie.name === 'NEXT_LOCALE')).toBeUndefined();
 
-    // Click the language dropdown trigger
-    const languageButton = page.locator('button').filter({
-      hasText: /English|中文/,
+    await context.close();
+  });
+
+  test('uses country only as a fallback for an unsupported browser language', async ({ browser }) => {
+    const context = await browser.newContext({
+      locale: 'fr-FR',
+      extraHTTPHeaders: { 'CF-IPCountry': 'CN' },
     });
-    await languageButton.first().click();
+    const page = await context.newPage();
 
-    // Wait for dropdown to render (Radix portals need a moment)
-    await page.waitForTimeout(1000);
+    await page.goto(`${ORIGIN}/`, { timeout: TIMEOUTS.navigation });
+    await expect(page).toHaveURL(`${ORIGIN}/zh-CN`);
 
-    // Try to find the Chinese menu item
-    const chineseOption = page.locator('[role="menuitem"]').filter({ hasText: /中文/ });
-    const visible = await chineseOption.first().isVisible().catch(() => false);
-
-    if (visible) {
-      await chineseOption.first().click();
-    } else {
-      // Dropdown may not have opened (hydration race). Navigate directly as fallback.
-      await page.goto('/zh-CN', { timeout: TIMEOUTS.navigation });
-    }
-
-    // Verify we're on zh-CN
-    await page.waitForURL(/\/zh-CN/, { timeout: TIMEOUTS.navigation });
-    expect(page.url()).toContain('/zh-CN');
+    await context.close();
   });
 
-  test('can switch from Chinese back to English', async ({ page }) => {
-    test.slow();
-    // Start on Chinese page
-    await page.goto('/zh-CN', { timeout: TIMEOUTS.navigation });
-    expect(page.url()).toContain('/zh-CN');
+  test('lets signed-out users choose a language and stores a secure server preference', async ({ page, context }) => {
+    await page.goto('/', { timeout: TIMEOUTS.navigation });
+    await page.evaluate(() => window.history.pushState({}, '', '/?campaign=bilingual'));
+    await page.getByTestId('locale-switcher').locator('summary').click();
+    await page.getByRole('menuitemradio', { name: '简体中文' }).click();
 
-    // Wait for hydration
-    await page.waitForTimeout(2000);
+    await expect(page).toHaveURL(`${ORIGIN}/zh-CN?campaign=bilingual`);
+    const localeCookie = (await context.cookies()).find((cookie) => cookie.name === 'NEXT_LOCALE');
+    expect(localeCookie).toMatchObject({ value: 'zh-CN', httpOnly: true, sameSite: 'Lax', path: '/' });
+  });
 
-    // Click language dropdown
-    const languageButton = page.locator('button').filter({
-      hasText: /English|中文/,
+  test('manual preference overrides browser and country signals', async ({ browser }) => {
+    const context = await browser.newContext({
+      locale: 'zh-CN',
+      extraHTTPHeaders: { 'CF-IPCountry': 'CN' },
     });
-    await languageButton.first().click();
+    await context.addCookies([{
+      name: 'NEXT_LOCALE',
+      value: 'en',
+      url: ORIGIN,
+      httpOnly: true,
+      sameSite: 'Lax',
+    }]);
+    const page = await context.newPage();
 
-    // Wait for dropdown to render
-    await page.waitForTimeout(1000);
+    await page.goto(`${ORIGIN}/`, { timeout: TIMEOUTS.navigation });
+    await expect(page).toHaveURL(`${ORIGIN}/`);
+    await expect(page.getByRole('heading', {
+      level: 1,
+      name: 'Turn Any Image into a Faithful 3D Model',
+    })).toBeVisible();
 
-    // Try to find the English menu item
-    const englishOption = page.locator('[role="menuitem"]').filter({ hasText: /English/ });
-    const visible = await englishOption.first().isVisible().catch(() => false);
-
-    if (visible) {
-      await englishOption.first().click();
-    } else {
-      // Navigate directly as fallback
-      await page.goto('/en', { timeout: TIMEOUTS.navigation });
-    }
-
-    // Wait for full page reload to /en/
-    await page.waitForURL(/\/en/, { timeout: TIMEOUTS.navigation });
-    expect(page.url()).toContain('/en');
+    await context.close();
   });
 
-  test('locale persists across navigation', async ({ page }) => {
-    // Switch to Chinese first
+  test('renders complete Chinese product and blog copy without English fallbacks', async ({ page }) => {
     await page.goto('/zh-CN', { timeout: TIMEOUTS.navigation });
+    await expect(page.getByText('登录后即可免费使用', { exact: true })).toBeVisible();
+    await expect(page.getByText('Sign in to use it for free', { exact: true })).toHaveCount(0);
 
-    // Navigate to pricing page while on Chinese locale
-    await page.goto('/zh-CN/pricing', { timeout: TIMEOUTS.navigation });
+    await page.goto('/zh-CN/blog', { timeout: TIMEOUTS.navigation });
+    await expect(page.getByRole('heading', { level: 2, name: '图片转 3D 模型实用指南' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Pixal3D 与同类工具怎么选' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Image to 3D Model Guide' })).toHaveCount(0);
+  });
 
-    // Should still be on zh-CN
-    expect(page.url()).toContain('/zh-CN/pricing');
+  test('publishes localized SEO for public pages and noindex for private pages', async ({ page }) => {
+    await page.goto('/zh-CN/blog', { timeout: TIMEOUTS.navigation });
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${ORIGIN}/zh-CN/blog`);
+    await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', `${ORIGIN}/blog`);
+    await expect(page.locator('link[rel="alternate"][hreflang="zh-CN"]')).toHaveAttribute('href', `${ORIGIN}/zh-CN/blog`);
 
-    // Navigate to sign-in page
     await page.goto('/zh-CN/signin', { timeout: TIMEOUTS.navigation });
-    expect(page.url()).toContain('/zh-CN/signin');
-  });
-
-  test('sub-pages work in both locales', async ({ page }) => {
-    // English pricing page
-    await page.goto(`${BASE}/pricing`, { timeout: TIMEOUTS.navigation });
-    await expect(page.locator('h1, h2').first()).toBeVisible({
-      timeout: TIMEOUTS.navigation,
-    });
-
-    // Chinese pricing page
-    await page.goto('/zh-CN/pricing', { timeout: TIMEOUTS.navigation });
-    await expect(page.locator('h1, h2').first()).toBeVisible({
-      timeout: TIMEOUTS.navigation,
-    });
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+    await expect(page.locator('link[rel="alternate"]')).toHaveCount(0);
   });
 });

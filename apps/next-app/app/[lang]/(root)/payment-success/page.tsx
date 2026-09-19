@@ -26,7 +26,7 @@ function PaymentSuccessContent() {
 
   useEffect(() => {
     if (!sessionId) {
-      router.replace("/");
+      router.replace(localizedPath("/"));
       return;
     }
 
@@ -50,14 +50,14 @@ function PaymentSuccessContent() {
         setIsValid(true);
       } catch (error) {
         console.error("Session verification failed:", error);
-        router.replace("/pricing");
+        router.replace(localizedPath("/pricing"));
       } finally {
         setIsVerifying(false);
       }
     }
 
     verifySession();
-  }, [router, sessionId]);
+  }, [localizedPath, router, sessionId]);
 
   if (isVerifying) {
     return (
@@ -94,11 +94,12 @@ function PaymentSuccessContent() {
 }
 
 function LoadingFallback() {
+  const { t } = useTranslation();
   return (
     <div className="container max-w-2xl py-20">
       <div className="flex flex-col items-center space-y-6 text-center">
         <span className="h-10 w-10 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">{t.common.loading}</p>
       </div>
     </div>
   );

@@ -25,4 +25,5 @@ export function getTranslation(locale: SupportedLocale): Translations {
   return translations[locale] as Translations
 }
 
-export * from './locales' 
+export * from './locales'
+export * from './locale-negotiation'

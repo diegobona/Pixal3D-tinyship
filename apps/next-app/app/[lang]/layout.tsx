@@ -5,6 +5,7 @@ import { i18n } from '../i18n-config';
 import { use } from 'react';
 import { translations } from "@libs/i18n";
 import { SharedAppWrapper } from "@/components/shared-app-wrapper";
+import { localizedSeo, type SiteLocale } from "@/lib/localized-seo";
 
 const DEFAULT_APP_URL = "https://pixal3d.net";
 const ICON_VERSION = "20260531";
@@ -23,12 +24,14 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   const { lang } = await params;
   const t = translations[lang as keyof typeof translations];
   const appUrl = getAppUrl();
+  const seo = localizedSeo("/", lang as SiteLocale);
   
   return {
     metadataBase: new URL(appUrl),
     title: t.home.metadata.title,
     description: t.home.metadata.description,
     keywords: t.home.metadata.keywords,
+    alternates: seo.alternates,
     icons: {
       icon: [
         { url: `/favicon.ico?v=${ICON_VERSION}`, type: "image/x-icon" },
@@ -58,8 +61,9 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     },
     openGraph: {
       type: 'website',
-      locale: lang,
-      url: appUrl,
+      locale: seo.openGraph?.locale,
+      alternateLocale: seo.openGraph?.alternateLocale,
+      url: seo.openGraph?.url,
       siteName: 'Pixal3D',
       title: t.home.metadata.title,
       description: t.home.metadata.description,

@@ -27,7 +27,7 @@ export const config = {
       defaultLocale: 'en' as const,
       locales: ['en', 'zh-CN'] as const,
       cookieKey: 'NEXT_LOCALE',
-      autoDetect: false,
+      autoDetect: true,
     },
     payment: {
       get successUrl() {

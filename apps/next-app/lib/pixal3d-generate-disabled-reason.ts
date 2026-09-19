@@ -4,6 +4,7 @@ interface Pixal3DGenerateDisabledReasonInput {
   hasImage: boolean;
   creditBalance: number;
   requiredCredits: number;
+  locale?: string;
   isReadingFile: boolean;
   isProcessing: boolean;
   labels: {
@@ -14,8 +15,8 @@ interface Pixal3DGenerateDisabledReasonInput {
   };
 }
 
-function formatCredits(value: number) {
-  return value.toLocaleString("en-US");
+function formatCredits(value: number, locale?: string) {
+  return value.toLocaleString(locale === "zh-CN" ? "zh-CN" : "en-US");
 }
 
 export function getPixal3DGenerateDisabledReason(input: Pixal3DGenerateDisabledReasonInput) {
@@ -27,8 +28,8 @@ export function getPixal3DGenerateDisabledReason(input: Pixal3DGenerateDisabledR
 
   if (input.creditBalance < input.requiredCredits) {
     return input.labels.insufficientCredits
-      .replace("{required}", formatCredits(input.requiredCredits))
-      .replace("{balance}", formatCredits(input.creditBalance));
+      .replace("{required}", formatCredits(input.requiredCredits, input.locale))
+      .replace("{balance}", formatCredits(input.creditBalance, input.locale));
   }
 
   if (input.isReadingFile) {

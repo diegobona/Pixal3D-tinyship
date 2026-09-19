@@ -11,49 +11,9 @@ config({ path: join(__dirname, '../../.env') });
 const rootDir = resolve(__dirname || process.cwd(), '../..');
 const libsDir = resolve(rootDir, 'libs');
 const useStandaloneOutput = process.platform !== 'win32' || process.env.NEXT_OUTPUT_STANDALONE === '1';
-const defaultLocale = 'en';
-const defaultLocalePaths = [
-  'blog',
-  'blog/:path*',
-  'dashboard',
-  'my-assets',
-  'payment-cancel',
-  'payment-success',
-  'pricing',
-  'signin',
-  'signup',
-];
 
 /** @type {import('next').NextConfig} */
 const nextConfig: NextConfig= {
-  async redirects() {
-    return [
-      {
-        source: `/${defaultLocale}`,
-        destination: '/',
-        permanent: false,
-      },
-      {
-        source: `/${defaultLocale}/:path*`,
-        destination: '/:path*',
-        permanent: false,
-      },
-    ];
-  },
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: '/',
-          destination: `/${defaultLocale}`,
-        },
-        ...defaultLocalePaths.map((path) => ({
-          source: `/${path}`,
-          destination: `/${defaultLocale}/${path}`,
-        })),
-      ],
-    };
-  },
   webpack(config: any) {
     // Modify webpack configuration to handle SVG files
     config.module.rules.push({

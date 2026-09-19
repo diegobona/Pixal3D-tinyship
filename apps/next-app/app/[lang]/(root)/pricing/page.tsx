@@ -80,14 +80,14 @@ export default function PricingPage() {
       const data = contentType.includes("application/json")
         ? await response.json()
         : { error: await response.text() };
-      if (!response.ok) throw new Error(data.error || "Failed to initiate payment");
+      if (!response.ok) throw new Error(t.pricing.checkoutError);
 
       if (data.paymentUrl) {
         window.location.href = data.paymentUrl;
       }
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error(error instanceof Error ? error.message : "Unable to start checkout. Please try again.");
+      toast.error(error instanceof Error ? error.message : t.pricing.checkoutError);
     } finally {
       setLoading(null);
     }
@@ -97,8 +97,8 @@ export default function PricingPage() {
     <main className="min-h-screen bg-[#071431] px-4 py-16 text-foreground sm:px-6 lg:px-8">
       <section className="mx-auto max-w-7xl">
         <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-normal sm:text-5xl">Pricing</h1>
-          <p className="mt-4 text-lg text-muted-foreground">Choose the credits plan that fits your 3D workflow.</p>
+          <h1 className="text-4xl font-bold tracking-normal sm:text-5xl">{t.pricing.title}</h1>
+          <p className="mt-4 text-lg text-muted-foreground">{t.pricing.description}</p>
 
           <div className="mt-8 inline-flex rounded-xl bg-muted p-1">
             <button
@@ -109,7 +109,7 @@ export default function PricingPage() {
               )}
               onClick={() => setBillingCycle("monthly")}
             >
-              Monthly
+              {t.pricing.monthly}
             </button>
             <button
               type="button"
@@ -119,7 +119,7 @@ export default function PricingPage() {
               )}
               onClick={() => setBillingCycle("yearly")}
             >
-              Yearly <span className="ml-2 rounded-md bg-yellow-400 px-2 py-0.5 text-xs text-black">{t.pricing.yearlyDiscountBadge}</span>
+              {t.pricing.yearly} <span className="ml-2 rounded-md bg-yellow-400 px-2 py-0.5 text-xs text-black">{t.pricing.yearlyDiscountBadge}</span>
             </button>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function PricingPage() {
                           <span className="pt-2 text-xl font-semibold text-foreground/72">$</span>
                           <span className="text-5xl font-bold">{formatPrice(displayMonthlyPrice)}</span>
                         </span>
-                        <span className="pb-2 text-sm text-muted-foreground">/ month</span>
+                        <span className="pb-2 text-sm text-muted-foreground">{t.pricing.perMonth}</span>
                       </div>
                       {billingCycle === "yearly" ? (
                         <p className="mt-1 text-sm text-muted-foreground">
@@ -193,9 +193,9 @@ export default function PricingPage() {
                       >
                         ✓
                       </span>
-                      Current plan
+                      {t.pricing.currentPlan}
                     </>
-                  ) : "Subscribe Now"}
+                  ) : t.pricing.subscribeNow}
                 </Button>
 
                 <ul className="mt-10 space-y-4 text-sm">

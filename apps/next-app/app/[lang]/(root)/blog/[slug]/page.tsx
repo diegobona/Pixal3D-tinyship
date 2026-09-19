@@ -7,6 +7,8 @@ import { eq, and } from "drizzle-orm";
 import { translations } from "@libs/i18n";
 import type { Metadata } from "next";
 import { getStaticBlogPostBySlug, type StaticBlogSection } from "@libs/blog/static-posts";
+import { getAvailableBlogLocales, localizeDatabaseBlogPost } from "@libs/blog/localized-blog";
+import { localizedSeo, type SiteLocale } from "@/lib/localized-seo";
 
 type Props = {
   params: Promise<{ lang: string; slug: string }>;
@@ -18,10 +20,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const staticPost = getStaticBlogPostBySlug(slug, lang);
 
   if (staticPost) {
+    const seo = localizedSeo(`/blog/${slug}`, lang as SiteLocale);
     return {
       title: `${staticPost.title} - ${t.blog.title}`,
       description: staticPost.excerpt || t.blog.metadata.description,
       keywords: t.blog.metadata.keywords,
+      alternates: seo.alternates,
+      openGraph: { ...seo.openGraph, title: staticPost.title, description: staticPost.excerpt },
     };
   }
 
@@ -29,21 +34,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select({
       title: blogPost.title,
       excerpt: blogPost.excerpt,
+      content: blogPost.content,
+      metadata: blogPost.metadata,
     })
     .from(blogPost)
     .where(and(eq(blogPost.slug, slug), eq(blogPost.status, blogPostStatus.PUBLISHED)))
     .limit(1);
 
-  if (!post) {
+  const localizedPost = post
+    ? localizeDatabaseBlogPost(post, lang === "zh-CN" ? "zh-CN" : "en")
+    : null;
+
+  if (!localizedPost) {
     return {
       title: t.blog.title,
     };
   }
 
+  const seo = localizedSeo(`/blog/${slug}`, lang as SiteLocale, {
+    locales: getAvailableBlogLocales(post.metadata),
+  });
+
   return {
-    title: `${post.title} - ${t.blog.title}`,
-    description: post.excerpt || t.blog.metadata.description,
+    title: `${localizedPost.title} - ${t.blog.title}`,
+    description: localizedPost.excerpt || t.blog.metadata.description,
     keywords: t.blog.metadata.keywords,
+    alternates: seo.alternates,
+    openGraph: {
+      ...seo.openGraph,
+      title: localizedPost.title,
+      description: localizedPost.excerpt || t.blog.metadata.description,
+    },
   };
 }
 
@@ -147,13 +168,14 @@ export default async function BlogDetailPage({ params }: Props) {
   const { lang, slug } = await params;
   const t = translations[lang as keyof typeof translations];
   const staticPost = getStaticBlogPostBySlug(slug, lang);
+  const blogPath = lang === "zh-CN" ? "/zh-CN/blog" : "/blog";
 
   if (staticPost) {
     return (
       <div className="min-h-screen bg-[#071431]">
         <article className="mx-auto max-w-3xl px-6 py-16 lg:px-8">
           <Link
-            href={`/${lang}/blog`}
+            href={blogPath}
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
           >
             <span aria-hidden="true">&lt;</span>
@@ -191,7 +213,7 @@ export default async function BlogDetailPage({ params }: Props) {
 
           <footer className="mt-12 pt-8 border-t border-border">
             <Link
-              href={`/${lang}/blog`}
+              href={blogPath}
               className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <span aria-hidden="true">&lt;</span>
@@ -213,13 +235,18 @@ export default async function BlogDetailPage({ params }: Props) {
       coverImage: blogPost.coverImage,
       publishedAt: blogPost.publishedAt,
       authorName: user.name,
+      metadata: blogPost.metadata,
     })
     .from(blogPost)
     .leftJoin(user, eq(blogPost.authorId, user.id))
     .where(and(eq(blogPost.slug, slug), eq(blogPost.status, blogPostStatus.PUBLISHED)))
     .limit(1);
 
-  if (!post) {
+  const localizedPost = post
+    ? localizeDatabaseBlogPost(post, lang === "zh-CN" ? "zh-CN" : "en")
+    : null;
+
+  if (!localizedPost) {
     notFound();
   }
 
@@ -227,7 +254,7 @@ export default async function BlogDetailPage({ params }: Props) {
     <div className="min-h-screen bg-[#071431]">
       <article className="mx-auto max-w-3xl px-6 py-16 lg:px-8">
         <Link
-          href={`/${lang}/blog`}
+          href={blogPath}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
         >
           <span aria-hidden="true">&lt;</span>
@@ -236,26 +263,26 @@ export default async function BlogDetailPage({ params }: Props) {
 
         <header className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            {post.title}
+            {localizedPost.title}
           </h1>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            {post.authorName && (
+            {localizedPost.authorName && (
               <span>
-                {t.blog.by} {post.authorName}
+                {t.blog.by} {localizedPost.authorName}
               </span>
             )}
-            {post.publishedAt && (
+            {localizedPost.publishedAt && (
               <span>
                 {t.blog.publishedOn}{" "}
-                {new Date(post.publishedAt).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "en-US")}
+                {new Date(localizedPost.publishedAt).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "en-US")}
               </span>
             )}
           </div>
-          {post.coverImage && (
+          {localizedPost.coverImage && (
             <div className="mt-6 aspect-video w-full overflow-hidden rounded-lg bg-muted">
               <img
-                src={post.coverImage}
-                alt={post.title}
+                src={localizedPost.coverImage}
+                alt={localizedPost.title}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -263,12 +290,12 @@ export default async function BlogDetailPage({ params }: Props) {
         </header>
 
         <div className="whitespace-pre-wrap text-base leading-8 text-foreground/90">
-          {post.content}
+          {localizedPost.content}
         </div>
 
         <footer className="mt-12 pt-8 border-t border-border">
           <Link
-            href={`/${lang}/blog`}
+            href={blogPath}
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <span aria-hidden="true">&lt;</span>

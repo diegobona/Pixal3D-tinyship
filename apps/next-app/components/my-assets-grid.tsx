@@ -23,6 +23,7 @@ export interface MyAssetItem {
 
 interface MyAssetsGridProps {
   items: MyAssetItem[];
+  numberLocale: string;
   labels: {
     createdAt: string;
     targetResolution: string;
@@ -58,7 +59,7 @@ function getStatusClasses(status: AssetStatus) {
   return "border-[#48bdff]/35 bg-[#102848] text-[#7bd7ff]";
 }
 
-export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
+export function MyAssetsGrid({ items, labels, numberLocale }: MyAssetsGridProps) {
   const [assets, setAssets] = useState(items);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
@@ -185,7 +186,7 @@ export function MyAssetsGrid({ items, labels }: MyAssetsGridProps) {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/42">
                     {labels.creditsUsed}
                   </p>
-                  <p className="mt-2 text-lg font-bold text-white">{item.creditsConsumed.toLocaleString("en-US")}</p>
+                  <p className="mt-2 text-lg font-bold text-white">{item.creditsConsumed.toLocaleString(numberLocale)}</p>
                 </div>
               </div>
 

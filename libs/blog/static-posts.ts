@@ -1,4 +1,5 @@
 import { en, zhCN } from "../i18n/locales";
+import { ZH_LEGACY_STATIC_BLOG_POSTS } from "./static-posts.zh-CN";
 
 type SupportedLocale = "en" | "zh-CN";
 
@@ -416,7 +417,7 @@ function getModelUsesPost(locale: SupportedLocale): StaticBlogPost {
     title: copy.title,
     excerpt: copy.excerpt,
     coverImage: "/blog-covers/pixal3d-model-uses.webp",
-    authorName: BLOG_AUTHOR,
+    authorName: locale === "zh-CN" ? "Pixal3D 团队" : BLOG_AUTHOR,
     publishedAt: "2026-09-12T00:00:00.000Z",
     sections: [
       { type: "paragraphs", paragraphs: [...copy.intro] },
@@ -447,9 +448,13 @@ function getModelUsesPost(locale: SupportedLocale): StaticBlogPost {
 }
 
 export function getStaticBlogPosts(locale = "en"): StaticBlogPost[] {
-  const localizedPost = getModelUsesPost(resolveLocale(locale));
+  const resolvedLocale = resolveLocale(locale);
+  const localizedPost = getModelUsesPost(resolvedLocale);
+  const legacyPosts = resolvedLocale === "zh-CN"
+    ? ZH_LEGACY_STATIC_BLOG_POSTS
+    : LEGACY_STATIC_BLOG_POSTS;
 
-  return [localizedPost, ...LEGACY_STATIC_BLOG_POSTS].sort(
+  return [localizedPost, ...legacyPosts].sort(
     (left, right) => new Date(right.publishedAt).getTime() - new Date(left.publishedAt).getTime()
   );
 }

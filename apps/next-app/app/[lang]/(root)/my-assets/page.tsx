@@ -115,6 +115,7 @@ export default async function MyAssetsPage({
           <>
             <MyAssetsGrid
               items={items}
+              numberLocale={lang === "zh-CN" ? "zh-CN" : "en-US"}
               labels={{
                 createdAt: t.card.createdAt,
                 targetResolution: t.card.targetResolution,

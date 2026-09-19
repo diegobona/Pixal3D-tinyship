@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { config } from "@config";
 import { authClientReact } from "@libs/auth/authClient";
@@ -13,6 +14,7 @@ import {
   getSubscriptionPlanIdFromEvent,
 } from "@/lib/credit-balance-events";
 import { shouldShowHeaderUpgradeButton } from "@/lib/header-actions";
+import { getLocalePath } from "@/lib/locale-preference";
 import {
   PIXAL3D_SHOW_LANGUAGE_SWITCHER,
   PIXAL3D_SHOW_MONETIZATION_SURFACES,
@@ -35,12 +37,10 @@ interface CreditStatusResponse {
 export default function Header({ className }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isLocaleMenuOpen, setIsLocaleMenuOpen] = useState(false);
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const [subscriptionPlanId, setSubscriptionPlanId] = useState<string | null>(null);
   const [isCreditStatusLoaded, setIsCreditStatusLoaded] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
-  const localeMenuRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { t, locale: currentLocale } = useTranslation();
@@ -52,7 +52,7 @@ export default function Header({ className }: HeaderProps) {
 
   const homeHref = localizedPath("/");
   const featuresHref = `${homeHref}#features`;
-  const displayName = user?.name || user?.email || "User";
+  const displayName = user?.name || user?.email || t.header.auth.userFallback;
   const displayEmail = user?.email || "";
   const shouldShowUpgradeButton = PIXAL3D_SHOW_MONETIZATION_SURFACES
     && shouldShowHeaderUpgradeButton({
@@ -62,22 +62,18 @@ export default function Header({ className }: HeaderProps) {
     });
 
   useEffect(() => {
-    if (!isUserMenuOpen && !isLocaleMenuOpen) return;
+    if (!isUserMenuOpen) return;
 
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (!userMenuRef.current?.contains(target)) {
         setIsUserMenuOpen(false);
       }
-      if (!localeMenuRef.current?.contains(target)) {
-        setIsLocaleMenuOpen(false);
-      }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsUserMenuOpen(false);
-        setIsLocaleMenuOpen(false);
       }
     };
 
@@ -88,7 +84,7 @@ export default function Header({ className }: HeaderProps) {
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isLocaleMenuOpen, isUserMenuOpen]);
+  }, [isUserMenuOpen]);
 
   useEffect(() => {
     if (!PIXAL3D_SHOW_MONETIZATION_SURFACES) {
@@ -168,14 +164,18 @@ export default function Header({ className }: HeaderProps) {
     router.push(homeHref);
   };
 
-  const setLocale = (nextLocale: "en" | "zh-CN") => {
-    setIsLocaleMenuOpen(false);
-    const pathWithoutLocale = pathname.replace(`/${currentLocale}`, "") || "/";
-    document.cookie = `${config.app.i18n.cookieKey}=${nextLocale}; path=/; max-age=31536000`;
-    window.location.href =
-      nextLocale === config.app.i18n.defaultLocale
-        ? pathWithoutLocale
-        : `/${nextLocale}${pathWithoutLocale === "/" ? "" : pathWithoutLocale}`;
+  const getLocaleDestination = (nextLocale: "en" | "zh-CN") => {
+    return getLocalePath(pathname, currentLocale, nextLocale);
+  };
+
+  const syncLocaleDestination = (
+    event: FormEvent<HTMLFormElement>,
+    nextLocale: "en" | "zh-CN",
+  ) => {
+    const returnTo = event.currentTarget.elements.namedItem("returnTo");
+    if (returnTo instanceof HTMLInputElement) {
+      returnTo.value = `${getLocaleDestination(nextLocale)}${window.location.search}`;
+    }
   };
 
   const navigation = (
@@ -207,7 +207,7 @@ export default function Header({ className }: HeaderProps) {
               data-testid="pixal3d-source-badge"
               className="hidden rounded-full border border-[#48bdff]/35 bg-[#071a33] px-2.5 py-1 text-[11px] font-extrabold leading-none tracking-normal text-[#7ee7ff] shadow-[0_0_24px_rgba(72,189,255,0.16)] sm:inline-flex"
             >
-              From TencentARC
+              {t.header.sourceBadge}
             </span>
           </Link>
 
@@ -225,7 +225,7 @@ export default function Header({ className }: HeaderProps) {
                     <div className="inline-flex h-10 items-center gap-2 rounded-full border border-[#6a4a16] bg-[linear-gradient(180deg,#2a1b06,#1a1207)] px-3 text-[#f7c455] shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
                       <CreditsIcon />
                       <span className="min-w-[1ch] text-sm font-bold leading-none">
-                        {creditBalance === null ? "..." : creditBalance.toLocaleString("en-US")}
+                        {creditBalance === null ? "..." : creditBalance.toLocaleString(currentLocale === "zh-CN" ? "zh-CN" : "en-US")}
                       </span>
                     </div>
                     <div
@@ -356,62 +356,6 @@ export default function Header({ className }: HeaderProps) {
                     </div>
                   ) : null}
                 </div>
-                {PIXAL3D_SHOW_LANGUAGE_SWITCHER ? (
-                <div
-                  ref={localeMenuRef}
-                  className="relative"
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      setIsLocaleMenuOpen((open) => !open);
-                    }}
-                    className="inline-flex h-10 w-8 items-center justify-center text-white/82 transition-colors hover:text-white"
-                    aria-haspopup="menu"
-                    aria-expanded={isLocaleMenuOpen}
-                    aria-label="Language"
-                  >
-                    <LocaleIcon />
-                  </button>
-
-                  {isLocaleMenuOpen ? (
-                    <div className="absolute right-0 top-full z-50 pt-2">
-                      <div
-                        role="menu"
-                        className="min-w-[170px] overflow-hidden rounded-[18px] border border-white/12 bg-[linear-gradient(180deg,rgba(24,29,43,0.98),rgba(16,19,29,0.98))] p-2 text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl"
-                      >
-                        <button
-                          type="button"
-                          role="menuitemradio"
-                          aria-checked={currentLocale === "en"}
-                          onClick={() => setLocale("en")}
-                          className={`flex w-full items-center rounded-xl px-4 py-3 text-left text-base font-semibold transition-colors ${
-                            currentLocale === "en"
-                              ? "bg-white/10 text-white"
-                              : "text-white/82 hover:bg-white/8 hover:text-white"
-                          }`}
-                        >
-                          English
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitemradio"
-                          aria-checked={currentLocale === "zh-CN"}
-                          onClick={() => setLocale("zh-CN")}
-                          className={`mt-1 flex w-full items-center rounded-xl px-4 py-3 text-left text-base font-semibold transition-colors ${
-                            currentLocale === "zh-CN"
-                              ? "bg-white/10 text-white"
-                              : "text-white/82 hover:bg-white/8 hover:text-white"
-                          }`}
-                        >
-                          中文
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-                ) : null}
               </>
             ) : (
               <>
@@ -420,13 +364,56 @@ export default function Header({ className }: HeaderProps) {
                 </Link>
               </>
             )}
+            {PIXAL3D_SHOW_LANGUAGE_SWITCHER ? (
+              <details className="group relative" data-testid="locale-switcher">
+                <summary
+                  onClick={() => setIsUserMenuOpen(false)}
+                  className="inline-flex h-10 cursor-pointer list-none items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 text-sm font-semibold text-white/82 transition-colors hover:bg-white/8 hover:text-white [&::-webkit-details-marker]:hidden"
+                  aria-label={t.header.language.openMenu}
+                >
+                  <LocaleIcon />
+                  <span>{currentLocale === "en" ? "EN" : "简中"}</span>
+                </summary>
+
+                  <div className="absolute right-0 top-full z-50 hidden pt-2 group-open:block">
+                    <div
+                      role="menu"
+                      className="min-w-[170px] overflow-hidden rounded-[18px] border border-white/12 bg-[linear-gradient(180deg,rgba(24,29,43,0.98),rgba(16,19,29,0.98))] p-2 text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+                    >
+                      {(["en", "zh-CN"] as const).map((candidate, index) => (
+                        <form
+                          key={candidate}
+                          action="/api/locale"
+                          method="post"
+                          onSubmit={(event) => syncLocaleDestination(event, candidate)}
+                        >
+                          <input type="hidden" name="locale" value={candidate} />
+                          <input type="hidden" name="returnTo" value={getLocaleDestination(candidate)} />
+                          <button
+                            type="submit"
+                            role="menuitemradio"
+                            aria-checked={currentLocale === candidate}
+                            className={`${index ? "mt-1 " : ""}flex w-full items-center rounded-xl px-4 py-3 text-left text-base font-semibold transition-colors ${
+                              currentLocale === candidate
+                                ? "bg-white/10 text-white"
+                                : "text-white/82 hover:bg-white/8 hover:text-white"
+                            }`}
+                          >
+                            {candidate === "en" ? t.header.language.english : t.header.language.chinese}
+                          </button>
+                        </form>
+                      ))}
+                    </div>
+                  </div>
+              </details>
+            ) : null}
           </div>
 
           <button
             type="button"
             onClick={() => setIsMenuOpen((open) => !open)}
             className="inline-flex items-center justify-center rounded-md p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white md:hidden"
-            aria-label="Open main menu"
+            aria-label={t.header.navigation.openMenu}
           >
             <span className="text-2xl leading-none">{isMenuOpen ? "x" : "="}</span>
           </button>
@@ -441,13 +428,17 @@ export default function Header({ className }: HeaderProps) {
             </div>
             <div className="border-t border-[#26324d] pt-4">
               {PIXAL3D_SHOW_LANGUAGE_SWITCHER ? (
-                <button
-                  type="button"
-                  onClick={() => setLocale(currentLocale === "en" ? "zh-CN" : "en")}
-                  className="block py-2 text-sm font-semibold text-white/75"
+                <form
+                  action="/api/locale"
+                  method="post"
+                  onSubmit={(event) => syncLocaleDestination(event, currentLocale === "en" ? "zh-CN" : "en")}
                 >
-                  {currentLocale === "en" ? t.header.language.english : t.header.language.chinese}
-                </button>
+                  <input type="hidden" name="locale" value={currentLocale === "en" ? "zh-CN" : "en"} />
+                  <input type="hidden" name="returnTo" value={getLocaleDestination(currentLocale === "en" ? "zh-CN" : "en")} />
+                  <button type="submit" className="block py-2 text-sm font-semibold text-white/75">
+                    {currentLocale === "en" ? t.header.language.chinese : t.header.language.english}
+                  </button>
+                </form>
               ) : null}
               {user ? (
                 <>

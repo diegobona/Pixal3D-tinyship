@@ -7,6 +7,8 @@ import { translations } from "@libs/i18n";
 import type { Metadata } from "next";
 import { Button } from "@libs/react-shared/ui/button";
 import { mergeAndPaginateBlogPosts, normalizeBlogPageNumber } from "@libs/blog/static-posts";
+import { localizeDatabaseBlogPost } from "@libs/blog/localized-blog";
+import { localizedSeo, type SiteLocale } from "@/lib/localized-seo";
 
 const PAGE_SIZE = 12;
 
@@ -18,11 +20,14 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params;
   const t = translations[lang as keyof typeof translations];
+  const seo = localizedSeo("/blog", lang as SiteLocale);
 
   return {
     title: t.blog.metadata.title,
     description: t.blog.metadata.description,
     keywords: t.blog.metadata.keywords,
+    alternates: seo.alternates,
+    openGraph: { ...seo.openGraph, title: t.blog.metadata.title, description: t.blog.metadata.description },
   };
 }
 
@@ -30,6 +35,7 @@ export default async function BlogListPage({ params, searchParams }: Props) {
   const { lang } = await params;
   const { page: pageParam } = await searchParams;
   const t = translations[lang as keyof typeof translations];
+  const blogPath = lang === "zh-CN" ? "/zh-CN/blog" : "/blog";
 
   const requestedPage = normalizeBlogPageNumber(pageParam, 1);
 
@@ -44,6 +50,8 @@ export default async function BlogListPage({ params, searchParams }: Props) {
           coverImage: blogPost.coverImage,
           publishedAt: blogPost.publishedAt,
           authorName: user.name,
+          content: blogPost.content,
+          metadata: blogPost.metadata,
         })
         .from(blogPost)
         .leftJoin(user, eq(blogPost.authorId, user.id))
@@ -54,7 +62,11 @@ export default async function BlogListPage({ params, searchParams }: Props) {
     }
   })();
 
-  const { posts: paginatedPosts, page, totalPages } = mergeAndPaginateBlogPosts(dbPosts, {
+  const localizedDbPosts = dbPosts
+    .map((post) => localizeDatabaseBlogPost(post, lang === "zh-CN" ? "zh-CN" : "en"))
+    .filter((post): post is NonNullable<typeof post> => post !== null);
+
+  const { posts: paginatedPosts, page, totalPages } = mergeAndPaginateBlogPosts(localizedDbPosts, {
     locale: lang,
     page: requestedPage,
     pageSize: PAGE_SIZE,
@@ -83,7 +95,7 @@ export default async function BlogListPage({ params, searchParams }: Props) {
                 {paginatedPosts.map((post) => (
                   <Link
                     key={post.id}
-                    href={`/${lang}/blog/${post.slug}`}
+                    href={`${blogPath}/${post.slug}`}
                     className="group rounded-xl border border-border bg-card p-0 overflow-hidden transition-all hover:shadow-lg hover:border-primary/20"
                   >
                     {post.coverImage ? (
@@ -133,7 +145,7 @@ export default async function BlogListPage({ params, searchParams }: Props) {
                     className={page <= 1 ? "pointer-events-none opacity-50" : ""}
                   >
                     <Link
-                      href={page <= 1 ? "#" : `/${lang}/blog?page=${page - 1}`}
+                      href={page <= 1 ? "#" : `${blogPath}?page=${page - 1}`}
                       className="flex items-center gap-1"
                     >
                       <span aria-hidden="true">&lt;</span>
@@ -150,7 +162,7 @@ export default async function BlogListPage({ params, searchParams }: Props) {
                     className={page >= totalPages ? "pointer-events-none opacity-50" : ""}
                   >
                     <Link
-                      href={page >= totalPages ? "#" : `/${lang}/blog?page=${page + 1}`}
+                      href={page >= totalPages ? "#" : `${blogPath}?page=${page + 1}`}
                       className="flex items-center gap-1"
                     >
                       {t.actions.next}

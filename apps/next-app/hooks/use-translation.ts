@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { config } from "@config";
 import { isValidLocale, locales, translations, type SupportedLocale, type Translations } from "@libs/i18n";
+import { getLocalePath, persistLocalePreference } from "@/lib/locale-preference";
 
 function createTranslationFunction(dictionary: Translations) {
   return (key: string, params?: Record<string, unknown>) => {
@@ -41,14 +42,12 @@ export function useTranslation() {
     [locale]
   );
 
-  const changeLocale = (newLocale: SupportedLocale) => {
-    const pathWithoutLocale = pathname.replace(`/${locale}`, "") || "/";
-    router.push(
-      newLocale === config.app.i18n.defaultLocale
-        ? pathWithoutLocale
-        : `/${newLocale}${pathWithoutLocale === "/" ? "" : pathWithoutLocale}`
-    );
-    document.cookie = `${config.app.i18n.cookieKey}=${newLocale}; path=/; max-age=31536000`;
+  const changeLocale = async (newLocale: SupportedLocale) => {
+    const nextPath = getLocalePath(pathname, locale, newLocale);
+    const query = typeof window === "undefined" ? "" : window.location.search;
+
+    await persistLocalePreference(newLocale);
+    router.push(`${nextPath}${query}`);
   };
 
   return {

@@ -3,26 +3,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { subscribeToNotify, type NotifyItem } from "@/lib/notify";
+import { useTranslation } from "@/hooks/use-translation";
 
-const TOAST_STYLES: Record<NotifyItem["kind"], { badge: string; border: string; dot: string }> = {
+const TOAST_STYLES: Record<NotifyItem["kind"], { border: string; dot: string }> = {
   success: {
-    badge: "Success",
     border: "border-emerald-400/35",
     dot: "bg-emerald-400 shadow-[0_0_22px_rgba(52,211,153,0.6)]",
   },
   error: {
-    badge: "Error",
     border: "border-rose-400/35",
     dot: "bg-rose-400 shadow-[0_0_22px_rgba(251,113,133,0.55)]",
   },
   info: {
-    badge: "Notice",
     border: "border-sky-400/35",
     dot: "bg-sky-400 shadow-[0_0_22px_rgba(56,189,248,0.55)]",
   },
 };
 
 export function NotifyHost() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<NotifyItem[]>([]);
   const timeoutIdsRef = useRef<Map<string, number>>(new Map());
 
@@ -79,7 +78,7 @@ export function NotifyHost() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/45">
-                      {style.badge}
+                      {t.common.notifications[item.kind === "info" ? "notice" : item.kind]}
                     </div>
                     <div className="mt-1 text-sm font-semibold text-white">{item.title}</div>
                   </div>
@@ -87,7 +86,7 @@ export function NotifyHost() {
                     type="button"
                     onClick={() => removeToast(item.id)}
                     className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-base text-white/60 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
-                    aria-label="Dismiss notification"
+                    aria-label={t.common.notifications.dismiss}
                   >
                     <span aria-hidden="true">x</span>
                   </button>
