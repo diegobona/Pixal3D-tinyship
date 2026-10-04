@@ -973,7 +973,7 @@ export default function Home() {
               {isAuthenticated ? (
                 <a
                   data-testid="pixal3d-reference-image-cta"
-                  href="https://seedance3-pro.com/app?model=gpt-image-2"
+                  href="https://seedance3-pro.com/app/image/gpt-image-2?ref=pixal3d"
                   target="_blank"
                   rel="noreferrer noopener"
                   className="pixal3d-reference-cta group absolute left-[112px] top-[103px] z-30 inline-flex h-6 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-full border border-[#48bdff]/60 bg-[#0a172a]/95 px-2 text-[10px] font-extrabold tracking-[0.01em] text-[#9bffe1] shadow-[0_4px_14px_rgba(0,240,138,0.16)] outline-none transition duration-200 hover:-translate-y-px hover:border-[#83f7d0] hover:bg-[#10253d] hover:text-white focus-visible:ring-2 focus-visible:ring-[#8fffe1] focus-visible:ring-offset-1 focus-visible:ring-offset-[#071431]"

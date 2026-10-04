@@ -68,7 +68,7 @@ test.describe('Public Pages', () => {
     await expect(englishLink).toContainText('No image? Create one free');
     await expect(englishLink).toHaveAttribute(
       'href',
-      'https://seedance3-pro.com/app?model=gpt-image-2',
+      'https://seedance3-pro.com/app/image/gpt-image-2?ref=pixal3d',
     );
     await expect(englishLink).toHaveAttribute('target', '_blank');
     await expect(englishLink).toHaveAttribute('rel', 'noreferrer noopener');
@@ -91,10 +91,10 @@ test.describe('Public Pages', () => {
     await page.goto('/zh-CN', { timeout: TIMEOUTS.navigation });
 
     const chineseLink = page.getByTestId('pixal3d-reference-image-cta');
-    await expect(chineseLink).toContainText('没有参考图像，去免费生成');
+    await expect(chineseLink).toContainText('没有参考图？免费生成一张');
     await expect(chineseLink).toHaveAttribute(
       'href',
-      'https://seedance3-pro.com/app?model=gpt-image-2',
+      'https://seedance3-pro.com/app/image/gpt-image-2?ref=pixal3d',
     );
   });
 
