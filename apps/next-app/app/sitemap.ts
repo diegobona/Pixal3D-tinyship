@@ -7,6 +7,7 @@ import { blogPost, db } from "@libs/database";
 import { blogPostStatus } from "@libs/database/schema/blog-post";
 import { getAvailableBlogLocales, type BlogLocale } from "@libs/blog/localized-blog";
 import { tutorialPath, tutorialSlugs, TUTORIAL_REVIEWED_AT } from "@config/tutorials";
+import { intentPagePath, intentPageSlugs, IMAGE_TO_3D_REVIEWED_AT } from "@config/image-to-3d";
 
 const DEFAULT_APP_URL = "https://pixal3d.net";
 const LOCALES = ["en", "zh-CN"] as const;
@@ -92,6 +93,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ? [sitemapEntry("/pricing", { changeFrequency: "monthly", priority: 0.8 })]
       : []),
     sitemapEntry("/blog", { changeFrequency: "weekly", priority: 0.7 }),
+    ...intentPageSlugs.map((slug) => sitemapEntry(intentPagePath(slug), {
+      lastModified: IMAGE_TO_3D_REVIEWED_AT,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    })),
     ...tutorialSlugs.map((slug) => sitemapEntry(tutorialPath(slug), {
       lastModified: TUTORIAL_REVIEWED_AT,
       changeFrequency: "monthly",

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768">
+  <defs>
+    <linearGradient id="front" x1="0" x2="1"><stop stop-color="#d1a064"/><stop offset="1" stop-color="#b7793c"/></linearGradient>
+    <linearGradient id="side" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ab6b32"/><stop offset="1" stop-color="#805027"/></linearGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e5b879"/><stop offset="1" stop-color="#cf9958"/></linearGradient></defs>
+  <rect width="768" height="768" fill="#fff"/>
+  
+    <path d="M166 292 L405 374 L405 651 L166 566 Z" fill="url(#front)"/>
+    <path d="M405 374 L604 263 L604 541 L405 651 Z" fill="url(#side)"/>
+    <path d="M166 292 L367 181 L604 263 L405 374 Z" fill="url(#top)"/>
+    <g fill="none" stroke="#996430" stroke-width="6"><path d="M167 356 L405 440"/><path d="M166 421 L405 505"/><path d="M167 491 L405 575"/></g>
+    <g fill="none" stroke="#663c20" stroke-width="6"><path d="M405 440 L604 329"/><path d="M405 505 L604 394"/><path d="M405 575 L604 464"/></g>
+    <g fill="none" stroke="#b98246" stroke-width="5"><path d="M221 262 L460 343"/><path d="M274 232 L514 314"/><path d="M325 204 L566 286"/></g>
+    <path d="M166 291 L193 301 L193 576 L166 566 Z" fill="#e2b074"/>
+    <path d="M377 364 L405 374 L405 651 L377 641 Z" fill="#dda563"/>
+    <path d="M577 278 L604 263 L604 541 L577 556 Z" fill="#bb8247"/>
+    <path d="M178 310 L392 382 L392 409 L178 336 Z" fill="#e0ac6c"/>
+    <path d="M178 533 L392 606 L392 635 L178 560 Z" fill="#d29a56"/>
+    <path d="M202 528 L214 554 L370 415 L357 389 Z" fill="#edbc7a"/>
+    <path d="M425 393 L586 303 L586 328 L425 418 Z" fill="#c68b4d"/>
+    <path d="M425 606 L586 516 L586 541 L425 631 Z" fill="#b57b42"/>
+    <path d="M429 442 L450 430 L574 513 L554 525 Z" fill="#be8548"/>
+    <path d="M177 291 L367 186 L389 194 L201 301 Z" fill="#f0c48a"/>
+    <path d="M386 205 L582 271 L559 284 L364 217 Z" fill="#d5a66b"/>
+    <g fill="#6e4a2e"><circle cx="180" cy="324" r="4"/><circle cx="390" cy="395" r="4"/><circle cx="180" cy="548" r="4"/><circle cx="390" cy="622" r="4"/><ellipse cx="590" cy="320" rx="3" ry="4"/><ellipse cx="590" cy="529" rx="3" ry="4"/></g>
+  
+</svg>

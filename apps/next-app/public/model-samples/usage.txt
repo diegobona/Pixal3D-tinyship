@@ -1,0 +1,26 @@
+Pixal3D sample library: free evaluation usage
+
+These original reference drawings and the new models generated from them are
+provided for personal, educational and non-commercial evaluation. You may
+download them, inspect or modify them, and import them into a non-commercial
+test scene without registering an account or paying a fee.
+
+Commercial use or redistribution of the sample files is not granted by this
+usage note. A separate decision from the site operator is needed for that use.
+The samples do not include rigging or animation and are not certified for
+printing or production use. Geometry-only STL/OBJ conversions have no textures.
+
+This note applies only to the files explicitly listed in this site's new sample
+library. It does not apply to third-party examples or community-gallery assets.
+The MIT license of the inference code is separate from this sample usage note.
+
+Provenance: see each sample's generation.json and geometry-exports.json beside
+the files. Original references: scripts/model-samples/create-references.mjs.
+
+中文说明：
+本批原创输入图及由其生成的模型，免费供个人、教学与非商业评估使用。
+无需注册或付费，即可下载、检查、修改并导入非商业测试场景。
+本说明不授予商用或再分发许可，更广泛的用途需由站点运营方另行决定。
+模型不含骨骼或动画，也未验证打印或生产用途。STL/OBJ 转换只保留几何。
+此说明仅适用于本批明确列出的样本，不适用于第三方示例或社区作品。
+推理代码的 MIT 许可与本样本使用说明分别适用。

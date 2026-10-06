@@ -88,10 +88,10 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain("pixal3d-trial-pulse");
   });
 
-  it("collects one free-form 3D product request above the advantages section", () => {
+  it("collects one free-form 3D modeling tool request above the advantages section", () => {
     expect(pageSource).toContain('data-testid="pixal3d-pain-point-feedback"');
     expect(en.pixal3d.painPoint.eyebrow).toBe("1-minute feedback");
-    expect(en.pixal3d.painPoint.title).toBe("What kind of 3D product do you need right now?");
+    expect(en.pixal3d.painPoint.title).toBe("What do you need from a 3D modeling tool?");
     expect(en.pixal3d.painPoint.inputHint).toBe("You can write in any language.");
     expect(pageSource).toContain('/api/feedback/pain-point');
     expect(en.pixal3d.painPoint.successMessage).toBe("Thank you — this will help us build our next product.");

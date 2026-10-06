@@ -1,0 +1,51 @@
+{
+  "createdOn": "2026-10-06",
+  "purpose": "Original input images for the four user-approved victor/pixal3d-studio generation runs",
+  "threeDimensionalOutputStatus": "Not included in this reference-generation step",
+  "references": [
+    {
+      "id": "mushroom",
+      "source": "Original vector drawing defined in scripts/model-samples/create-references.mjs",
+      "externalImageInputs": [],
+      "referenceSvg": "apps/next-app/public/model-samples/mushroom/reference.svg",
+      "referencePng": "apps/next-app/public/model-samples/mushroom/reference.png",
+      "width": 768,
+      "height": 768,
+      "svgSha256": "80ea2035b43b0e72eadcc096cdb9d60d9c2697d24148cba31d64f6deaa92358c",
+      "pngSha256": "7b8b9bb223103af218794b6abb3985e33c737450165d38d19a6b311b3d7e9944"
+    },
+    {
+      "id": "teapot",
+      "source": "Original vector drawing defined in scripts/model-samples/create-references.mjs",
+      "externalImageInputs": [],
+      "referenceSvg": "apps/next-app/public/model-samples/teapot/reference.svg",
+      "referencePng": "apps/next-app/public/model-samples/teapot/reference.png",
+      "width": 768,
+      "height": 768,
+      "svgSha256": "89e56d54f21866b478b4a5fee15dc23c136fe15fe7d9e8627b913c11c86ea935",
+      "pngSha256": "b3b8f62fd56363ebfbcbd6cd06298491a8385c8ab8a6f1ac4609c4d6f25f4f47"
+    },
+    {
+      "id": "chair",
+      "source": "Original vector drawing defined in scripts/model-samples/create-references.mjs",
+      "externalImageInputs": [],
+      "referenceSvg": "apps/next-app/public/model-samples/chair/reference.svg",
+      "referencePng": "apps/next-app/public/model-samples/chair/reference.png",
+      "width": 768,
+      "height": 768,
+      "svgSha256": "1af93911b755d4fe5d8f46092b4f7cfe66146ee653e54de69e937f874878794b",
+      "pngSha256": "d24d7fef5b17e2c078ed90d32460fab4005fa119515675373590084161329c6c"
+    },
+    {
+      "id": "crate",
+      "source": "Original vector drawing defined in scripts/model-samples/create-references.mjs",
+      "externalImageInputs": [],
+      "referenceSvg": "apps/next-app/public/model-samples/crate/reference.svg",
+      "referencePng": "apps/next-app/public/model-samples/crate/reference.png",
+      "width": 768,
+      "height": 768,
+      "svgSha256": "3810b83100d14b09c7b70220be31a7da804e501b0de12f318816c2dfa8c9441a",
+      "pngSha256": "e6bdae8f4aa43b0b58c600da025a99f5324f6aaf9fef510d45661d09bb76e406"
+    }
+  ]
+}

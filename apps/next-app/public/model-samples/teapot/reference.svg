@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768">
+  <defs>
+    <radialGradient id="body" cx="30%" cy="24%" r="82%"><stop stop-color="#a7dace"/><stop offset=".5" stop-color="#5fae9f"/><stop offset="1" stop-color="#28665f"/></radialGradient>
+    <linearGradient id="handle" x1="0" x2="1"><stop stop-color="#367e73"/><stop offset=".55" stop-color="#70b6a6"/><stop offset="1" stop-color="#2d7468"/></linearGradient>
+    <linearGradient id="spout" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a1d4c7"/><stop offset=".6" stop-color="#64ac9b"/><stop offset="1" stop-color="#397f73"/></linearGradient>
+    <linearGradient id="lid" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#b8e1d3"/><stop offset="1" stop-color="#4e9a87"/></linearGradient></defs>
+  <rect width="768" height="768" fill="#fff"/>
+  
+    <path d="M496 295 C602 244 659 289 660 379 C661 470 615 522 525 500 L511 459 C575 477 614 443 615 382 C616 326 586 306 526 338 Z" fill="url(#handle)"/>
+    <path d="M268 373 C222 363 182 319 158 245 L102 238 C117 357 165 427 248 451 Z" fill="url(#spout)"/>
+    <ellipse cx="131" cy="242" rx="32" ry="14" transform="rotate(10 131 242)" fill="#306e62"/>
+    <ellipse cx="131" cy="242" rx="23" ry="7" transform="rotate(10 131 242)" fill="#183f3b"/>
+    <path d="M246 340 C253 278 308 246 387 246 C474 246 531 292 541 365 C561 468 532 558 467 592 C421 616 332 611 293 581 C239 541 223 441 246 340 Z" fill="url(#body)"/>
+    <ellipse cx="385" cy="289" rx="113" ry="44" fill="#4e9b89"/>
+    <path d="M276 283 C289 243 324 216 386 215 C450 215 486 240 498 283 C484 316 300 325 276 283 Z" fill="url(#lid)"/>
+    <ellipse cx="386" cy="275" rx="102" ry="35" fill="url(#lid)"/>
+    <path d="M370 217 L370 192 C370 174 399 174 400 192 L400 217 Z" fill="#469780"/>
+    <ellipse cx="385" cy="188" rx="20" ry="13" fill="#9dd4bc"/>
+    <path d="M274 373 C260 431 268 485 289 520" fill="none" stroke="#d3f1e4" stroke-width="17" stroke-linecap="round" opacity=".5"/>
+    <path d="M313 575 C349 596 424 604 470 576 L463 597 C417 617 353 610 320 592 Z" fill="#276b5f"/>
+  
+</svg>

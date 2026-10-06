@@ -1,8 +1,10 @@
 import type { Locale } from './types'
 import { tutorialsEn } from './tutorials/en'
 import { embedEn } from './embed'
+import { imageTo3DEn } from './image-to-3d/en'
 
 export const en: Locale = {
+  imageTo3D: imageTo3DEn,
   tutorials: tutorialsEn,
   embed: embedEn,
   common: {
@@ -211,10 +213,10 @@ export const en: Locale = {
     },
     painPoint: {
       eyebrow: "1-minute feedback",
-      title: "What kind of 3D product do you need right now?",
-      description: "Describe the 3D product you would like us to build next.",
+      title: "What do you need from a 3D modeling tool?",
+      description: "Tell us which part of your 3D workflow is frustrating and what you'd want software or an online tool to do for you.",
       inputHint: "You can write in any language.",
-      otherPlaceholder: "Describe the 3D product, style, format, or workflow you need...",
+      otherPlaceholder: "What's slowing you down? Describe what a tool should do, such as fixing mesh errors or processing models in batches...",
       submitButton: "Submit feedback",
       submittingButton: "Submitting...",
       successMessage: "Thank you — this will help us build our next product.",

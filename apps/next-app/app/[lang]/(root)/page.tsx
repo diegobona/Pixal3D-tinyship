@@ -19,6 +19,7 @@ import { Button } from "@libs/react-shared/ui/button";
 import { Input } from "@libs/react-shared/ui/input";
 import { LazyIframe } from "@libs/react-shared/components/lazy-iframe";
 import { tutorialPath, tutorialSlugs } from "@config/tutorials";
+import { intentPagePath, intentPageSlugs } from "@config/image-to-3d";
 import { useTranslation } from "@/hooks/use-translation";
 import { authClientReact } from "@libs/auth/authClient";
 import { dispatchCreditBalanceUpdated } from "@/lib/credit-balance-events";
@@ -974,14 +975,6 @@ export default function Home() {
                 <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#28e4cf]" />
                 {t.embed.title}
               </p>
-              <a
-                href={PIXAL3D_INLINE_TRIAL_IFRAME_URL}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="rounded text-xs text-[#aeb6ca] transition hover:text-[#9bffe1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#48bdff]"
-              >
-                {t.embed.source}
-              </a>
             </div>
             <div data-testid="pixal3d-inline-trial-body" className="relative min-h-[900px] flex-1 bg-[#0b0f1a] sm:min-h-[940px] lg:min-h-[960px]">
               {isAuthenticated ? (
@@ -1873,6 +1866,17 @@ export default function Home() {
             </div>
           </div>
 
+          <section data-testid="pixal3d-intent-links" aria-labelledby="pixal3d-intent-links-title" className="mt-12 w-full max-w-[1420px] border-t border-[#25314f] py-8">
+            <h2 id="pixal3d-intent-links-title" className="text-2xl font-extrabold tracking-normal text-white sm:text-3xl">{t.imageTo3D.common.homeLinksTitle}</h2>
+            <p className="mt-3 max-w-3xl text-base leading-7 text-[#aeb6ca]">{t.imageTo3D.common.homeLinksDescription}</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {intentPageSlugs.map((slug) => (
+                <a key={slug} href={localizedPath(intentPagePath(slug))} className="flex items-center justify-between gap-3 rounded-xl border border-[#25314f] bg-[#0b1426]/88 px-5 py-4 text-sm font-bold leading-6 text-[#d1e5ff] transition hover:border-[#48bdff]/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#48bdff]">
+                  <span>{slug === "image-to-3d" ? t.imageTo3D.common.compareLink : t.imageTo3D.common.downloadLink}</span><span aria-hidden="true" className="shrink-0 text-[#28e4cf]">→</span>
+                </a>
+              ))}
+            </div>
+          </section>
           <section
             data-testid="pixal3d-tutorial-links"
             aria-labelledby="pixal3d-tutorial-links-title"

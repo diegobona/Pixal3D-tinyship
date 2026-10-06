@@ -1,0 +1,41 @@
+import type { ImageTo3DTranslations } from "../../../ai3d/intent-pages";
+
+export const downloadEn: ImageTo3DTranslations["download"] = {
+  title: "Free Image to 3D Model Download",
+  description: "Get image-to-3D sample files with no sign up. Download self-hosted models, choose a file format, and check the limits of free generation and commercial use.",
+  eyebrow: "Get a model file",
+  summary: "Download a sample to check your import workflow, or use the workspace to generate a model from your own image. You do not need a Pixal3D account to download the files on this page.",
+  workspaceNote: "This workspace runs on a third-party Hugging Face Space. Its GPU queue, quotas and account requirements can change. The sample downloads on this page work independently of that Space.",
+  relatedTitle: "Choose a model or set up a local workflow",
+  jump: "Go to free downloads",
+  libraryTitle: "Downloadable model samples",
+  libraryIntro: "Each sample includes its source image and the files listed on its card. Downloads come directly from this site, with no sign up or site credits. Check the usage note before reusing a sample.",
+  libraryEmptyTitle: "The sample library is being prepared",
+  libraryEmptyBody: "There are no downloadable samples here yet. You can generate your own model in the workspace and use its download control when the export is ready.",
+  downloadLabel: "Download",
+  referenceLabel: "Source image",
+  provenanceLabel: "Generation source",
+  licenseLabel: "Sample usage terms",
+  workflowTitle: "From your image to a usable file",
+  workflow: [
+    { title: "Start with a clear object", body: "Use an image you have permission to upload. Keep the object fully in view and separate it from the background. A single view cannot show every surface, so inspect the generated back and underside." },
+    { title: "Wait for the final export", body: "Upload the image to the embedded workspace and run generation. Wait for a completed model before downloading. A preview image or a rotating viewer is not the model file." },
+    { title: "Check it in the target application", body: "Import the file into the application you plan to use. Check orientation, scale, geometry and any textures. For printing, inspect the mesh in a slicer before deciding it is ready." },
+  ],
+  formatsTitle: "Which format should you download?",
+  formatHeaders: ["Format", "Useful for", "What to check"],
+  formatRows: [
+    { name: "GLB", use: "Web viewers, game engines and an initial textured preview.", limits: "A binary glTF file can package geometry, materials and textures together. Check that your application supports the file's materials and any compression extensions." },
+    { name: "STL", use: "Passing a mesh to a 3D-printing slicer.", limits: "STL carries surface triangles without the GLB's color or textures. Confirm units, wall thickness and a closed, printable mesh. Changing the format does not repair geometry." },
+    { name: "OBJ", use: "Editing geometry in 3D software.", limits: "For textured OBJ, keep the MTL file and texture images with the OBJ. A geometry-only OBJ has no textures. Check what is included in the download." },
+    { name: "FBX", use: "Workflows in DCC software and game engines that expect FBX.", limits: "FBX availability depends on the exporter. Import a supported file into your 3D application and export FBX there if needed. A model download does not imply a rig or animation." },
+  ],
+  faqTitle: "Free downloads and usage",
+  faq: [
+    { question: "Can I download without signing up?", answer: "Yes. The sample-file links on this page do not require a Pixal3D account. Generating your own model uses the third-party Space, which may impose its own Hugging Face sign-in or quota rules." },
+    { question: "How much is free?", answer: "The listed sample files are free to download and do not spend Pixal3D credits. Free Space generation depends on the provider's available GPU time and queue. This page does not promise unlimited runs, priority access or a paid export feature for free." },
+    { question: "Can I use the samples commercially?", answer: "The samples are supplied for personal, educational and non-commercial evaluation under the usage note linked on each card. This page does not grant commercial reuse. For your own generated models, check your input-image rights and the terms of the model and hosting service. A code license alone does not clear every generated asset for commercial use." },
+    { question: "Why are there different download formats on different cards?", answer: "A card only links formats that are actually available for that sample. GLB is the textured model export; an STL or geometry-only OBJ conversion loses its textures. FBX is not offered unless an actual FBX file has been exported." },
+    { question: "Is a downloaded model ready for games or 3D printing?", answer: "Open it in your target application and inspect it first. Generated meshes can need cleanup, retopology or scale corrections. A printable STL also needs checks for open surfaces and thin walls; an STL extension alone does not make the object printable." },
+  ],
+};

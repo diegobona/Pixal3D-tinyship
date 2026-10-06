@@ -1,6 +1,5 @@
 export const embedEn = {
   title: "Pixal3D workspace",
-  source: "Hosted on Hugging Face",
   waiting: "The workspace will load when it comes into view.",
   loading: "Loading the embedded workspace…",
   slow: "The workspace is taking longer to load. You can retry or open it in a new tab. If it is already working, keep this page open to preserve your session.",
@@ -13,7 +12,6 @@ export const embedEn = {
 
 export const embedZhCN: typeof embedEn = {
   title: "Pixal3D 工作台",
-  source: "由 Hugging Face 托管",
   waiting: "工作台将在进入视口附近时加载。",
   loading: "正在加载内嵌工作台…",
   slow: "工作台加载时间较长。你可以重新加载或在新标签页中打开。如果工作台已能正常使用，请保留此页面以维持当前会话。",

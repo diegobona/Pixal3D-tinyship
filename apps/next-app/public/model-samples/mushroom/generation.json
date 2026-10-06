@@ -1,0 +1,58 @@
+{
+  "id": "mushroom",
+  "status": "complete",
+  "sourceSpace": "https://huggingface.co/spaces/victor/pixal3d-studio",
+  "sourceRevision": "ef1cb838893269417b3eaa81dd8fc635f65a5180",
+  "startedAt": "2026-10-06T14:59:28.156Z",
+  "input": {
+    "path": "/model-samples/mushroom/reference.png",
+    "sha256": "7b8b9bb223103af218794b6abb3985e33c737450165d38d19a6b311b3d7e9944",
+    "origin": "Original vector drawing in scripts/model-samples/create-references.mjs"
+  },
+  "parameters": {
+    "prompt": "A single red-capped mushroom with cream spots and a pale stem, matching the input illustration.",
+    "seed": 2026100601,
+    "resolution": 1024,
+    "quality": "draft",
+    "manual_fov": -1,
+    "share_to_community": false
+  },
+  "health": {
+    "ok": true,
+    "backend": "victor/pixal3d-studio",
+    "fast_backend": "local",
+    "fast_final": true,
+    "mock": false
+  },
+  "eventId": "93a09beb66b2486a9793070433328ae9",
+  "result": {
+    "ok": true,
+    "asset": {
+      "id": "82560ae497d0",
+      "title": "A single red-capped mushroom with cream spots",
+      "prompt": "A single red-capped mushroom with cream spots and a pale stem, matching the input illustration.",
+      "model_url": "https://huggingface.co/buckets/victor/pixal3d-community/resolve/assets/82560ae497d0/model.glb",
+      "preview_url": null,
+      "input_url": "https://huggingface.co/buckets/victor/pixal3d-community/resolve/assets/82560ae497d0/input.png",
+      "model_filename": "model.glb",
+      "seed": 2026100601,
+      "resolution": 1024,
+      "quality": "draft",
+      "source_space": "victor/pixal3d-studio",
+      "shared": false,
+      "created_at": "2026-10-06T23:00:42.067643+08:00",
+      "persistent": true,
+      "status": "complete",
+      "state_path": null
+    },
+    "mode": "fast_final",
+    "recoveredFrom": "Published bucket record for this exact prompt and seed; original timing response was not retained"
+  },
+  "completedAt": "2026-10-06T15:09:46.721Z",
+  "output": {
+    "path": "/model-samples/mushroom/model.glb",
+    "bytes": 3114164,
+    "sha256": "95375bf830b2ad4fdbae0d44f84b50b5bc5d97f3e1f48746d13a68db0ac94984"
+  },
+  "recoveredDeliveryIssue": "Unexpected output origin; inspect the result before downloading."
+}

@@ -1,8 +1,10 @@
 import type { Locale } from './types'
 import { tutorialsZhCN } from './tutorials/zh-CN'
 import { embedZhCN } from './embed'
+import { imageTo3DZhCN } from './image-to-3d/zh-CN'
 
 export const zhCN: Locale = {
+  imageTo3D: imageTo3DZhCN,
   tutorials: tutorialsZhCN,
   embed: embedZhCN,
   common: {
@@ -129,9 +131,9 @@ export const zhCN: Locale = {
       }
     },
     painPoint: {
-      eyebrow: "1 分钟反馈", title: "你现在需要一款什么样的 3D 产品？",
-      description: "告诉我们你希望接下来做出的 3D 产品。", inputHint: "可以使用任意语言填写。",
-      otherPlaceholder: "描述你需要的 3D 产品、风格、格式或工作流程……", submitButton: "提交反馈",
+      eyebrow: "1 分钟反馈", title: "你希望 3D 建模工具帮你解决什么问题？",
+      description: "说说你现在做 3D 时最麻烦的一步，以及希望软件或在线工具帮你做什么。", inputHint: "可以使用任意语言填写。",
+      otherPlaceholder: "你现在卡在哪一步？希望工具怎么帮你，比如自动修复网格，或批量处理模型……", submitButton: "提交反馈",
       submittingButton: "正在提交……", successMessage: "感谢反馈，这将帮助我们规划下一款产品。",
       errorMessage: "反馈提交失败，请重试。"
     },

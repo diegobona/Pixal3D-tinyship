@@ -1,0 +1,113 @@
+import type { ImageTo3DTranslations } from "../../../ai3d/intent-pages";
+
+export const comparisonEn: ImageTo3DTranslations["comparison"] = {
+  title: "Image to 3D: compare models and choose a workflow",
+  description: "Compare Pixal3D, Rodin Gen-2.5, TRELLIS.2 and Hunyuan3D 2.1 for image-to-3D generation. Check output formats, local GPU needs and online access before choosing.",
+  summary: "A photo, picture or concept image can become a 3D asset. Choose a model for the detail you need, then decide whether to use an online demo or run its available weights locally.",
+  eyebrow: "Choose an image-to-3D workflow",
+  workspaceNote: "The embedded Pixal3D community demo processes your image on Hugging Face. Its queue, access rules and download controls belong to that Space; it does not switch between all four models.",
+  relatedTitle: "Try a workflow or inspect a downloadable model",
+  jump: "Compare model options",
+  modelsTitle: "What each model gives you",
+  modelsIntro: "Start with the same reference image when comparing results. The suggestions below follow the models' documented capabilities. Published timings use different settings and hardware, so they cannot establish a shared speed ranking.",
+  models: {
+    pixal3d: {
+      name: "Pixal3D",
+      version: "Current TRELLIS.2-based release",
+      summary: "Projects image features into 3D to preserve visible detail. The current release adds PBR textures; the original paper used a different geometry backbone.",
+      suitable: "Try it for an object whose visible silhouette and small details need to follow the reference closely.",
+      avoid: "Inspect cutout edges carefully. The paper reports geometric artifacts from noisy segmentation boundaries, and multiview input needs accurate cameras.",
+      quality: "Check fidelity from the input view, then inspect hidden surfaces. Paper comparisons describe the original version and do not rank this newer release.",
+      formats: "The official image-to-3D script exports a textured GLB.",
+      runtime: "Downloadable weights and a browser demo. Local code has CPU offloading; MIT license, with separate dependency terms.",
+      memory: "CLI estimate: about 18 GB, or 10 to 12 GB with offloading. GPU and measurement conditions are unspecified; this is not a tested minimum.",
+      time: "The official local guide supplies no hardware-labelled end-to-end duration. Resolution and offloading change the work performed.",
+      sourceLabels: ["Official repository and license", "GLB export and memory estimate", "Paper results and limitations"],
+    },
+    rodin: {
+      name: "Hyper3D Rodin",
+      version: "Rodin Gen-2.5 hosted service",
+      summary: "A cloud workflow with mesh and material controls, including triangle or quad output. The API accepts up to five reference images.",
+      suitable: "Consider it when you want online generation with PBR materials and a choice of export formats, without setting up a local GPU.",
+      avoid: "Check the selected tier and fidelity mode. Creative mode allows looser input matching; texture enhancement can introduce artifacts.",
+      quality: "Compare the exported mesh with the reference before committing to a result. Faithful mode aims for closer matching than creative mode.",
+      formats: "Gen-2.5 API: GLB, USDZ, FBX, OBJ or STL. Material and mesh options depend on the request.",
+      runtime: "Hosted web service and authenticated API. Free preview, exports and commercial use depend on the plan and terms; API generation consumes credits.",
+      memory: "No local generation GPU is needed for the hosted service. Cloud GPU memory is not specified in its API guide.",
+      time: "Hyper3D advertises about 4 seconds for base geometry and 5 for a textured Gen-2.5 model. Hardware, tier and queue conditions are unspecified; larger jobs take longer.",
+      sourceLabels: ["Gen-2.5 controls and formats", "Plans and export access", "Publisher's generation-time claim", "Service and output terms"],
+    },
+    trellis: {
+      name: "Microsoft TRELLIS",
+      version: "TRELLIS.2 image-to-3D model",
+      summary: "Generates PBR assets with an O-Voxel representation. It handles open surfaces and complex topology, including non-manifold geometry.",
+      suitable: "Consider it for assets with sharp features or open surfaces such as clothing and leaves, when you can meet its local GPU requirements.",
+      avoid: "Keep the version in view. Original TRELLIS supports Gaussians and radiance fields; those outputs and its 16 GB requirement do not describe TRELLIS.2.",
+      quality: "Base color, roughness, metallic and opacity support relighting. Inspect both material maps and geometry in your destination renderer.",
+      formats: "The official TRELLIS.2 example exports a textured GLB. Original TRELLIS also decodes meshes, 3D Gaussians and radiance fields.",
+      runtime: "Downloadable model and code under MIT, with dependency terms. The official local installation is tested on Linux, A100 and H100 GPUs.",
+      memory: "TRELLIS.2 official prerequisite: an NVIDIA GPU with at least 24 GB. Original TRELLIS specifies at least 16 GB.",
+      time: "Publisher's H100 shape + material times: about 3 seconds at 512³, 17 at 1024³ and 60 at 1536³. Other GPUs, download time and queueing need separate estimates.",
+      sourceLabels: ["TRELLIS.2 features, hardware and timing", "Official GLB export example", "Original TRELLIS outputs and requirements"],
+    },
+    hunyuan3d: {
+      name: "Tencent Hunyuan3D",
+      version: "Hunyuan3D 2.1 shape and PBR models",
+      summary: "Generates geometry and then paints PBR materials. You can use the shape and texture stages separately.",
+      suitable: "Consider it when you want to inspect the shape before texturing, or need PBR material generation for an existing mesh.",
+      avoid: "Review the Community License before use. It excludes the EU, UK and South Korea, including outputs, and has additional conditions for large services.",
+      quality: "Version 2.1 replaces 2.0's RGB texture pipeline with PBR. Check the untextured shape first so surface color does not hide geometry errors.",
+      formats: "The 2.1 demo exports GLB, OBJ, PLY or STL. Its textured workflow creates OBJ and converts it to GLB; STL retains geometry only.",
+      runtime: "Downloadable weights and local Gradio app under the Tencent Community License. Hosted demos have their own availability and access rules.",
+      memory: "Official 2.1 figures: 10 GB for shape, 21 GB for texture, 29 GB combined. Hardware is unspecified. The 2.0 figures are 6 GB shape and 16 GB combined.",
+      time: "The 2.1 repository gives no hardware-labelled end-to-end duration. Shape-only and textured runs perform different work.",
+      sourceLabels: ["2.1 stages and memory figures", "Demo export code", "Community License restrictions", "2.0 version and memory figures"],
+    },
+  },
+  selectionTitle: "Choose the model and the way to run it",
+  selection: [
+    {
+      title: "Start with the reference you actually need",
+      body: "Use a view that makes the object easy to inspect. Pixal3D focuses on visible detail matching. TRELLIS.2 documents open surfaces and PBR attributes. Hunyuan3D 2.1 lets you work on shape before material generation. Rodin adds hosted mesh and export controls. These are reasons to try each workflow, not a quality leaderboard.",
+    },
+    {
+      title: "Choose online access or local control",
+      body: "An online demo runs on the provider's hardware and can have a queue or login requirement. Local Pixal3D, TRELLIS.2 and Hunyuan3D need their model files and dependencies. Their memory figures describe specific code paths; a low-memory setting can trade speed for memory, and it does not guarantee every GPU will work.",
+    },
+    {
+      title: "Match the export to its destination",
+      body: "Use GLB to inspect a textured asset in a browser or compatible editor. Check material handling when moving OBJ or FBX between tools. STL is a geometry export for a slicing workflow, so inspect scale, closed surfaces and wall thickness before printing.",
+    },
+    {
+      title: "Check access and rights before a longer run",
+      body: "Free preview, free file export and commercial permission are separate questions. Rodin sets access through its plans and service terms. Pixal3D and TRELLIS.2 use MIT with dependency terms. Hunyuan3D 2.1 has a territorial Community License; a separate license is required if a licensee's products exceeded one million monthly active users in the month before this version's release. Source-image rights still apply.",
+    },
+  ],
+  faqTitle: "Questions before converting an image",
+  faq: [
+    {
+      question: "Can I use an image-to-3D converter online for free without registering?",
+      answer: "Some public demos allow an initial visit without an account. Generation can still require login, available GPU quota or a queue. A free preview may have different export rights. Check the workspace you open and its current plan; this page cannot promise anonymous, unlimited generation or free commercial downloads.",
+    },
+    {
+      question: "Are photo to 3D, picture to 3D and image to 3D different tasks?",
+      answer: "They describe the same input workflow here: give the model a photograph, drawing or rendered image and ask it to generate a 3D asset. The hidden side must be inferred. Additional views can provide more evidence, but each model has its own input rules.",
+    },
+    {
+      question: "Which image-to-3D model should I choose?",
+      answer: "Start with your required output and hardware. Try Pixal3D for visible reference detail, TRELLIS.2 for its documented topology and PBR support, or Hunyuan3D 2.1 for separate shape and paint stages. Rodin is an option for hosted generation and export controls. Compare results using your own reference and check the license before adopting a workflow.",
+    },
+    {
+      question: "How much VRAM and time will local generation need?",
+      answer: "Check the exact version and runner. TRELLIS.2's official requirement is at least 24 GB; Pixal3D's CLI estimates 10 to 12 GB with offloading; Hunyuan3D 2.1 reports 10 GB for shape and 29 GB for shape plus texture. These figures have different scopes. The published H100 timings for TRELLIS.2 do not predict another model's time on your GPU.",
+    },
+    {
+      question: "How do I check whether the generated model is usable?",
+      answer: "Rotate it beyond the input view and inspect the back, underside and thin parts. View the mesh without texture to catch surface errors, then test its materials in the target renderer. Printing needs a separate check of dimensions and closed geometry. A convincing preview alone does not verify those properties.",
+    },
+    {
+      question: "Does the embedded workspace compare all four models?",
+      answer: "The workspace opens a Pixal3D community Space. The comparison helps you decide which model and run method to investigate; the linked official sources describe the other workflows. A Space's current availability and access rules determine whether you can generate there.",
+    },
+  ],
+};

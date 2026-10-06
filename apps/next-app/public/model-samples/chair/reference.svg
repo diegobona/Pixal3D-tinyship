@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="768" viewBox="0 0 768 768">
+  <defs>
+    <linearGradient id="wood" x1="0" x2="1"><stop stop-color="#bc804a"/><stop offset=".4" stop-color="#e2b578"/><stop offset="1" stop-color="#a76536"/></linearGradient>
+    <linearGradient id="back" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#efc792"/><stop offset="1" stop-color="#c48b50"/></linearGradient>
+    <linearGradient id="seat" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f1c78d"/><stop offset="1" stop-color="#d79752"/></linearGradient></defs>
+  <rect width="768" height="768" fill="#fff"/>
+  
+    <path d="M439 398 L471 413 L485 629 L455 643 Z" fill="#90542d"/>
+    <path d="M274 384 L304 371 L286 579 L257 592 Z" fill="#a56b3d"/>
+    <path d="M285 155 L315 143 L328 423 L297 435 Z" fill="url(#wood)"/>
+    <path d="M482 211 L512 198 L512 482 L482 494 Z" fill="#97592f"/>
+    <path d="M285 155 L315 143 L512 198 L482 211 Z" fill="#e6bd88"/>
+    <path d="M303 154 L495 205 L497 279 L306 229 Z" fill="url(#back)"/>
+    <path d="M327 247 L354 254 L357 366 L329 359 Z" fill="url(#wood)"/>
+    <path d="M381 261 L408 268 L410 380 L382 373 Z" fill="url(#wood)"/>
+    <path d="M435 276 L462 283 L464 394 L436 387 Z" fill="url(#wood)"/>
+    <path d="M238 383 L357 331 L542 391 L419 452 Z" fill="url(#seat)"/>
+    <path d="M238 383 L419 452 L419 482 L240 414 Z" fill="#b47a43"/>
+    <path d="M419 452 L542 391 L539 423 L419 482 Z" fill="#966132"/>
+    <path d="M250 407 L281 419 L267 639 L237 629 Z" fill="url(#wood)"/>
+    <path d="M398 473 L428 476 L447 674 L415 680 Z" fill="url(#wood)"/>
+    <path d="M515 421 L539 409 L554 612 L529 625 Z" fill="#a06a39"/>
+    <path d="M266 548 L414 603 L415 626 L263 572 Z" fill="#b17c44"/>
+    <path d="M430 581 L531 531 L533 555 L432 603 Z" fill="#9a6132"/>
+    <path d="M326 187 L467 225" stroke="#f8d5a7" stroke-width="6" stroke-linecap="round" opacity=".45"/>
+  
+</svg>

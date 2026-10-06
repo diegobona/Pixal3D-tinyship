@@ -1,0 +1,44 @@
+{
+  "inputPath": "/model-samples/mushroom/model.glb",
+  "inputBytes": 3114164,
+  "inputSha256": "95375bf830b2ad4fdbae0d44f84b50b5bc5d97f3e1f48746d13a68db0ac94984",
+  "sceneIndex": 0,
+  "meshInstances": 1,
+  "exportedVertices": 58407,
+  "triangles": 99288,
+  "bounds": {
+    "min": [
+      -0.28202491998672485,
+      -0.3244726359844208,
+      -0.2886427044868469
+    ],
+    "max": [
+      0.2811689078807831,
+      0.31416085362434387,
+      0.4695954918861389
+    ]
+  },
+  "geometryOnly": true,
+  "materialAndTextureFiles": [],
+  "units": "Source glTF units preserved; no rescaling applied",
+  "topologyRepaired": false,
+  "printabilityVerified": false,
+  "degenerateTriangles": 0,
+  "stlDegenerateTrianglesAfterFloat32Encoding": 0,
+  "outputs": [
+    {
+      "format": "OBJ",
+      "path": "/model-samples/mushroom/model.obj",
+      "filename": "pixal3d-mushroom.obj",
+      "bytes": 5615455,
+      "sha256": "b47e6e6b5f4ef607639d237429b28a0b9a9aa3c0071767d77f9993e4490625d4"
+    },
+    {
+      "format": "STL",
+      "path": "/model-samples/mushroom/model.stl",
+      "filename": "pixal3d-mushroom.stl",
+      "bytes": 4964484,
+      "sha256": "2b18e6640b68b72b1a6e1989461efee291a92104e3e00f8199b3b9f15572bc64"
+    }
+  ]
+}

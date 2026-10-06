@@ -1,0 +1,30 @@
+{
+  "id": "teapot",
+  "status": "failed",
+  "sourceSpace": "https://huggingface.co/spaces/victor/pixal3d-studio",
+  "sourceRevision": "ef1cb838893269417b3eaa81dd8fc635f65a5180",
+  "startedAt": "2026-10-06T15:09:46.724Z",
+  "input": {
+    "path": "/model-samples/teapot/reference.png",
+    "sha256": "b3b8f62fd56363ebfbcbd6cd06298491a8385c8ab8a6f1ac4609c4d6f25f4f47",
+    "origin": "Original vector drawing in scripts/model-samples/create-references.mjs"
+  },
+  "parameters": {
+    "prompt": "A single green ceramic teapot with its lid, curved spout and handle, matching the input illustration.",
+    "seed": 2026100602,
+    "resolution": 1024,
+    "quality": "draft",
+    "manual_fov": -1,
+    "share_to_community": false
+  },
+  "health": {
+    "ok": true,
+    "backend": "victor/pixal3d-studio",
+    "fast_backend": "local",
+    "fast_final": true,
+    "mock": false
+  },
+  "eventId": "77245741baa74724aaf8d8f097399fd9",
+  "failedAt": "2026-10-06T15:09:50.337Z",
+  "error": "Gradio generation error: {\"error\": \"You have exceeded your ZeroGPU quota (120s requested vs. 108s left). Try again in 23:49:40. Authenticate with a Hugging Face token for more quota - https://huggingface.co/settings/tokens\", \"duration\": 10, \"visible\": true, \"title\": \"ZeroGPU quota exceeded\"}"
+}

@@ -1,4 +1,8 @@
+import { mkdir } from 'node:fs/promises';
+import path from 'node:path';
 import { test, expect } from '@playwright/test';
+import { en } from '../../../libs/i18n/locales/en';
+import { zhCN } from '../../../libs/i18n/locales/zh-CN';
 import { PAGES, TIMEOUTS } from '../helpers/constants';
 
 /**
@@ -13,7 +17,7 @@ test.describe('Public Pages', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/api/auth/get-session**', (route) => route.fulfill({ json: null }));
     await page.route('**/api/credits/status', (route) => route.fulfill({ json: { credits: { balance: 0 }, subscription: null } }));
-    await page.route('https://victor-pixal3d-studio.hf.space/**', (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><p>Workspace fixture</p>' }));
+    await page.route('https://victor-pixal3d-studio.hf.space/**', (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Workspace fixture</title><body style="margin:0;background:#0b0f1a"></body>' }));
     await page.route('**/embed.tawk.to/**', (route) => route.abort());
     await page.route('https://ldyang694.github.io/**', (route) => route.abort());
   });
@@ -39,6 +43,19 @@ test.describe('Public Pages', () => {
 
     await expect(page.getByTestId('pixal3d-inline-trial-auth-overlay')).toBeVisible();
     await expect(page.getByTestId('pixal3d-reference-image-cta')).toHaveCount(0);
+    const englishBrand = page.getByTestId('pixal3d-inline-trial-brand');
+    await expect(englishBrand).toContainText(en.embed.title);
+    await expect(englishBrand.getByRole('link')).toHaveCount(0);
+
+    if (process.env.E2E_CAPTURE_FEEDBACK === 'true') {
+      await page.setViewportSize({ width: 1280, height: 1050 });
+      await englishBrand.scrollIntoViewIfNeeded();
+      const brandBox = (await englishBrand.boundingBox())!;
+      await page.evaluate((y) => window.scrollBy({ top: y - 120, behavior: 'instant' }), brandBox.y);
+      const directory = path.join(process.cwd(), '.tmp', 'feedback-copy');
+      await mkdir(directory, { recursive: true });
+      await page.screenshot({ path: path.join(directory, 'home-workspace-en.png'), fullPage: false });
+    }
 
     await page.route('**/api/auth/get-session', async (route) => {
       await route.fulfill({
@@ -98,6 +115,8 @@ test.describe('Public Pages', () => {
     await page.goto('/zh-CN', { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
 
     const chineseLink = page.getByTestId('pixal3d-reference-image-cta');
+    await expect(page.getByTestId('pixal3d-inline-trial-brand')).toContainText(zhCN.embed.title);
+    await expect(page.getByTestId('pixal3d-inline-trial-brand').getByRole('link')).toHaveCount(0);
     await expect(chineseLink).toContainText('没有参考图？免费生成一张');
     await expect(chineseLink).toHaveAttribute(
       'href',
@@ -105,12 +124,13 @@ test.describe('Public Pages', () => {
     );
   });
 
-  test('Home page collects a single 3D product request in any language', async ({ page }) => {
-    const productRequest = 'I need a low-poly city kit，也需要中文标牌。';
-    let submittedPayload: Record<string, unknown> | null = null;
+  test('Home page collects a 3D modeling tool request in both languages', async ({ page }) => {
+    test.setTimeout(60_000);
+    const toolRequest = 'I need a 3D modeling SaaS that fixes mesh errors in batches；希望 AI 自动检查模型问题并保留编辑记录。';
+    const submittedPayloads: Record<string, unknown>[] = [];
 
     await page.route('**/api/feedback/pain-point', async (route) => {
-      submittedPayload = route.request().postDataJSON() as Record<string, unknown>;
+      submittedPayloads.push(route.request().postDataJSON() as Record<string, unknown>);
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -118,25 +138,36 @@ test.describe('Public Pages', () => {
       });
     });
 
-    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
+    for (const [index, localized] of [
+      { url: '/', copy: en.pixal3d.painPoint },
+      { url: '/zh-CN', copy: zhCN.pixal3d.painPoint },
+    ].entries()) {
+      await page.goto(localized.url, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
+      const feedback = page.getByTestId('pixal3d-pain-point-feedback');
+      const textarea = feedback.getByTestId('pixal3d-product-request-input');
+      await expect(feedback.getByRole('heading', { name: localized.copy.title, exact: true })).toBeVisible();
+      await expect(feedback.getByText(localized.copy.description, { exact: true })).toBeVisible();
+      await expect(feedback.locator('input[type="checkbox"]')).toHaveCount(0);
+      await expect(feedback.locator('textarea')).toHaveCount(1);
+      await expect(textarea).toHaveAttribute('maxlength', '3000');
+      await expect(textarea).toHaveAttribute('placeholder', localized.copy.otherPlaceholder);
+      await expect(feedback.getByText(localized.copy.inputHint, { exact: true })).toBeVisible();
 
-    const feedback = page.getByTestId('pixal3d-pain-point-feedback');
-    const textarea = feedback.getByTestId('pixal3d-product-request-input');
+      if (index === 0 && process.env.E2E_CAPTURE_FEEDBACK === 'true') {
+        await page.setViewportSize({ width: 1280, height: 1050 });
+        await feedback.scrollIntoViewIfNeeded();
+        const directory = path.join(process.cwd(), '.tmp', 'feedback-copy');
+        await mkdir(directory, { recursive: true });
+        await page.screenshot({ path: path.join(directory, 'feedback-en.png'), fullPage: false });
+      }
 
-    await expect(feedback.getByRole('heading', {
-      name: 'What kind of 3D product do you need right now?',
-    })).toBeVisible();
-    await expect(feedback.locator('input[type="checkbox"]')).toHaveCount(0);
-    await expect(feedback.locator('textarea')).toHaveCount(1);
-    await expect(textarea).toHaveAttribute('maxlength', '3000');
-    await expect(feedback.getByText('You can write in any language.', { exact: true })).toBeVisible();
-
-    await textarea.fill(productRequest);
-    await feedback.getByRole('button', { name: 'Submit feedback' }).click();
-
-    await expect(feedback.getByText('Thank you — this will help us build our next product.')).toBeVisible();
-    expect(submittedPayload).toMatchObject({ otherText: productRequest });
-    expect(submittedPayload).not.toHaveProperty('painPoints');
+      await textarea.fill(toolRequest);
+      await feedback.getByRole('button', { name: localized.copy.submitButton, exact: true }).click();
+      await expect(feedback.getByText(localized.copy.successMessage, { exact: true })).toBeVisible();
+      expect(submittedPayloads).toHaveLength(index + 1);
+      expect(submittedPayloads[index]).toMatchObject({ otherText: toolRequest });
+      expect(submittedPayloads[index]).not.toHaveProperty('painPoints');
+    }
   });
 
   test('Sign in page loads and shows login form', async ({ page }) => {

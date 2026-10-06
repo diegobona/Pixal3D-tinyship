@@ -849,8 +849,22 @@ _每次测试运行后更新此表。_
 
 | # | Test name | Flow |
 |---|-----------|------|
-| 1 | Single product-request question | Open `/en` → find `pixal3d-pain-point-feedback` → verify the only question is “What kind of 3D product do you need right now?” → verify there are no checkbox options and exactly one textarea |
+| 1 | Single tool-request question | Open `/en` → find `pixal3d-pain-point-feedback` → verify the question asks “What do you need from a 3D modeling tool?” and the description/placeholder invite workflow problems and software features → verify there are no checkbox options and exactly one textarea |
 | 2 | Multilingual 3,000-character input | Verify the textarea hint says any language is accepted → verify the separate counter and `maxlength=3000` enforce the limit → enter text and submit → verify the success message appears |
+
+### 工作台标注与反馈措辞调整（2026-10-07）
+
+- 首页和两篇意图页的工作台外框不再显示 `Hosted on Hugging Face` 或对应中文托管标注；懒加载、登录覆盖层和故障恢复继续可用。
+- 首页 EN/ZH 的反馈标题、说明、输入提示明确询问 3D 建模软件、在线服务或 AI 工具的需求，引导用户描述工作流程中的问题与所需功能。
+- 反馈保持一个自由文本框、任意语言和 3,000 字上限；正常提交与成功提示继续可用。手机无横向溢出。
+
+**状态：** Green。Next 类型检查、生产构建通过；首页已有单元回归 10/10 通过（323ms）；相关公共首页、工作台和意图页 E2E 最终 16/16 通过（19.4s）。构建只保留既有 middleware 弃用提示。
+
+**命令：** `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/public-pages.spec.ts tests/e2e/specs/embedded-workspace.spec.ts tests/e2e/specs/image-to-3d-pages.spec.ts --grep 'Home page|Embedded workspace|Public image-to-3D intent pages'`；`corepack pnpm exec vitest run tests/unit/next/home-page-layout.test.ts`；`corepack pnpm --filter @tinyship/next-app typecheck` 与 `build`。
+
+Verify 使用已连接的 in-app browser，核对 EN/ZH 实际文字及 390px 中文布局（整页无横向溢出）。E2E 沿用 Chromium 路径覆盖与 `E2E_SKIP_CLEANUP=true`；反馈提交与登录/供应商页面均为 fixture，不写入真实用户反馈、不运行 GPU 或消费积分。`E2E_CAPTURE_FEEDBACK=true` 保存 `.tmp/feedback-copy/feedback-en.png` 和 `home-workspace-en.png`。
+
+最初工作台翻译回归在中文导航后发生客户端脚本未完成加载，尚未请求模拟 session 即超时。只读 trace 复核后，在该工作台 spec 中隔离无关的外部图库请求，与公共首页 spec 的 fixture 保持一致；工作台 3/3 和最终组合 16/16 均通过。没有调整业务登录逻辑、放宽断言或增加超时时间。
 
 ---
 
@@ -906,3 +920,34 @@ E2E 设置 `E2E_SKIP_CLEANUP=true`，因为这些用例使用会话/远程工作
 ### 第三方 iframe 统计边界（2026-10-06）
 
 用户确认只能嵌入第三方 `victor/pixal3d-studio`，没有修改 Space 代码的权限。实时只读核查公开源码与部署页面，两者均无生成/下载事件桥。准确的内部生成成功次数、模型下载请求次数暂不可接入；加载、焦点或外部打开不能替代它们。现有懒加载、品牌外框、SEO 和内链实现保留。本次仅补充已确认的限制说明，无运行时代码变更，沿用上面的验证结果。
+
+## 23. 图片转 3D 两个搜索意图页
+
+**状态：** 页面 Green（2026-10-06）；四个样本批次 Pending（1/4） ｜ **范围：** Next.js ｜ **公开页面与样本下载**
+
+| # | 验收场景 | 预期行为 |
+|---|---------|---------|
+| 1 | 两页双语公开访问 | `/image-to-3d-model-free-download`、`/image-to-3d` 和对应中文页未登录均可阅读，不跳转到登录页；英文 A 页 H1 直接包含 Free 和 Download |
+| 2 | 内容分工 | A 页围绕实际文件下载、免费边界、格式与权限 FAQ；B 页包含 Pixal3D、Hyper3D Rodin、TRELLIS、Hunyuan3D 独立卡片，说明适用对象、格式、质量限制、运行条件及已知耗时/显存的适用范围；不复制第二套首页生成器 |
+| 3 | 嵌入与来源边界 | 两页复用品牌外框及懒加载恢复入口，Space 可单独配置；明确第三方运行与本站样本下载的不同免费范围，框内没有本站登录遮罩，不宣称已统计内部生成/下载 |
+| 4 | 真正可下载的自托管文件 | 只展示来源/再分发权限明确且已存在的文件；无本站注册步骤、无占位链接，公开下载返回真实有效文件；样本说明生成来源和资产许可，不把模型代码许可当成输出许可，不冒充新生成批次 |
+| 5 | 格式与 FAQ | GLB、STL、OBJ、FBX 说明准确，只有实际存在的格式才有下载按钮；回答 no sign up、免费范围与商用，STL 提醒几何/尺寸检查，OBJ 说明材质依赖 |
+| 6 | SEO 与语言切换 | 两页有独立 title/description、无查询参数 canonical、EN/ZH/x-default hreflang；英文前缀别名跳转；sitemap 包含两页语言版本，robots 放行；切换语言保留当前页面和查询参数 |
+| 7 | 内链与移动布局 | 首页新增两页入口且已有文案保持；两页互链并连接相关四个教程；390px 无整页横向溢出，表格可局部滚动，按钮/FAQ 可操作 |
+| 8 | 无隐式付费操作 | 浏览、选择模型和公开样本下载不预留试用会话、不提交生成任务、不扣本站积分；外部工作台用 fixture 验证 UI，不把 fixture 当作真实 GPU 运行 |
+
+**结果：** `specs/image-to-3d-pages.spec.ts` 10/10 通过（初次 16.9s，最终布局调整后 15.3s）。覆盖两页 EN/ZH 公开内容、来源与 FAQ，实际匿名文件下载及 SHA-256、GLB 内嵌纹理和几何检查，OBJ/STL 面数与边界一致，懒加载、语言切换、首页/教程内链、canonical/hreflang/sitemap/robots、390px 布局与原图解码。浏览页面和下载文件未提交生成请求、预留试用会话或消耗本站积分。
+
+| 命令 | 结果 |
+|------|------|
+| `corepack pnpm --filter @tinyship/next-app typecheck` | 通过 |
+| `corepack pnpm --filter @tinyship/next-app build` | 通过，43 个预渲染页面；保留既有 middleware 弃用提示 |
+| `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts` | 最终 10/10 通过（15.3s） |
+| `corepack pnpm exec node --test scripts/model-samples/generation-safety.test.mjs scripts/model-samples/export-geometry.test.mjs` | 19/19 通过（293.7ms） |
+| `corepack pnpm exec node scripts/model-samples/refresh-manifest.mjs` | 1 个完整模型、3 个真实文件通过校验并生成清单 |
+
+桌面/手机 Verify 使用已连接的 in-app browser（本机无 `agent-browser`）。E2E 使用 `E2E_SKIP_CLEANUP=true` 与本节上一轮记录的 Chromium headless shell 路径覆盖；不创建测试数据库用户，远程 iframe 使用 fixture，下载使用真实本地公开文件。完整页面截图保存到 `.tmp/intent-pages/download-page.png` 和 `comparison-page.png`；下载区域预览为 `.tmp/intent-pages/download-preview.png`。
+
+独立脚本复核中的重复提交与原图完整性问题已修复。新回归覆盖明确的配额拒绝、未收到事件 ID 的提交中断、已接受请求的流/解析中断、恢复下载、Token 脱敏，以及原图变化时阻止跳过/续跑/发布。离线测试不请求真实供应商或 GPU。
+
+**未完成项：** 用户已指定 `victor/pixal3d-studio` 生成四个样本。蘑菇已完成并提供真实 GLB/OBJ/STL；茶壶被 ZeroGPU 匿名额度拒绝（请求 120s，剩余 108s），椅子和木箱未提交。未完成样本不进入清单，也不显示下载按钮。批次需要额度恢复或用户提供认证后续做。两页具体嵌入 Space 仍按原需求后定，目前各自配置为现有 Space。公开资产说明只授权个人、教育及非商业评估使用，未授予商用许可。

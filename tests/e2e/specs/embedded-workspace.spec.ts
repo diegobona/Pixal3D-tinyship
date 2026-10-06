@@ -14,6 +14,8 @@ async function mockWorkspaceSession(page: Page, authenticated: boolean) {
     await route.fulfill({ json: { credits: { balance: 0 }, subscription: null } });
   });
   await page.route('**/embed.tawk.to/**', (route) => route.abort());
+  // Gallery images/models are unrelated to workspace auth and recovery assertions.
+  await page.route('https://ldyang694.github.io/**', (route) => route.abort());
 }
 
 async function deferIntersection(page: Page) {
@@ -110,7 +112,9 @@ test.describe('Embedded workspace foundation', () => {
       ['/zh-CN', 'Pixal3D 工作台', '工作台没有响应？', '关闭帮助'],
     ]) {
       await page.goto(path, { waitUntil: 'domcontentloaded' });
-      await expect(page.getByTestId('pixal3d-inline-trial-brand')).toContainText(title);
+      const brand = page.getByTestId('pixal3d-inline-trial-brand');
+      await expect(brand).toContainText(title);
+      await expect(brand.getByRole('link')).toHaveCount(0);
       const frame = page.getByTestId(frameId);
       const helper = page.getByTestId('pixal3d-reference-image-cta');
       await expect(helper).toBeVisible();
