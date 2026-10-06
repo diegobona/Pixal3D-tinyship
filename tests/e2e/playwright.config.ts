@@ -28,6 +28,10 @@ export default defineConfig({
 
   use: {
     baseURL: 'http://localhost:7001',
+    // Optional local browser override when the matching bundled download is unavailable.
+    ...(process.env.E2E_CHROMIUM_EXECUTABLE_PATH ? {
+      launchOptions: { executablePath: process.env.E2E_CHROMIUM_EXECUTABLE_PATH },
+    } : {}),
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

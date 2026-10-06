@@ -34,7 +34,7 @@ describe("Next home page layout", () => {
     const ctaIndex = pageSource.indexOf('data-testid="pixal3d-reference-image-cta"');
     const inlineTrialIndex = pageSource.indexOf('data-testid="pixal3d-inline-trial"');
     const inlineTrialBodyIndex = pageSource.indexOf('data-testid="pixal3d-inline-trial-body"');
-    const iframeIndex = pageSource.indexOf('data-testid="pixal3d-inline-trial-iframe"');
+    const iframeIndex = pageSource.indexOf('testId="pixal3d-inline-trial-iframe"');
 
     expect(ctaIndex).toBeGreaterThan(inlineTrialIndex);
     expect(ctaIndex).toBeGreaterThan(inlineTrialBodyIndex);
@@ -48,12 +48,12 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain("px-2");
     expect(pageSource).toContain("text-[10px]");
     expect(pageSource).not.toContain("min-h-9");
-    expect(pageSource).toContain('href="https://seedance3-pro.com/app?model=gpt-image-2"');
+    expect(pageSource).toContain('href="https://seedance3-pro.com/app/image/gpt-image-2?ref=pixal3d"');
     expect(pageSource).toContain('target="_blank"');
     expect(pageSource).toContain('rel="noreferrer noopener"');
     expect(pageSource).toContain("t.pixal3d.generator.referenceImageCta");
     expect(en.pixal3d.generator.referenceImageCta).toBe("No image? Create one free");
-    expect(zhCN.pixal3d.generator.referenceImageCta).toBe("没有参考图像，去免费生成");
+    expect(zhCN.pixal3d.generator.referenceImageCta).toBe("没有参考图？免费生成一张");
     expect(globalCssSource).toContain("@keyframes pixal3d-reference-cta-glow");
     expect(globalCssSource).toContain(".pixal3d-reference-cta");
     expect(globalCssSource).toContain("animation: none;");
@@ -196,7 +196,8 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain('data-testid="pixal3d-inline-trial-auth-overlay"');
     expect(pageSource).not.toContain('data-testid="pixal3d-inline-trial-instance-hint"');
     expect(pageSource).not.toContain('Click the "Open Instance X" button');
-    expect(pageSource).toContain("Sign in to use it for free");
+    expect(pageSource).toContain("t.pixal3d.generator.signedOutTitle");
+    expect(en.pixal3d.generator.signedOutTitle).toBe("Sign in to use it for free");
     expect(pageSource).toContain('window.location.href = localizedPath("/signin");');
     expect(pageSource).toContain("lg:h-[960px] lg:min-h-[960px]");
     expect(pageSource).not.toContain("lg:h-[1180px]");

@@ -18,6 +18,10 @@ config({ path: resolve(__dirname, '../../.env') });
 const E2E_EMAIL_PATTERN = 'e2e-%@example.com';
 
 export default async function globalTeardown() {
+  if (process.env.E2E_SKIP_CLEANUP === 'true') {
+    console.log('[teardown] Test user cleanup skipped (E2E_SKIP_CLEANUP=true).');
+    return;
+  }
   const databaseUrl = process.env.DATABASE_URL;
 
   if (!databaseUrl) {

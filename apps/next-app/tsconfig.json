@@ -5,6 +5,7 @@
     "paths": {
       "@/*": ["./*"],
       "@libs/*": ["../../libs/*"],
+      "@config/*": ["../../config/*"],
       "@config": ["../../config.ts"]
     },
     "lib": [

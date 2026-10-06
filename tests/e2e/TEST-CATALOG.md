@@ -30,6 +30,7 @@
 - [21. My Assets 历史任务测试](#21-my-assets-历史任务测试)
 
 ### 待实现 (Backlog)
+- [22. Pixal3D 教程页与 iframe 底座](#22-pixal3d-教程页与-iframe-底座)
 - [19. 支付宝支付流程测试](#19-支付宝支付流程测试)
 - [20. 博客功能测试](#20-博客功能测试)
 
@@ -824,6 +825,10 @@ PayPal 重定向到 /api/payment/return/paypal?order_id=xxx&token=xxx&PayerID=xx
 | 2026-10-05 | Next.js | 1 | 0 | 0 | 参考图生成按钮中英文新跳转地址与 `ref=pixal3d` 参数（public-pages.spec.ts）— 通过（14.5s） |
 | 2026-09-19 | Next.js | 7 | 0 | 0 | 中英双语、自动语言判断、手动偏好与 SEO（i18n-switching.spec.ts）— 全部通过（1.5m） |
 
+| 2026-10-06 | Next.js | 19 | 0 | 0 | 教程 13 项 + iframe 3 项（49.7s），相关首页回归 3 项（4.0s）；外部工作台/会话使用 fixture |
+| 2026-10-06 | Next.js | 13 | 0 | 0 | 最终便携版操作文案调整后，教程页回归再次全部通过（23.1s） |
+| 2026-10-06 | Next.js | 13 | 0 | 0 | humanizer 润色四篇中英文教程后，教程页回归全部通过（26.3s） |
+
 _每次测试运行后更新此表。_
 
 ---
@@ -859,3 +864,45 @@ _每次测试运行后更新此表。_
 | 2 | Poll Pixal3D task to GLB | Poll `/api/3d-generate/status?taskId=...` until terminal -> verify success includes a `.glb` model URL, or provider runtime failure marks the task failed without automatic refund |
 | 3 | Missing fal key fails safely | Run generation without `FAL_API_KEY` in a local test environment -> verify the API returns an error and any consumed credits are refunded |
 | 4 | Wiro backup remains available | Submit `provider=wiro` with `WIRO_API_KEY` configured -> verify the same API shape returns a processing task and status polling maps Wiro GLB output |
+
+## 22. Pixal3D 教程页与 iframe 底座
+
+**状态：** Green（2026-10-06） ｜ **范围：** Next.js ｜ **无需登录阅读教程**
+
+| # | 验收场景 | 预期行为 |
+|---|---------|---------|
+| 1 | 四个独立教程入口 | `/how-to-install-locally`、`/gguf`、`/low-vram`、`/comfyui` 及对应 `/zh-CN` 页面均可直接访问，未登录不重定向到登录页；标题和正文对应目标主题 |
+| 2 | 统一教程结构 | 环境要求 → 逐步操作 → 已公开的性能证据 → 常见问题与解决 → 模型/文件来源 → 截图；数据、报错和社区支持结论附可核实来源，未知数据明确说明 |
+| 3 | SEO 与 URL | 每页独立 title/description、干净 canonical、EN/ZH/x-default hreflang；查询参数不进入 canonical；`/en/<slug>` 跳转到英文干净 URL；sitemap 包含四页并声明语言版本，robots 放行教程且不暴露私有/API 索引入口 |
+| 4 | 内链 | 首页新增四个教程链接且现有文案保持；教程互链和返回首页按当前语言生成 URL |
+| 5 | 布局与截图 | 桌面与手机均无横向溢出；命令块可横向滚动；真实来源截图/示例注明出处与性质，不冒充本机实测 |
+| 6 | iframe 懒加载与品牌外框 | 初始保持固定占位高度，接近视口才挂载外部 iframe，具有 native loading=lazy；外框标题、来源与状态有 EN/ZH 文案；原 iframe 尺寸及登录遮罩/参考图入口保持 |
+| 7 | 加载失败与恢复 | 网络失败或超时出现说明和可操作的重试/外部打开入口；重新加载成功后状态恢复，无无限加载遮罩 |
+| 8 | 埋点可行性与真实性 | 生成和下载定义为两个独立事件；明确现有跨域 iframe 是否提供事件桥；加载、焦点、会话分配不能冒充生成或下载次数；任何待接入方案不宣称已统计成功 |
+
+**结果：** 教程 13 项、iframe 3 项、受影响的首页回归 3 项通过。使用运行中的 Next.js（7001）完成桌面/390px 手机浏览器验收；官方预览和归档截图均确认真实解码。类型检查、生产构建与首页单元回归 11 项通过。
+
+| 命令 | 结果 |
+|------|------|
+| `corepack pnpm --filter @tinyship/next-app typecheck` | 通过 |
+| `corepack pnpm --filter @tinyship/next-app build` | 通过，39 个路由；保留 Next.js 既有 middleware 弃用提示 |
+| `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/tutorials.spec.ts tests/e2e/specs/embedded-workspace.spec.ts` | 16/16 通过（49.7s） |
+| `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/tutorials.spec.ts` | 最终文案调整后，13/13 再次通过（23.1s） |
+| `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/public-pages.spec.ts --grep 'Home page\|Embedded workspace'` | 3/3 通过（4.0s） |
+| `corepack pnpm exec vitest run tests/unit/next/home-page-layout.test.ts tests/unit/next/home-progress-order.test.ts` | 11/11 通过 |
+
+E2E 设置 `E2E_SKIP_CLEANUP=true`，因为这些用例使用会话/远程工作台 fixture，不创建数据库用户。当前机器仅缓存 Chromium 149（headless shell 1228），通过 `E2E_CHROMIUM_EXECUTABLE_PATH` 选择该浏览器；未安装匹配 Playwright 1.60 的默认 Chromium 下载。路由、页面渲染、语言切换和元数据使用真实 Next.js，测试没有执行 GPU 生成、分配试用会话或消耗积分。未宣称跨域生成/下载计数已接通。
+
+### 教程文字润色（2026-10-06）
+
+**状态：** Green。使用已安装的 humanizer skill 润色四篇 EN/ZH 教程，仅调整文章措辞。
+
+- 保留观点、事实、数字、来源、适用条件与未知项；不增加作者经历或 GPU 测试结论。
+- 命令、文件名、路径、模型/节点参数、链接地址与教程结构保持一致。
+- 四篇双语页面、元数据、语言切换与移动布局继续通过现有教程 E2E；完成 Next.js 类型检查和构建。
+
+**验证结果：** 独立逐篇复核通过；对比润色前快照，数字实际值、命令、路径、来源/图片地址、公共 UI 标签及结构均保留。真实浏览器确认新版文字显示。`corepack pnpm --filter @tinyship/next-app typecheck` 与 `build` 均通过；`corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/tutorials.spec.ts` 13/13 通过（26.3s）。E2E 沿用本节记录的 Chromium 路径覆盖与 fixture 设置，构建仅有既有 middleware 弃用提示。
+
+### 第三方 iframe 统计边界（2026-10-06）
+
+用户确认只能嵌入第三方 `victor/pixal3d-studio`，没有修改 Space 代码的权限。实时只读核查公开源码与部署页面，两者均无生成/下载事件桥。准确的内部生成成功次数、模型下载请求次数暂不可接入；加载、焦点或外部打开不能替代它们。现有懒加载、品牌外框、SEO 和内链实现保留。本次仅补充已确认的限制说明，无运行时代码变更，沿用上面的验证结果。

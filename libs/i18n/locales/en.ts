@@ -1,6 +1,10 @@
 import type { Locale } from './types'
+import { tutorialsEn } from './tutorials/en'
+import { embedEn } from './embed'
 
 export const en: Locale = {
+  tutorials: tutorialsEn,
+  embed: embedEn,
   common: {
     login: "Login",
     and: "and",

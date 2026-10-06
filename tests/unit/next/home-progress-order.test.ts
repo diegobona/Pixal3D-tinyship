@@ -13,7 +13,7 @@ describe("home free trial modal layout", () => {
     const headerIndex = source.indexOf('data-testid="pixal3d-hf-trial-header"');
     const timerIndex = source.indexOf('data-testid="pixal3d-hf-trial-timer"');
     const modalBodyIndex = source.indexOf('data-testid="pixal3d-hf-trial-body"');
-    const iframeIndex = source.indexOf('data-testid="pixal3d-hf-trial-iframe"');
+    const iframeIndex = source.indexOf('testId="pixal3d-hf-trial-iframe"');
 
     expect(source).not.toContain('data-testid="pixal3d-hf-trial-panel"');
     expect(modalIndex).toBeGreaterThan(-1);

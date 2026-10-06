@@ -6,6 +6,7 @@ import { PIXAL3D_SHOW_MONETIZATION_SURFACES } from "@/lib/pixal3d-surface-visibi
 import { blogPost, db } from "@libs/database";
 import { blogPostStatus } from "@libs/database/schema/blog-post";
 import { getAvailableBlogLocales, type BlogLocale } from "@libs/blog/localized-blog";
+import { tutorialPath, tutorialSlugs, TUTORIAL_REVIEWED_AT } from "@config/tutorials";
 
 const DEFAULT_APP_URL = "https://pixal3d.net";
 const LOCALES = ["en", "zh-CN"] as const;
@@ -91,6 +92,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ? [sitemapEntry("/pricing", { changeFrequency: "monthly", priority: 0.8 })]
       : []),
     sitemapEntry("/blog", { changeFrequency: "weekly", priority: 0.7 }),
+    ...tutorialSlugs.map((slug) => sitemapEntry(tutorialPath(slug), {
+      lastModified: TUTORIAL_REVIEWED_AT,
+      changeFrequency: "monthly",
+      priority: 0.75,
+    })),
   ];
 
   const staticBlogEntries = getStaticBlogPosts().map((post) =>

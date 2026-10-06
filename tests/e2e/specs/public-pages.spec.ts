@@ -10,8 +10,15 @@ import { PAGES, TIMEOUTS } from '../helpers/constants';
  */
 
 test.describe('Public Pages', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/auth/get-session**', (route) => route.fulfill({ json: null }));
+    await page.route('**/api/credits/status', (route) => route.fulfill({ json: { credits: { balance: 0 }, subscription: null } }));
+    await page.route('https://victor-pixal3d-studio.hf.space/**', (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><p>Workspace fixture</p>' }));
+    await page.route('**/embed.tawk.to/**', (route) => route.abort());
+    await page.route('https://ldyang694.github.io/**', (route) => route.abort());
+  });
   test('Home page loads and renders hero section', async ({ page }) => {
-    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation });
+    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
 
     // Page should load without errors
     await expect(page).not.toHaveTitle(/error|500|404/i);
@@ -28,7 +35,7 @@ test.describe('Public Pages', () => {
   });
 
   test('Embedded workspace shows a small source-image helper only after sign-in', async ({ page }) => {
-    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation });
+    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
 
     await expect(page.getByTestId('pixal3d-inline-trial-auth-overlay')).toBeVisible();
     await expect(page.getByTestId('pixal3d-reference-image-cta')).toHaveCount(0);
@@ -88,7 +95,7 @@ test.describe('Public Pages', () => {
     expect(linkBox!.y + linkBox!.height).toBeLessThanOrEqual(iframeBox!.y + 130);
     await expect(page.getByTestId('anyposes-footer-link')).toHaveCount(0);
 
-    await page.goto('/zh-CN', { timeout: TIMEOUTS.navigation });
+    await page.goto('/zh-CN', { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
 
     const chineseLink = page.getByTestId('pixal3d-reference-image-cta');
     await expect(chineseLink).toContainText('没有参考图？免费生成一张');
@@ -111,7 +118,7 @@ test.describe('Public Pages', () => {
       });
     });
 
-    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation });
+    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
 
     const feedback = page.getByTestId('pixal3d-pain-point-feedback');
     const textarea = feedback.getByTestId('pixal3d-product-request-input');

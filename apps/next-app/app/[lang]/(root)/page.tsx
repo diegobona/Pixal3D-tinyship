@@ -17,6 +17,8 @@ import {
 } from "@libs/ai/3d-entitlements";
 import { Button } from "@libs/react-shared/ui/button";
 import { Input } from "@libs/react-shared/ui/input";
+import { LazyIframe } from "@libs/react-shared/components/lazy-iframe";
+import { tutorialPath, tutorialSlugs } from "@config/tutorials";
 import { useTranslation } from "@/hooks/use-translation";
 import { authClientReact } from "@libs/auth/authClient";
 import { dispatchCreditBalanceUpdated } from "@/lib/credit-balance-events";
@@ -329,7 +331,6 @@ export default function Home() {
   const [hfTrialSecondsLeft, setHfTrialSecondsLeft] = useState(0);
   const [hfTrialEndsAt, setHfTrialEndsAt] = useState<number | null>(null);
   const [isOpeningHfTrial, setIsOpeningHfTrial] = useState(false);
-  const [isHfTrialFrameLoading, setIsHfTrialFrameLoading] = useState(false);
   const [isHfTrialModalOpen, setIsHfTrialModalOpen] = useState(false);
   const [isHfTrialLimitReached, setIsHfTrialLimitReached] = useState(false);
   const [activeInspirationId, setActiveInspirationId] = useState<string | null>(null);
@@ -580,7 +581,6 @@ export default function Home() {
         setHfTrialUrl("");
         setHfTrialQueueSize(null);
         setHfTrialEndsAt(null);
-        setIsHfTrialFrameLoading(false);
         setIsHfTrialModalOpen(false);
         showPageNotice("info", t.pixal3d.generator.freeTrialExpired);
       }
@@ -619,7 +619,6 @@ export default function Home() {
     setHfTrialSecondsLeft(0);
     setHfTrialEndsAt(null);
     setIsOpeningHfTrial(false);
-    setIsHfTrialFrameLoading(false);
   };
 
   useEffect(() => {
@@ -897,7 +896,6 @@ export default function Home() {
     hfTrialRequestIdRef.current = requestId;
     setIsHfTrialModalOpen(true);
     setIsOpeningHfTrial(true);
-    setIsHfTrialFrameLoading(false);
     clearPageNotice();
 
     try {
@@ -928,7 +926,6 @@ export default function Home() {
 
       if (requestId !== hfTrialRequestIdRef.current) return;
       setHfTrialUrl(data.data.selected.url);
-      setIsHfTrialFrameLoading(true);
       setHfTrialQueueSize(data.data.selected.queueSize);
       setHfTrialSecondsLeft(FREE_TRIAL_DURATION_SECONDS);
       setHfTrialEndsAt(Date.now() + FREE_TRIAL_DURATION_SECONDS * 1000);
@@ -969,6 +966,23 @@ export default function Home() {
             data-testid="pixal3d-inline-trial"
             className="relative mt-4 w-full max-w-[1420px] overflow-hidden rounded-2xl border border-[#25314f] bg-[#070d20] shadow-[0_28px_110px_rgba(0,0,0,0.26)]"
           >
+            <div
+              data-testid="pixal3d-inline-trial-brand"
+              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[#25314f] px-4 py-3 sm:px-5"
+            >
+              <p className="inline-flex items-center gap-2 text-sm font-bold text-white">
+                <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#28e4cf]" />
+                {t.embed.title}
+              </p>
+              <a
+                href={PIXAL3D_INLINE_TRIAL_IFRAME_URL}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="rounded text-xs text-[#aeb6ca] transition hover:text-[#9bffe1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#48bdff]"
+              >
+                {t.embed.source}
+              </a>
+            </div>
             <div data-testid="pixal3d-inline-trial-body" className="relative min-h-[900px] flex-1 bg-[#0b0f1a] sm:min-h-[940px] lg:min-h-[960px]">
               {isAuthenticated ? (
                 <a
@@ -988,14 +1002,12 @@ export default function Home() {
                   </span>
                 </a>
               ) : null}
-              <iframe
-                data-testid="pixal3d-inline-trial-iframe"
+              <LazyIframe
+                testId="pixal3d-inline-trial-iframe"
                 title={t.pixal3d.generator.hfTrialTitle}
                 src={PIXAL3D_INLINE_TRIAL_IFRAME_URL}
+                labels={t.embed}
                 className="h-[900px] min-h-[900px] w-full bg-[#0b0f1a] sm:h-[940px] sm:min-h-[940px] lg:h-[960px] lg:min-h-[960px]"
-                allow="clipboard-read; clipboard-write"
-                sandbox="allow-downloads allow-forms allow-modals allow-popups allow-same-origin allow-scripts"
-                referrerPolicy="no-referrer"
               />
               {!isAuthenticated ? (
                 <div
@@ -1628,19 +1640,16 @@ export default function Home() {
 
                 <div data-testid="pixal3d-hf-trial-body" className="relative min-h-0 flex-1 bg-[#0b0f1a]">
                   {hfTrialUrl ? (
-                    <iframe
-                      data-testid="pixal3d-hf-trial-iframe"
+                    <LazyIframe
+                      testId="pixal3d-hf-trial-iframe"
                       title={t.pixal3d.generator.hfTrialTitle}
                       src={hfTrialUrl}
+                      labels={t.embed}
                       className="h-full min-h-[520px] w-full bg-[#0b0f1a]"
-                      allow="clipboard-read; clipboard-write"
-                      sandbox="allow-downloads allow-forms allow-modals allow-popups allow-same-origin allow-scripts"
-                      referrerPolicy="no-referrer"
-                      onLoad={() => setIsHfTrialFrameLoading(false)}
                     />
                   ) : null}
 
-                  {(isOpeningHfTrial || isHfTrialFrameLoading) && (
+                  {isOpeningHfTrial && (
                     <div
                       className="absolute inset-0 z-10 flex items-center justify-center bg-[radial-gradient(circle_at_50%_35%,rgba(72,189,255,0.14),rgba(7,13,32,0.96)_58%,rgba(7,13,32,1))] px-6 text-center"
                       data-testid="pixal3d-hf-trial-loading"
@@ -1650,14 +1659,10 @@ export default function Home() {
                           <span className="h-8 w-8 animate-spin rounded-full border-4 border-[#48bdff]/25 border-t-[#48bdff]" />
                         </div>
                         <h3 className="mt-6 text-2xl font-extrabold tracking-normal text-white">
-                          {isOpeningHfTrial
-                            ? t.pixal3d.generator.hfTrialFindingTitle
-                            : t.pixal3d.generator.hfTrialLoadingTitle}
+                          {t.pixal3d.generator.hfTrialFindingTitle}
                         </h3>
                         <p className="mx-auto mt-3 max-w-md text-base leading-7 text-[#aeb6ca]">
-                          {isOpeningHfTrial
-                            ? t.pixal3d.generator.hfTrialFindingDescription
-                            : t.pixal3d.generator.hfTrialLoadingDescription}
+                          {t.pixal3d.generator.hfTrialFindingDescription}
                         </p>
                         <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/10">
                           <div className="h-full w-full animate-pulse rounded-full bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a]" />
@@ -1867,6 +1872,31 @@ export default function Home() {
               ))}
             </div>
           </div>
+
+          <section
+            data-testid="pixal3d-tutorial-links"
+            aria-labelledby="pixal3d-tutorial-links-title"
+            className="mt-12 w-full max-w-[1420px] border-t border-[#25314f] py-8"
+          >
+            <h2 id="pixal3d-tutorial-links-title" className="text-2xl font-extrabold tracking-normal text-white sm:text-3xl">
+              {t.tutorials.common.homeLinksTitle}
+            </h2>
+            <p className="mt-3 max-w-3xl text-base leading-7 text-[#aeb6ca]">
+              {t.tutorials.common.homeLinksDescription}
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {tutorialSlugs.map((slug) => (
+                <a
+                  key={slug}
+                  href={localizedPath(tutorialPath(slug))}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-[#25314f] bg-[#0b1426]/88 px-5 py-4 text-sm font-bold leading-6 text-[#d1e5ff] transition hover:border-[#48bdff]/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#48bdff]"
+                >
+                  <span>{t.tutorials.pages[slug].title}</span>
+                  <span aria-hidden="true" className="shrink-0 text-[#28e4cf]">→</span>
+                </a>
+              ))}
+            </div>
+          </section>
         </div>
       </section>
     </div>

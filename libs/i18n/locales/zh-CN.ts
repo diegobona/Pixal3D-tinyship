@@ -1,6 +1,10 @@
 import type { Locale } from './types'
+import { tutorialsZhCN } from './tutorials/zh-CN'
+import { embedZhCN } from './embed'
 
 export const zhCN: Locale = {
+  tutorials: tutorialsZhCN,
+  embed: embedZhCN,
   common: {
     login: "登录", and: "和", loading: "加载中……", unexpectedError: "发生了意外错误", viewPlans: "查看套餐", dismissMessage: "关闭消息",
     notifications: { success: "成功", error: "错误", notice: "提示", dismiss: "关闭通知" }

@@ -21,6 +21,8 @@ npx playwright install chromium
 
 Without these, `pnpm test:e2e` will fail with "Executable doesn't exist" errors.
 
+For a machine with an existing Chrome for Testing binary, an optional `E2E_CHROMIUM_EXECUTABLE_PATH` can point to that executable. The normal default remains Playwright's matching bundled browser. Record the actual browser version when using an override. Public fixture-only suites can set `E2E_SKIP_CLEANUP=true` to avoid database test-user cleanup.
+
 ---
 
 ## Running Tests
