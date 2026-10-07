@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { en } from '../../../libs/i18n/locales/en';
 import { zhCN } from '../../../libs/i18n/locales/zh-CN';
 import { PAGES, TIMEOUTS } from '../helpers/constants';
@@ -8,6 +8,25 @@ import { SPACE_DEFAULT_TARGETS, workspaceUrl } from '../../../config/space-works
 import { startWorkspaceFixtureServer } from '../helpers/space-workspace-fixture';
 
 let workspaceFixture: Awaited<ReturnType<typeof startWorkspaceFixtureServer>>;
+
+async function expectHeaderControlsFit(page: Page) {
+  const controls = await page.locator('header a, header button, header summary').evaluateAll((nodes) => nodes.map((node) => {
+    const box = node.getBoundingClientRect();
+    return { label: node.textContent?.trim() || node.getAttribute('aria-label'), x: box.x, y: box.y, right: box.right, bottom: box.bottom, width: box.width, height: box.height };
+  }).filter((box) => box.width > 0 && box.height > 0));
+  for (const [index, control] of controls.entries()) {
+    expect(control.x, control.label ?? 'header control').toBeGreaterThanOrEqual(0);
+    expect(control.right, control.label ?? 'header control').toBeLessThanOrEqual(page.viewportSize()!.width);
+    for (const other of controls.slice(index + 1)) {
+      const overlaps = Math.min(control.right, other.right) - Math.max(control.x, other.x) > 1
+        && Math.min(control.bottom, other.bottom) - Math.max(control.y, other.y) > 1;
+      expect(overlaps, `${control.label} overlaps ${other.label}`).toBe(false);
+    }
+  }
+  const widths = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, document: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
+  expect(widths.document).toBeLessThanOrEqual(widths.viewport + 1);
+  expect(widths.body).toBeLessThanOrEqual(widths.viewport + 1);
+}
 
 /**
  * Public Pages Smoke Tests
@@ -27,22 +46,82 @@ test.describe('Public Pages', () => {
     await page.route('**/embed.tawk.to/**', (route) => route.abort());
     await page.route('https://ldyang694.github.io/**', (route) => route.abort());
   });
-  test('Home page loads and renders hero section', async ({ page }) => {
-    await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
-
-    // Page should load without errors
-    await expect(page).not.toHaveTitle(/error|500|404/i);
-
-    // Header should be visible
-    await expect(page.locator('header')).toBeVisible();
-
-    // Hero section should contain a heading
-    const heroHeading = page.locator('h1').first();
-    await expect(heroHeading).toBeVisible();
-
-    // Navigation links should be present
-    await expect(page.locator('nav')).toBeVisible();
-  });
+  for (const width of [1280, 768, 390]) {
+    for (const { locale, home, copy } of [
+      { locale: 'en', home: '/', copy: en },
+      { locale: 'zh-CN', home: '/zh-CN', copy: zhCN },
+    ]) {
+      test(`Home page loads and renders hero section with working navigation at ${width}px in ${locale}`, async ({ page }) => {
+        test.setTimeout(45_000);
+        const mobile = width < 768;
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
+        await expect(page).not.toHaveTitle(/error|500|404/i);
+        await expect(page.locator('header')).toBeVisible();
+        const hero = page.getByRole('heading', { level: 1, name: copy.pixal3d.generator.heroTitle, exact: true });
+        const badge = page.getByTestId('pixal3d-free-badge');
+        await expect(hero).toBeInViewport();
+        await expect(badge).toHaveText(copy.pixal3d.generator.subtitle);
+        await expect(badge).toBeInViewport({ ratio: 1 });
+        expect(await badge.evaluate((node) => node.matches('a, button, input, [role="button"], [role="link"], [tabindex]'))).toBe(false);
+        await expect(badge.locator('a, button, input, [role="button"], [role="link"], [tabindex]')).toHaveCount(0);
+        const heroBox = (await hero.boundingBox())!;
+        const badgeBox = (await badge.boundingBox())!;
+        const workspaceBox = (await page.getByTestId('pixal3d-inline-trial').boundingBox())!;
+        expect(badgeBox.y).toBeGreaterThanOrEqual(heroBox.y + heroBox.height);
+        expect(badgeBox.y + badgeBox.height).toBeLessThanOrEqual(workspaceBox.y);
+        const toggle = page.getByTestId('header-menu-toggle');
+        const navigation = mobile
+          ? page.getByTestId('header-mobile-navigation').getByRole('navigation')
+          : page.getByTestId('header-navigation');
+        if (mobile) {
+          await expect(page.getByTestId('header-navigation')).toBeHidden();
+          await expect(toggle).toHaveAccessibleName(copy.header.navigation.openMenu);
+          await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+          await expect(navigation).toHaveCount(0);
+        } else {
+          await expect(toggle).toBeHidden();
+          await expect(navigation).toBeVisible();
+          await expect(page.locator('header').getByRole('link', { name: copy.header.auth.signIn, exact: true })).toBeVisible();
+        }
+        await expectHeaderControlsFit(page);
+        const directory = path.join(process.cwd(), '.tmp', 'home-polish');
+        await mkdir(directory, { recursive: true });
+        await page.screenshot({ path: path.join(directory, `home-header-${width}-${locale}.png`), ...(mobile ? {} : { clip: { x: 0, y: 0, width, height: 400 } }) });
+        if (mobile) {
+          await toggle.click();
+          await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        }
+        const homeLink = navigation.getByRole('link', { name: copy.header.navigation.home, exact: true });
+        const featuresLink = navigation.getByRole('link', { name: copy.pixal3d.generator.featuresNav, exact: true });
+        const blogLink = navigation.getByRole('link', { name: copy.header.navigation.blog, exact: true });
+        await expect(navigation.getByRole('link')).toHaveText([copy.header.navigation.home, copy.pixal3d.generator.featuresNav, copy.header.navigation.blog]);
+        await expect(homeLink).toHaveAttribute('aria-current', 'page');
+        await expect(blogLink).not.toHaveAttribute('aria-current');
+        await expect(featuresLink).toHaveAttribute('href', locale === 'en' ? '/#features' : '/zh-CN#features');
+        await expectHeaderControlsFit(page);
+        await blogLink.click();
+        await expect(page).toHaveURL(new RegExp(locale === 'en' ? '/blog$' : '/zh-CN/blog$'));
+        if (mobile) {
+          await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+          await expect(navigation).toHaveCount(0);
+          await toggle.click();
+        }
+        await expect(blogLink).toHaveAttribute('aria-current', 'page');
+        await expect(homeLink).not.toHaveAttribute('aria-current');
+        await featuresLink.click();
+        await expect(page).toHaveURL(new RegExp(locale === 'en' ? '/#features$' : '/zh-CN/?#features$'));
+        await expect(page.getByTestId('pixal3d-advantages')).toBeInViewport();
+        if (mobile) {
+          await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+          await expect(navigation).toHaveCount(0);
+        } else {
+          await expect(homeLink).toHaveAttribute('aria-current', 'page');
+          await expect(blogLink).not.toHaveAttribute('aria-current');
+        }
+      });
+    }
+  }
 
   test('Embedded workspace shows a small source-image helper only after sign-in', async ({ page }) => {
     await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
@@ -106,6 +185,13 @@ test.describe('Public Pages', () => {
     await expect(englishLink).toHaveAttribute('rel', 'noreferrer noopener');
     await expect(englishLink).toHaveCSS('position', 'absolute');
     await expect(englishLink).toHaveCSS('z-index', '30');
+
+    const originalViewport = page.viewportSize()!;
+    await page.setViewportSize({ width: 768, height: originalViewport.height });
+    await expect(page.getByTestId('header-navigation')).toBeVisible();
+    await expect(page.locator('header').getByRole('button', { name: /Layout Test User/ })).toBeVisible();
+    await expectHeaderControlsFit(page);
+    await page.setViewportSize(originalViewport);
 
     const linkBox = await englishLink.boundingBox();
     const iframeBox = await workspaceIframe.boundingBox();

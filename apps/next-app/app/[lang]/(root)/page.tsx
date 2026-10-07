@@ -955,10 +955,14 @@ export default function Home() {
       <section className="relative min-h-[calc(100vh-4rem)] border-l border-r border-[#2b3657] bg-[radial-gradient(circle_at_50%_-10%,rgba(22,91,173,0.22),transparent_42%),linear-gradient(180deg,#071431_0%,#0a1737_46%,#071431_100%)] px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
         <div className="mx-auto flex w-full max-w-[1420px] flex-col items-center">
           <div className="mb-2 text-center">
-            <h1 className="inline-block bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] bg-clip-text pb-2 text-[38px] font-extrabold leading-[1.12] tracking-normal text-transparent sm:text-[56px]">
+            <h1 className="inline-block text-balance bg-gradient-to-r from-[#48bdff] via-[#28e4cf] to-[#00f08a] bg-clip-text pb-2 text-[38px] font-extrabold leading-[1.12] tracking-normal text-transparent sm:text-[56px]">
               {t.pixal3d.generator.heroTitle}
             </h1>
-            <p className="mt-2 text-base font-medium tracking-normal text-[#9ca4ba] sm:text-xl">
+            <p data-testid="pixal3d-free-badge" className="mx-auto mt-3 flex w-fit items-center gap-2 rounded-full border border-[#55d9c2]/20 bg-[#55d9c2]/[0.07] px-3.5 py-1.5 text-xs font-medium leading-5 tracking-wide text-[#b5eade] sm:text-sm">
+              <svg aria-hidden="true" viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-[#68dec3]" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="10" cy="10" r="7.25" />
+                <path d="m6.75 10 2.1 2.1 4.4-4.2" />
+              </svg>
               {t.pixal3d.generator.subtitle}
             </p>
           </div>

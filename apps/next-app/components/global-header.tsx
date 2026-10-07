@@ -14,7 +14,7 @@ import {
   getSubscriptionPlanIdFromEvent,
 } from "@/lib/credit-balance-events";
 import { shouldShowHeaderUpgradeButton } from "@/lib/header-actions";
-import { getLocalePath } from "@/lib/locale-preference";
+import { getLocalePath, stripLocalePrefix } from "@/lib/locale-preference";
 import {
   PIXAL3D_SHOW_LANGUAGE_SWITCHER,
   PIXAL3D_SHOW_MONETIZATION_SURFACES,
@@ -52,6 +52,15 @@ export default function Header({ className }: HeaderProps) {
 
   const homeHref = localizedPath("/");
   const featuresHref = `${homeHref}#features`;
+  const currentPath = stripLocalePrefix(pathname, currentLocale).replace(/\/$/, "") || "/";
+  const isCurrentPage = (path: string) =>
+    currentPath === path || (path !== "/" && currentPath.startsWith(`${path}/`));
+  const navigationLinkClass = (active = false) =>
+    `inline-flex min-h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#48bdff] ${
+      active
+        ? "bg-white/[0.07] text-[#b5f3e6]"
+        : "text-[#a8b4cb] hover:bg-white/[0.04] hover:text-white"
+    }`;
   const displayName = user?.name || user?.email || t.header.auth.userFallback;
   const displayEmail = user?.email || "";
   const shouldShowUpgradeButton = PIXAL3D_SHOW_MONETIZATION_SURFACES
@@ -180,18 +189,18 @@ export default function Header({ className }: HeaderProps) {
 
   const navigation = (
     <>
-      <Link href={homeHref} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
+      <Link href={homeHref} aria-current={isCurrentPage("/") ? "page" : undefined} className={navigationLinkClass(isCurrentPage("/"))}>
         {t.header.navigation.home}
       </Link>
-      <Link href={featuresHref} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
+      <Link href={featuresHref} className={navigationLinkClass()}>
         {t.pixal3d.generator.featuresNav}
       </Link>
       {PIXAL3D_SHOW_MONETIZATION_SURFACES ? (
-        <Link href={localizedPath("/pricing")} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
+        <Link href={localizedPath("/pricing")} aria-current={isCurrentPage("/pricing") ? "page" : undefined} className={navigationLinkClass(isCurrentPage("/pricing"))}>
           {t.header.navigation.pricing}
         </Link>
       ) : null}
-      <Link href={localizedPath("/blog")} className="text-2xl font-medium tracking-normal text-white/90 transition-colors hover:text-[#48bdff]">
+      <Link href={localizedPath("/blog")} aria-current={isCurrentPage("/blog") ? "page" : undefined} className={navigationLinkClass(isCurrentPage("/blog"))}>
         {t.header.navigation.blog}
       </Link>
     </>
@@ -200,22 +209,22 @@ export default function Header({ className }: HeaderProps) {
   return (
     <header className={`sticky top-0 z-40 w-full border-b border-[#26324d] bg-[#050b1d]/95 text-white backdrop-blur-sm ${className || ""}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-16 items-center justify-between gap-4">
           <Link href={homeHref} aria-label={config.app.name} className="flex shrink-0 items-center gap-3">
             <Logo size="lg" />
             <span
               data-testid="pixal3d-source-badge"
-              className="hidden rounded-full border border-[#48bdff]/35 bg-[#071a33] px-2.5 py-1 text-[11px] font-extrabold leading-none tracking-normal text-[#7ee7ff] shadow-[0_0_24px_rgba(72,189,255,0.16)] sm:inline-flex"
+              className="hidden rounded-full border border-[#48bdff]/35 bg-[#071a33] px-2.5 py-1 text-[11px] font-extrabold leading-none tracking-normal text-[#7ee7ff] shadow-[0_0_24px_rgba(72,189,255,0.16)] lg:inline-flex"
             >
               {t.header.sourceBadge}
             </span>
           </Link>
 
-          <nav className="hidden flex-1 items-center justify-center space-x-16 md:flex">
+          <nav data-testid="header-navigation" className="hidden flex-1 items-center justify-center gap-1 md:flex lg:gap-2">
             {navigation}
           </nav>
 
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden shrink-0 items-center gap-3 md:flex">
             {isPending ? (
               <div className="h-8 w-28 rounded-full bg-white/10" />
             ) : user ? (
@@ -411,21 +420,26 @@ export default function Header({ className }: HeaderProps) {
 
           <button
             type="button"
+            data-testid="header-menu-toggle"
             onClick={() => setIsMenuOpen((open) => !open)}
-            className="inline-flex items-center justify-center rounded-md p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white md:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#48bdff] md:hidden"
             aria-label={t.header.navigation.openMenu}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-navigation"
           >
-            <span className="text-2xl leading-none">{isMenuOpen ? "x" : "="}</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+              <path d={isMenuOpen ? "m6 6 12 12M6 18 18 6" : "M4 7h16M4 12h16M4 17h16"} />
+            </svg>
           </button>
         </div>
       </div>
 
       {isMenuOpen && (
-        <div className="border-t border-[#26324d] bg-[#050b1d] md:hidden">
+        <div id="mobile-navigation" data-testid="header-mobile-navigation" className="border-t border-[#26324d] bg-[#050b1d] md:hidden">
           <div className="space-y-2 px-4 py-4">
-            <div className="flex flex-col gap-3" onClick={() => setIsMenuOpen(false)}>
+            <nav className="flex flex-col gap-1" onClick={() => setIsMenuOpen(false)}>
               {navigation}
-            </div>
+            </nav>
             <div className="border-t border-[#26324d] pt-4">
               {PIXAL3D_SHOW_LANGUAGE_SWITCHER ? (
                 <form

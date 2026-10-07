@@ -1214,3 +1214,21 @@ CUA 已核对中文首页新文案及实际点击、下载区提示移除、Pixa
 **验收：** 浏览器核对双语按钮文字；复用现有首页内链及 EN/ZH × 桌面/390px 入口 E2E，验证文字、布局、登录入口及键盘跳转。现有断言读取共享字典，无需新增测试。完成 Next typecheck/build 后记录结果。`agent-browser` 当前不可用，使用 CUA 浏览器核验。
 
 **结果：** CUA 已核对中文文案和英文实际按钮；既有 E2E `--grep 'links from the homepage|homepage multi-model entry'` **5/5 通过（12.4s）**，覆盖双语桌面/390px、登录及生成工具页跳转。Next typecheck、build（43 页）和 `git diff --check` 通过；构建保留既有 middleware 弃用提示。沿用 Chromium headless 149.0.7827.55、工作台 fixture 及跳过用户清理配置。截图 `.tmp/intent-pages/home-more-models-{desktop,mobile}-{en,zh-CN}.png` 已更新。仅修改 EN/ZH 共享字典并同步两份文档，无 Next 组件或配置变更。
+
+### 首页导航与免费说明视觉优化（2026-10-07）
+
+**状态：** Green（Spec 先于实现记录）。针对用户截图，收紧顶部导航字号和间距，以浅色背景标记当前页；标题下的免费说明改为带小型装饰图标的浅青标签。继续沿用现有翻译与深蓝配色。
+
+- EN/ZH 首页 Home 为当前页；Blog 列表及详情的 Blog 为当前页，其他页面不误标 Home。Features 保持页内功能锚点语义，可从 Blog 回到同语言首页功能区。
+- 桌面导航具有可见 hover/键盘焦点；手机菜单保持展开、点击关闭与跳转，按钮公开展开状态。390px、768px 与1280px 无横向溢出；登录后的账号与语言操作保持可用。
+- 免费说明是可读的非交互标签，装饰图标不产生多余无障碍名称；不改变承诺或增加新文案。主标题、Pixal3D 工作台/登录流程和下方更多生成工具入口保持原顺序。
+
+**实施与验证：** 修改 `global-header.tsx` 的共享导航样式及基于已去语言前缀路径的当前页状态，修改首页 subtitle 展示 → CUA 检查实际双语桌面/手机样式与导航 → 扩展既有首页烟雾 E2E 验证语义、点击和尺寸，复用更多生成工具入口回归 → Next typecheck/build 与相关 E2E → 同步文档和结果。使用 CUA 替代环境中缺失的 `agent-browser`。仅涉及 Next UI，继续在 main 工作。
+
+**结果：** 导航改为紧凑字号/间距、浅色当前页背景与键盘焦点，保留44px点击高度；手机菜单使用 SVG 图标并公开展开状态。来源徽标从大屏显示，给平板账号区留出空间。免费说明使用原翻译搭配非交互的浅青标签；主标题增加均衡换行，避免英文末行孤立单词。
+
+CUA 已检查桌面英文、中文390/768px与真实 Blog/Features 导航，E2E 截图也已检查。Next typecheck、build（43页）及 `git diff --check` 通过；构建仅有既有 middleware 弃用提示。首页布局/SEO单测 **15/15通过**；一条旧源码断言原先只接受 LF，确认 CRLF 为原因后改为兼容两种换行。
+
+相关 E2E `public-pages.spec.ts` 与 `image-to-3d-pages.spec.ts`，筛选 `Home page loads|Embedded workspace shows|links from the homepage|homepage multi-model entry`：**12项均已通过验证**（组合运行11项通过；旧内链场景截图时节点脱离，未改逻辑，单项重跑1/1通过，3.2s）。中文 Features 的 href 断言按实际 DOM 使用 `/zh-CN#features`。覆盖 EN/ZH ×1280/768/390、当前页语义、跨页功能区跳转、手机菜单收起、免费标签位置、768px已登录头部不重叠与既有登录/更多工具入口。使用 Chromium headless 149.0.7827.55、工作台 fixture 与跳过用户清理配置。
+
+预览 `.tmp/home-polish/home-header-{1280,768,390}-{en,zh-CN}.png`。修改分组：Next 为全局导航和首页；docs 为实施说明、用户指南与本验收记录；测试为现有首页 E2E及换行兼容修正。共享字典和配置无变更，未触发生成/计费，未提交推送。

@@ -39,7 +39,7 @@ describe("Next home page layout", () => {
     expect(ctaIndex).toBeGreaterThan(inlineTrialIndex);
     expect(ctaIndex).toBeGreaterThan(inlineTrialBodyIndex);
     expect(ctaIndex).toBeLessThan(iframeIndex);
-    expect(pageSource).toContain('data-testid="pixal3d-inline-trial"\n            className="relative');
+    expect(pageSource).toMatch(/data-testid="pixal3d-inline-trial"\r?\n            className="relative/);
     expect(pageSource).toContain('className="pixal3d-reference-cta group absolute');
     expect(pageSource).toContain("left-[112px]");
     expect(pageSource).toContain("top-[103px]");
