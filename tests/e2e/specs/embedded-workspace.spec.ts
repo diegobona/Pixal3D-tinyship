@@ -1,9 +1,13 @@
 import { test, expect, type Page } from '@playwright/test';
+import { SPACE_DEFAULT_TARGETS, workspaceUrl } from '../../../config/space-workspaces';
+import { startWorkspaceFixtureServer } from '../helpers/space-workspace-fixture';
 
 const frameId = 'pixal3d-inline-trial-iframe';
-const spaceUrl = 'https://victor-pixal3d-studio.hf.space';
+const spaceUrl = workspaceUrl('pixal3d');
+let workspaceFixture: Awaited<ReturnType<typeof startWorkspaceFixtureServer>>;
 
 async function mockWorkspaceSession(page: Page, authenticated: boolean) {
+  await page.route('**' + spaceUrl, (route) => route.fulfill({ status: 307, headers: { Location: workspaceFixture.destination(SPACE_DEFAULT_TARGETS.pixal3d.url), 'Cache-Control': 'no-store' } }));
   await page.route('**/api/auth/get-session**', async (route) => {
     await route.fulfill({ json: authenticated ? {
       session: { id: 'layout-session', token: 'layout-token', userId: 'layout-user', expiresAt: new Date(Date.now() + 60_000).toISOString() },
@@ -22,13 +26,21 @@ async function deferIntersection(page: Page) {
   await page.addInitScript(() => {
     const NativeObserver = window.IntersectionObserver;
     const pending: (() => void)[] = [];
-    Object.assign(window, { revealWorkspace: () => pending.forEach((reveal) => reveal()) });
+    let revealed = false;
+    Object.assign(window, { revealWorkspace: () => {
+      revealed = true;
+      pending.forEach((reveal) => reveal());
+    } });
     window.IntersectionObserver = class extends NativeObserver {
       constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
         super(callback, options);
         if (options?.rootMargin === '200px') {
           this.observe = (target: Element) => {
-            pending.push(() => callback([{ target, isIntersecting: true } as IntersectionObserverEntry], this));
+            const reveal = () => callback([{ target, isIntersecting: true } as IntersectionObserverEntry], this);
+            // Native observers report current visibility even when hydration
+            // registers them after the simulated scroll into view.
+            if (revealed) reveal();
+            else pending.push(reveal);
           };
         }
       }
@@ -37,13 +49,14 @@ async function deferIntersection(page: Page) {
 }
 
 test.describe('Embedded workspace foundation', () => {
+  test.beforeAll(async () => { workspaceFixture = await startWorkspaceFixtureServer(); });
+  test.afterAll(async () => { await workspaceFixture.close(); });
   test('defers remote mounting, reserves height, and retains the frame after scrolling away', async ({ page }) => {
     await mockWorkspaceSession(page, false);
     await deferIntersection(page);
     let frameRequests = 0;
-    await page.route(`${spaceUrl}/**`, async (route) => {
-      frameRequests += 1;
-      await route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Workspace fixture</title><p>Workspace fixture</p>' });
+    page.on('request', (request) => {
+      if (request.url().startsWith(workspaceFixture.origin + '/')) frameRequests += 1;
     });
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     const container = page.getByTestId(`${frameId}-container`);
@@ -72,13 +85,13 @@ test.describe('Embedded workspace foundation', () => {
     let requests = 0;
     let releaseFirst: () => void = () => {};
     const firstRequestGate = new Promise<void>((resolve) => { releaseFirst = resolve; });
-    await page.route(`${spaceUrl}/**`, async (route) => {
+    await page.route('**' + spaceUrl, async (route) => {
       requests += 1;
       if (requests === 1) {
         await firstRequestGate;
         await route.abort().catch(() => {});
       } else {
-        await route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Recovered workspace</title><p>Recovered workspace</p>' });
+        await route.fulfill({ status: 307, headers: { Location: workspaceFixture.destination(SPACE_DEFAULT_TARGETS.pixal3d.url), 'Cache-Control': 'no-store' } });
       }
     });
     try {
@@ -106,7 +119,6 @@ test.describe('Embedded workspace foundation', () => {
 
   test('brand bar and help are translated without moving the signed-in image helper', async ({ page }) => {
     await mockWorkspaceSession(page, true);
-    await page.route(`${spaceUrl}/**`, (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><p>Workspace fixture</p>' }));
     for (const [path, title, helpLabel, dismissLabel] of [
       ['/', 'Pixal3D workspace', 'Workspace not responding?', 'Dismiss help'],
       ['/zh-CN', 'Pixal3D 工作台', '工作台没有响应？', '关闭帮助'],

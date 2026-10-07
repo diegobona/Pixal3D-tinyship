@@ -951,3 +951,167 @@ E2E 设置 `E2E_SKIP_CLEANUP=true`，因为这些用例使用会话/远程工作
 独立脚本复核中的重复提交与原图完整性问题已修复。新回归覆盖明确的配额拒绝、未收到事件 ID 的提交中断、已接受请求的流/解析中断、恢复下载、Token 脱敏，以及原图变化时阻止跳过/续跑/发布。离线测试不请求真实供应商或 GPU。
 
 **未完成项：** 用户已指定 `victor/pixal3d-studio` 生成四个样本。蘑菇已完成并提供真实 GLB/OBJ/STL；茶壶被 ZeroGPU 匿名额度拒绝（请求 120s，剩余 108s），椅子和木箱未提交。未完成样本不进入清单，也不显示下载按钮。批次需要额度恢复或用户提供认证后续做。两页具体嵌入 Space 仍按原需求后定，目前各自配置为现有 Space。公开资产说明只授权个人、教育及非商业评估使用，未授予商用许可。
+
+### 工作区优先与布局精简（2026-10-07）
+
+**状态：** Green（2026-10-07；以下验收场景在编码前记录）。
+
+- 两页 EN/ZH 的核心生成工作区均位于紧凑页头之后，是第一个正文区域；桌面与 390px 手机初始视口可看到工作区外框和 iframe 顶部，无需先浏览下载库或模型卡片。
+- 每页仅挂载一个现有 Space iframe，接近视口自动加载，滚动离开后保留会话；不增加本站登录遮罩、试用预留或付费生成请求，也不恢复已删除的托管来源徽标。
+- 下载页使用紧凑的样本图、真实文件按钮与用途说明；保留原图性质、来源、使用许可和 GLB/OBJ/STL 区别，FBX 不增加虚假下载入口。删除重复流程卡片。
+- 对比页四个模型的适用情景易于扫描，显存、耗时、质量限制和来源通过可操作的详情展开；保留全部事实、版本条件和数字，删除重复选择步骤卡片。不暗示卡片切换第三方工作区模型。
+- 两页保留不同搜索意图、元数据、语言切换和内链；FAQ、折叠说明和下载链接正常工作。桌面与手机无整页横向溢出，触控入口易于操作。
+- 在真实浏览器检查桌面与手机布局后更新相关 E2E，并完成 Next.js typecheck、build 与该页面 E2E。
+
+**验证结果：** Next.js typecheck、build 通过（43 个预渲染页面，仅既有 middleware 弃用提示）。相关页面 11 项 + 共享工作区 3 项 E2E 共 14/14 通过（24.0s），新增父页面脚本被阻止时，核心 iframe 仍可显示的浏览器回归。覆盖首次视口、SSR 单 iframe、滚动保留、详情/格式展开、EN/ZH、390px、真实文件下载与 SEO。共享工作区测试观察器修正可见事件先于水合注册时被丢弃的竞态，原有懒加载与恢复断言保留。E2E 沿用 Chromium 覆盖、免数据库清理和第三方 fixture，未执行 GPU 任务。
+
+真实浏览器桌面/手机检查使用 in-app browser（本机无 agent-browser）。真实页面局部预览为 `.tmp/intent-pages/redesign-download.jpg`、`redesign-comparison.jpg`；E2E 保存两页 EN/ZH 的首屏、支持内容及手机布局截图。
+
+### 下载与模型选择意图聚焦（2026-10-07）
+
+**状态：** 页面功能 Green（2026-10-07；以下场景在本轮实现前记录，按 A → B 顺序验收）；样本批次仍为 Pending（1/4）。**测试文件：** `specs/image-to-3d-pages.spec.ts`。仅验证 Next.js 公共页面；第三方工作台使用 fixture，不运行 GPU、创建账号、预留试用或消费积分。
+
+| # | 验收场景 | 预期行为 |
+|---|---------|---------|
+| A1 | 下载入口从首屏可找到 | A 页英文 H1 保留 Free 与 Download；生成工作台位于紧凑页头后的首个正文区域；工作台附近直接说明上传、生成和导出的路径，并提供明确的本站样本下载入口，点击后到达真实下载区域。 |
+| A2 | 原图与真实结果同屏呈现 | 每个已完成样本展示输入原图和由其实际 GLB 渲染的结果预览；结果具有可解码的静态海报，交互预览失败或父页面脚本无法加载时仍能查看海报和使用下载链接；海报来源可以追溯到对应 GLB 的哈希。 |
+| A3 | 匿名取得真实文件 | 无登录的独立请求和浏览器分别取得已完成样本的 GLB、OBJ、STL；公开 URL 直接返回有效文件，文件大小与 SHA-256 匹配清单，GLB 纹理/几何有效，OBJ/STL 几何与 GLB 相符。未完成样本没有占位卡片或按钮，未提供的 FBX 没有下载入口。 |
+| A4 | 格式用途与限制直接可见 | 格式对照内容默认可见，说明 GLB、OBJ、STL 及 FBX 的用途、实际可用性与限制；OBJ 材质依赖/当前几何导出、STL 尺寸和可打印性检查、FBX 不可下载均准确；手机可读且不造成整页横向溢出。 |
+| A5 | 免费与许可边界准确 | 本站样本可匿名直接下载，样本来源与非商业评估许可可查；第三方工作台的账号、额度、排队和导出限制与本站下载区明确区分，不把本站免注册下载承诺套用到供应商生成或导出。 |
+| B1 | 首屏支持模型选择 | B 页保留一个生成工作台，并在其附近提供 Pixal3D、Hyper3D Rodin、TRELLIS、Hunyuan3D 的具名导航；每个入口跳转对应模型内容。导航不替换、重载或增加 iframe，且明确当前仍是暂定 Pixal3D 嵌入。 |
+| B2 | 选择所需事实默认可见 | 四张模型卡片直接显示适用情景、输出格式、免费/在线/本地条件、质量与不适用场景，以及带具体版本/硬件条件的简短耗时和显存信息；未知值明确为未知，不编造统一性能排行或把所有服务说成免费。 |
+| B3 | 每个模型都有实际行动入口 | 每张卡片至少有一个有意义的在线使用或本地安装入口，链接指向已核验的对应官方页面/项目；链接名称说明行为，长版本细节、许可说明和来源链接放入可正常展开/收起的详情。 |
+| C1 | 双语、SEO 和导航保持有效 | 两页 EN/ZH 均公开可读，新增文案使用对应字典；保留不同的 title/description、无查询参数 canonical、EN/ZH/x-default hreflang、sitemap/robots、首页及教程内链；切换语言保留页面路径与查询参数。 |
+| C2 | 单 iframe、脚本回退与手机布局 | 两页服务端 HTML 均含一个核心 iframe，首屏可看到其顶部；滚动、模型锚点导航和折叠内容操作后仍只有原来的 iframe。阻断父页面脚本后 iframe、样本海报和直接下载仍可用；390px EN/ZH 均无整页横向溢出，动作入口可操作。 |
+
+**验证顺序：** A 实现 → 真实浏览器 EN/ZH 桌面/390px 核验 → 更新并运行 A 相关 E2E → B 实现 → 真实浏览器核验 → 更新并运行完整相关 E2E → Next.js typecheck/build → 在此补记实际结果。沿用 `E2E_SKIP_CLEANUP=true` 与现有 `E2E_CHROMIUM_EXECUTABLE_PATH` 覆盖，并记录实际 Chromium 版本。fixture 仅隔离远程工作台与无关第三方请求；本地页面、静态预览、下载和元数据使用真实应用。
+
+**A 阶段结果：** 浏览器核验后，A 的 EN/ZH 页面、匿名真实文件与三个格式的浏览器下载、海报 PNG/GLB 哈希溯源、SSR 单 iframe、父页面脚本阻断时的海报/下载、390px 双语布局等相关 E2E **6/6 通过（10.7s）**。命令为 `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts --grep 'image-to-3d-model-free-download|serves real|server-renders|parent scripts|within 390px'`。实际浏览器为 Google Chrome for Testing **149.0.7827.55**，使用现有 headless shell 路径覆盖；第三方 iframe 为 fixture，本地图片、文件和页面均为实际内容。后续 B 与最终验证结果如下。
+
+**A + B 组合结果：** B 的真实浏览器 EN 桌面/中文 390px 核验后，运行 `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts tests/e2e/specs/embedded-workspace.spec.ts`，**16/16 通过（52.6s；13 项意图页 + 3 项共享工作台）**。B 新回归逐一点击四个具名模型导航，确认到达对应卡片且原 iframe 节点、src 与一次加载均保留；在线及外部本地安装链接在新标签页打开对应 URL，Pixal3D 本地安装进入真实本地化教程。默认可见使用条件与五项简要事实、折叠长说明与来源、EN/ZH 元数据/语言切换/内链及 390px 布局均通过。
+
+本次设置 `E2E_CAPTURE_INTENT_PAGES=true`，新截图位于 `.tmp/intent-pages/`：`download-top-{locale}.png`、`comparison-top-{locale}.png`、对应 `supporting`、`mobile-top`、`mobile-supporting` 与整页截图；复核英文模型卡片和中文手机导航无视觉阻塞。浏览器仍为 **149.0.7827.55**。第三方工作台与外部入口仅用 fixture 验证本站操作，不证明供应商 GPU 可用性；本地结果海报、GLB/OBJ/STL、教程和 SEO 为真实内容。
+
+| 最终验证 | 结果 |
+|----------|------|
+| `corepack pnpm --filter @tinyship/next-app build` | 通过，43 个预渲染页面；编译 8.0s、TypeScript 10s，仅既有 middleware → proxy 弃用提示 |
+| `corepack pnpm --filter @tinyship/next-app typecheck` | 构建后再次执行，通过 |
+| 意图页与共享工作台相关 E2E（上述组合命令） | 16/16 通过（52.6s） |
+| 资产生成安全与几何导出离线测试 | 22/22 通过；海报独立解码及 GLB/PNG 溯源通过 |
+| `git diff --check` | 通过，无空白错误；仅工作区 CRLF 规范化提示 |
+
+**样本批次单独状态：** 仍仅蘑菇已完成，提供真实 GLB/OBJ/STL 与对应 GLB 海报；茶壶、椅子、木箱不显示为已完成，也不出现占位下载。本轮未提交 GPU 生成任务。供应商配额恢复时间记录为北京时间 **2026-10-07 22:59:30**，其余 3/4 等待配额后继续；页面功能 Green 不代表四个生成样本已经完成。
+
+### 删除工作区左侧标题（2026-10-07）
+
+**状态：** Green。修改前验收：两页 EN/ZH 工作区外框不再显示左侧 Pixal3D workspace / Pixal3D 工作台标题；右侧说明保留，iframe 仍有可访问名称，首屏显示、下载和详情操作正常。
+
+**结果：** 真实浏览器确认左侧标题消失；四个 EN/ZH 页面相关 E2E 4/4 通过（8.0s），新增外框仅含右侧说明、section 可访问名称及 iframe title 断言。Next.js typecheck 和 build 通过，构建仅有既有 middleware 弃用提示。预览为 `.tmp/intent-pages/workspace-title-removed.jpg`。
+
+### TRELLIS.2 与 Hunyuan3D 2.1 站内工作台切换（2026-10-07）
+
+**状态：** Green（2026-10-07；以下场景在本轮编码前记录）。**测试文件：** `specs/image-to-3d-pages.spec.ts`。此次需求更新 B 页的使用动作；以上历史记录中“所有非 Pixal3D 模型在线操作均打开外部工具”和“交互后始终仅有一个 iframe”的验收由下列行为替代。
+
+| # | 验收场景 | 预期行为 |
+|---|---------|---------|
+| 1 | 首次访问仅运行默认嵌入 | B 页初始服务端 HTML 仍只有 Pixal3D iframe；初次访问仅请求 Pixal3D 工作台，TRELLIS.2 和 Hunyuan3D 2.1 在首次选择前不挂载、不请求第三方工作台。 |
+| 2 | 顶部与卡片可切换站内模型 | 分别点击顶部和模型卡片中的 TRELLIS.2、Hunyuan3D 2.1 使用按钮，在当前页面工作台区域显示对应真实 `hf.space` iframe；不导航到外站、不弹出新标签页。各模型 iframe 使用准确的源 URL 与本地化可访问标题，顶部/卡片对应按钮的 `aria-pressed` 与当前模型保持一致。 |
+| 3 | 切换时保留输入与会话 | 依次访问 Pixal3D、TRELLIS.2、Hunyuan3D，再从两处使用按钮切回。已经访问的 iframe 保留原 DOM 节点及 fixture 内输入的文本，供应商页面不会因切换而重新请求；三个均访问后最多挂载三个 iframe，始终只有一个可见。 |
+| 4 | 名称导航与其他操作保持明确 | 四个模型名称仍滚动至对应模型说明卡片，不触发模型切换；Rodin 保持真实外部使用入口，打开规则与原先一致；本地安装链接仍进入对应的教程或官方安装页面。A 页保持单 Pixal3D 工作台和实际样本下载行为。 |
+| 5 | 活跃工作台可单独恢复 | 工作台加载慢或失败时，当前模型的重试/独立打开恢复入口指向当前源；重试仅重新加载所选模型，未选模型的 iframe、输入和会话继续保留。切换后可看到新活跃工作台的恢复状态，不混用另一模型的状态。 |
+| 6 | 双语、手机与脚本回退 | EN/ZH 文案、按钮状态和 iframe 标题正确；390px 中切换入口可操作且无整页横向溢出。父页面脚本阻断时保留 SSR 的默认 Pixal3D 工作台；已有 A 页海报与匿名直接下载回退仍可用。 |
+| 7 | 仅隔离第三方的安全回归 | E2E 使用可输入文本的第三方 iframe fixture 验证切换与保留，不提交真实 GPU 生成，不创建账号、预留试用或消费积分；对站点生成/试用请求继续使用禁止请求断言。 |
+
+**验证顺序：** 实现 → 真实浏览器核验 EN/ZH、顶部/卡片切换及 390px → 基于实际 DOM 更新相关 E2E → 运行意图页与共享工作台回归 → Next.js typecheck/build → 补记结果。维持现有 Chromium 覆盖与 `E2E_SKIP_CLEANUP=true`。
+
+**已知既有边界：** 完整回归发现一次全局语言表单在页面水合前提交而丢失查询参数：服务端隐藏 `returnTo` 仅含路径，查询参数由客户端 `onSubmit` 追加。本轮不修改全局 Header 或 `/api/locale`；原有语言测试明确验证水合后的客户端交互，在 B 页每次语言操作前等待模型按钮启用，仍保留完整 URL、查询参数、cookie 和 canonical 断言。该场景定向复核 1/1 通过（8.9s）；脚本失效场景仍独立验证默认工作台及 A 页海报/下载回退，不宣称覆盖无脚本语言查询保留。
+
+新恢复测试最初使用默认角色选择器读取已隐藏 iframe 中的输入，导致两项断言找不到元素；改为 `includeHidden: true` 后，仍完整验证原节点与输入值，定向 2/2 通过（3.7s）。应用的 iframe 保留和恢复实现未因此修改。
+
+**最终结果：** `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts tests/e2e/specs/embedded-workspace.spec.ts` **20/20 通过（58.6s；17 项意图页 + 3 项共享工作台）**。新 EN 桌面与中文 390px 场景验证首次仅 Pixal3D、顶部/卡片双向切换、每个来源仅一次请求、原 iframe 节点与文本输入保留、三框最多挂载且仅一框可见、按钮状态同步、无页面跳转/新窗口，以及逐个模型重试只重载当前 iframe。原有 A 页下载/海报/脚本回退、模型名称导航、Rodin/本地安装外链、SEO 与语言回归保留。
+
+Next.js 生产 build 通过（43 个预渲染页面，仅既有 middleware 弃用提示），随后 typecheck 与 `git diff --check` 通过。本次 E2E 使用 `http://localhost:7001`、Chromium headless **149.0.7827.55**、`E2E_SKIP_CLEANUP=true` 和 `E2E_CAPTURE_INTENT_PAGES=true`。新增截图为 `.tmp/intent-pages/comparison-active-{pixal3d,trellis,hunyuan3d}-{en,zh-CN}.png`；已检查 TRELLIS.2 中文手机和 Hunyuan3D 英文桌面选中态。真实浏览器也检查了供应商上传/生成/导出 UI 与卡片入口，实时预览保存在 `.tmp/intent-pages/trellis-inline-live.jpg`。E2E iframe 使用可输入文本的 fixture；未提交真实生成、认证、试用或计费请求。
+
+### 工作台切换的本地地址兼容（2026-10-07）
+
+**状态：** Green（2026-10-07；Spec 在修复前记录，根因确认后收窄验收范围）。本轮修复用户观察到的“在本页使用”入口长期禁用并显示等待光标问题；上一轮只在 `localhost` 验证的通过结果未覆盖 `127.0.0.1` 的实际使用。本轮仅处理 Next.js 开发环境的工作台交互。
+
+**确认根因与修复范围：** Next.js 16 开发调试流依赖 HMR WebSocket；相同服务端收到 `Origin: http://127.0.0.1:7001` 时拒绝握手，而 `localhost` 返回 101，导致前者的页面未完成水合。只在 Next 配置加入 `allowedDevOrigins: ['127.0.0.1']`，保留组件就绪保护、静态页面、现有会话逻辑及已声明的 Pixal3D 无脚本回退，不新增 GET 模型切换或动态页面。
+
+| # | 验收场景 | 预期行为 |
+|---|---------|---------|
+| 1 | 两种地址独立访问均可切换 | 使用全新浏览器上下文分别访问 `http://localhost:7001` 与 `http://127.0.0.1:7001` 的 B 页，不借用另一地址已建立的状态。顶部和模型卡片的 Pixal3D、TRELLIS.2、Hunyuan3D 使用入口均能在当前页面显示正确工作台；不要求用户手动更换主机名。 |
+| 2 | 两地址的脚本均正常就绪 | 保持真实 Next.js 脚本加载，两个地址均能完成水合，使用入口随后启用、显示 pointer 光标并实际切换正确模型，不能只移除 disabled 属性或等待光标。开发服务单独复核两个 Origin 的 HMR 握手均为 101；浏览器 E2E 验证用户操作，不硬依赖开发专用协议。 |
+| 3 | 保留已声明的无脚本边界 | 父页面脚本阻断时继续呈现默认 SSR Pixal3D 工作台；切换入口保留就绪保护，不宣称无脚本也能切换全部模型。A 页海报与直接下载回退仍可用，本轮不改变该既有边界。 |
+| 4 | 正常会话与恢复不回退 | 正常脚本下继续验证按需挂载、顶部/卡片选中状态一致、最多三个已访问 iframe 且仅一个可见、切回保留 DOM 和输入、每个模型首次仅请求一次；重试仍只重载当前模型，其他输入继续保留。 |
+| 5 | 双语、手机及现有行为 | EN/ZH 与 390px 下入口可操作、文案准确且无整页横向溢出；模型名称仍只导航至说明卡片，Rodin 外链与 A 页下载行为保持正确。所有第三方生成仅使用 fixture，不提交真实 GPU、认证、试用或计费请求。 |
+
+**验证顺序：** 配置修复 → 真实浏览器分别核验两个地址 → 按真实 DOM 更新 E2E → 两地址独立访问与原会话/恢复/SSR 回退相关回归 → Next.js typecheck/build → 补记结果。实际测试代码在修复后的 UI 经过核验后编写。
+
+**结果：** 新增四项独立上下文回归覆盖 `localhost` / `127.0.0.1` × EN / ZH，使用真实父页面脚本及第三方工作台 fixture，验证入口就绪、TRELLIS.2 与 Hunyuan3D 站内打开、卡片返回、输入/节点保留、每个来源仅一次请求、仅一框可见与无新标签页。定向 **4/4 通过（5.3s）** 后，完整相关命令 `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts tests/e2e/specs/embedded-workspace.spec.ts` **24/24 通过（1.1m；21 项意图页 + 3 项共享工作台）**。
+
+最后增加顶部三个入口及卡片入口 `cursor: pointer` 断言，再执行 `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts --grep 'fresh browser context' --reporter=list`，**4/4 通过（4.9s）**。完整 24 项 HTML 报告保留在 `test-results/e2e-report/index.html`。测试继续使用 Chromium headless **149.0.7827.55**、`E2E_SKIP_CLEANUP=true`；未请求真实 GPU、试用或扣费。浏览器回归没有依赖开发环境专用 HMR 事件，因而仍可用于正常应用运行方式。
+
+最终 Next.js build 通过（43 个预渲染页面；编译 8.9s、TypeScript 10.0s，仅既有 middleware 弃用提示），随后 typecheck 与 `git diff --check` 通过。真实浏览器在用户原先的 `127.0.0.1` 中文页面验证按钮启用、pointer 光标及 TRELLIS.2 / Hunyuan3D 实际工作台显示；截图为 `.tmp/intent-pages/hunyuan-buttons-fixed-127.jpg`。
+
+### HF 工作台后台巡检与同模型自动切换（2026-10-07）
+
+**状态：** 本地页面 E2E 与路由回归 Green；生产部署验证待完成（Spec 在实现前记录）。用户选择网站后台自动执行；不创建 Codex 本地定时任务。范围为 Next.js 的 Pixal3D、TRELLIS.2、Hunyuan3D 2.1 嵌入，Rodin 外链与已有样本资产来源不变。
+
+**下载操作提示补充（2026-10-07，Green）：** A 页三步流程下方增加 EN/ZH 提示：下载按钮无响应时，尝试通过其右侧的分享按钮下载。桌面与390px宽度可见、自然换行；步骤数量、工作区及已有下载行为保持。属于轻量文案修改，复用现有 A 页内容与响应式 E2E，不新增模拟第三方按钮行为的测试。真实浏览器已核验中英文提示及分享图标；聚焦 E2E `--grep 'image-to-3d-model-free-download has distinct|within 390px'` 3/3通过（6.0s），Next typecheck/build通过（43页；仅既有middleware弃用提示）。截图 `.tmp/intent-pages/download-share-hint-zh-CN.png`。未提交第三方生成、分享或下载操作，未部署。
+
+| # | 验收场景 | 预期行为 |
+|---|---------|---------|
+| 1 | 三天到期才检查供应商 | 复用 Cloudflare 现有每日触发入口，PostgreSQL 持久记录每个模型的到期时间；未满 72 小时的运行不请求 HF 检查。并发触发由持久租约防止重复执行，失败和进程中断后可恢复，不依赖单个 Worker 实例内存。原有年度积分刷新的密钥开关和行为保持。 |
+| 2 | 巡检只做可用性读取 | 检查公开 Space 状态、模型与版本证据、应用可访问性及嵌入条件；区分暂时超时、启动中、不可用和未知结果，不把 HTTP 200、iframe load、队列长度或 fixture 当成生成成功。不得提交 GPU 生成、预留试用、注册登录或消耗本站积分。 |
+| 3 | 仅切换匹配的候选 | 当前源确认不可用时，在已核验候选中选择同一模型和版本、功能条件匹配且检查通过的 Space。仅名称相似、版本不同、身份/功能证据不足的搜索结果不能自动成为活跃源；没有合格候选时保留最后已知配置并记录原因，不编造可用替代。 |
+| 4 | 状态与审计持久化 | 每个模型记录当前及上次可用源、检查时间、下次到期、检查结果与切换原因；切换和失败可审计。公共页面/解析接口不返回数据库信息、巡检密钥或供应商凭证；模型之间的状态互不覆盖。 |
+| 5 | 公开稳定地址解析 | 首页及 A/B 页统一使用 `/api/space-workspaces/{pixal3d\|trellis\|hunyuan3d}` 同源 iframe 地址；该地址匿名可用并重定向到服务器选定的合法 `hf.space`，不要求客户端先完成水合。未知模型与任意外部 URL 参数不能造成开放重定向。解析响应不缓存旧活跃源。 |
+| 6 | 数据库故障可安全回退 | 无记录、表尚未安装或数据库暂不可读时，解析接口在有界等待后使用该模型已配置的默认源，页面仍可打开；故障不触发生成或将未验证地址写为活跃源。单次页面加载不主动执行供应商巡检。 |
+| 7 | 后台切换不打断现有会话 | 后台更新活跃源后，已挂载 iframe 的节点、输入和运行中会话保持。切换只在新页面、该模型首次挂载或用户明确重试时解析；切回已访问模型仍复用原节点，最多三个 iframe 且仅一个可见。 |
+| 8 | 重试与独立打开使用当前解析 | 对当前模型重试或独立打开时访问稳定解析地址，取得最新活跃源；重试只重载当前模型，其他 iframe 的输入与节点保留。用户看到的来源说明不能把已切换的社区 Space 冒充最初官方实例。 |
+| 9 | 现有页面保持可用 | 两页初始 SSR 仍仅含默认 Pixal3D iframe；禁用父页面脚本时仍能通过稳定地址打开该工作台。EN/ZH、localhost/127、390px、模型导航/按钮、SEO、A 页海报与真实匿名下载及首页原有访问限制保持。 |
+| 10 | 巡检入口受保护 | 新巡检 POST 路由在缺少服务端密钥时安全失败，错误或缺失客户端密钥被拒绝；匿名用户与普通登录用户都不能触发供应商检查或状态写入。正确服务端调用使用相同授权约定，路由仅适配共享业务逻辑。 |
+| 11 | 可重复的页面回归 | 浏览器使用真实 Next.js 页面与解析路由，并仅隔离外部供应商；另用受控重定向 fixture 模拟活跃源切换，验证当前帧不变、新挂载/重试取得替代、恢复链接正确。测试清楚区分真实路由默认解析与 fixture 覆盖，不以 fixture 证明真实备用 Space 健康。 |
+| 12 | 部署后才宣称后台生效 | 完成数据库结构更新与 Cloudflare 部署后，核验运行中的巡检授权、计划、持久状态及日志。只有本地代码/测试通过时标为实现验证完成，不能声称线上已每三天自动巡检。 |
+
+**测试分工与顺序：** 先实现共享巡检/存储、薄 API 和页面稳定源 → 真实浏览器核验默认解析及 EN/ZH 工作台切换 → 按实际 DOM 更新 `specs/image-to-3d-pages.spec.ts`、共享 iframe 与首页相关 E2E。现有二十四项会话、来源、恢复及两种本机地址回归需适配稳定地址，并保留真实样本下载检查。重定向状态码/白名单/无缓存、巡检密钥拒绝、72 小时到期、租约/并发、候选版本匹配、数据库回退等纯 API/业务契约放入对应 API 或单元测试，不混作 UI E2E。所有自动化供应商响应使用 fixture；不执行真实 GPU 或试用流程。沿用 Chromium 覆盖与 `E2E_SKIP_CLEANUP=true`，完成相关 Next.js E2E、typecheck/build 后在本节记录实际结果及部署状态。
+
+**Verify 与测试边界：** 可用的 in-app browser 在真实 `127.0.0.1` 中文页面确认默认 Pixal3D 经稳定地址加载、TRELLIS 按钮切换及切回 Pixal3D 保留已有 iframe；没有提交生成。页面 E2E 使用真实 Next.js 页面、SSR 和脚本，稳定解析的 307 跳转由第二个本地 HTTP origin 承接供应商文档；这验证实际浏览器跨 origin 重定向，避免 Playwright 对重定向链后续请求的拦截限制导致误连真实 HF。一个独立页面场景通过实际匿名 Next.js 解析路由，确认三个默认目标与 `no-store` 后再交给本地供应商 fixture；EN/ZH 两项仅修改内存中的受控解析结果，验证已挂载输入和节点不变，而首次挂载、独立打开及用户重试取得新目标。未写入生产活跃源，也不把这些 fixture 作为真实备用 Space 或 GPU 健康证据。
+
+**结果：** 新增三项定向 E2E 3/3 通过（11.6s）。首次完整回归中，五项旧测试因 fixture 新增目标说明后通用 `p` 选择器不再唯一而失败，已改为明确文本选择器；另一次中文内链断言在并发应用构建期间失败，停止并发构建后无应用或测试改动即通过。六项定向复核 6/6 通过（20.5s），随后完整相关回归 **29/29 通过（1.2m）**：原二十四项保留，新增实际解析一项、受控切换两项及首页两项。最终报告为 `test-results/e2e-report/index.html`。
+
+| 验证命令 | 本轮结果 |
+|---------|---------|
+| `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts tests/e2e/specs/embedded-workspace.spec.ts tests/e2e/specs/public-pages.spec.ts --grep 'Public image-to-3D intent pages\|Embedded workspace foundation\|Home page loads\|Embedded workspace shows'` | 29/29 通过（1.2m） |
+| `corepack pnpm exec vitest run tests/unit/space-monitor/routes.test.ts` | 28/28 通过（273ms）；实际 registry/auth、模拟共享业务边界；覆盖匿名解析、未知模型、URL 注入无效、授权与状态脱敏、触发时间、回滚及故障响应 |
+| `git diff --check -- tests/e2e tests/unit/space-monitor/routes.test.ts` | 通过；只有现有 CRLF 规范化提示 |
+
+巡检使用独立 `SPACE_MONITOR_SECRET`，不会借用或启用年度积分任务的 `CRON_SECRET`；路由单元测试明确验证该隔离。E2E 使用 Chromium headless **149.0.7827.55**、`E2E_SKIP_CLEANUP=true` 和 `E2E_CAPTURE_INTENT_PAGES=true`；最新 EN/ZH 桌面与 390px 截图保存到 `.tmp/intent-pages/`，中文手机首屏已复核。Next.js 最终 typecheck/build、共享巡检/存储测试及生产部署的实际结果由对应实现验证另行补记；此处的本地 Green 不表示线上计划已经启用。四样本批次仍为 1/4，本轮 QA 未执行 GPU、登录、预留试用或计费操作。
+
+### B 页精简说明与突出模型名称（2026-10-07）
+
+**状态：** Green（Spec 已先于实现记录）。范围仅为 `/image-to-3d` 及中文页的可见文案和顶部模型名称呈现。
+
+| # | 验收场景 | 预期行为 |
+|---|---------|---------|
+| 1 | 精简页头摘要 | 中文页头摘要移除末尾“免费使用和文件导出的条件各不相同”，英文移除对应的末尾说明；保留选择模型、本站使用三个模型和打开 Rodin 的介绍，句子标点自然。 |
+| 2 | 删除两处重复段落 | 工作台下方原 `workspaceNote` 整段不再显示；“选择模型”标题下原 `modelsIntro` 整段不再显示。两个位置不残留空白段落或多余间距，模型卡片的具体条件、限制和来源仍可阅读。 |
+| 3 | 顶部模型名称更突出 | 顶部选择器的 Pixal3D、Rodin、TRELLIS.2、Hunyuan3D 2.1 名称使用桌面 24px、手机 20px 的加粗文字，比其说明与使用条件更醒目；390px 下较长名称自然排版，不挤压使用按钮、不造成整页横向溢出。 |
+| 4 | 导航与模型操作保持有效 | 点击四个名称仍到达各自模型卡片；三个站内模型使用按钮继续切换正确工作台并同步选中状态，切回保留已访问 iframe 与输入；Rodin 仍打开原外部入口。 |
+| 5 | 双语与原页面边界 | EN/ZH 对应调整一致，既有 SEO 元数据、无脚本默认工作台和公开访问正常；A 页三步流程、分享下载提示及真实样本下载保持。文案精简不触发生成、试用或计费操作。 |
+
+**验证顺序：** 完成文案与样式 → 真实浏览器核验 B 页 EN/ZH 桌面与 390px → 按实际 DOM 调整既有内容断言，保留名称导航、站内切换、会话保留和响应式回归 → 相关 Next.js E2E 与 typecheck/build → 补记结果。本轮不新增第三方生成测试。
+
+**结果：** 真实浏览器检查中文桌面与 390px 布局，三处指定文字已移除，名称桌面 24px、手机 20px / 700 加粗，较长名称可换行且导航无横向溢出。既有 E2E `--grep 'image-to-3d has distinct|model navigation reaches|switches embedded models|within 390px'` **7/7 通过（28.2s）**，覆盖 EN/ZH 内容、四个名称锚点、模型切换、会话保留以及两页手机布局。Next typecheck、build（43 个预渲染页面）与 `git diff --check` 通过；构建仅有既有 middleware 弃用提示。浏览器和环境沿用本节前述 Chromium 覆盖、fixture 与跳过测试用户清理配置。中文桌面预览为 `.tmp/intent-pages/model-navigation-clean-zh-CN.png`，E2E 双语截图仍存于 `.tmp/intent-pages/`。未执行真实生成或计费操作，未部署。
+
+### 两页目标关键词与标题调整（2026-10-07）
+
+**状态：** Green（Spec 已先于实现记录）。采用用户确认的标题：A 为 `Image to 3D Model: Free Download`，B 为 `Image to 3D Model: Free & Online AI Tools`。
+
+- 两页英文 H1、HTML title、Open Graph 和 Twitter 标题使用同一新标题；中文采用自然对应表述。
+- B 页现有摘要、模型比较标题及 FAQ 自然体现 image-to-3D AI、从图片在线生成模型及免费使用意图，不增加段落，不恢复前轮已删除的三处说明。
+- A 页保留免费下载文件的定位，B 页保留模型比较与在线使用的定位；URL、canonical、工作区和下载行为保持。
+- 复用 EN/ZH 两页内容/metadata/FAQ 与 390px 响应式 E2E；真实浏览器核对首屏和文字换行，完成 Next typecheck/build 后记录结果。
+
+**结果：** 真实浏览器已核对两页英文 H1、B 页摘要及工作区上方层级；E2E 的 390px 截图已检查英文 B 页和中文 A 页标题换行。现有内容测试增加 OG/Twitter 标题和比较区 H2 的一致性断言，`--grep 'has distinct public content|within 390px'` **5/5 通过（9.1s）**，覆盖 EN/ZH H1、HTML title、社交标题、canonical、FAQ、样本内容与响应式布局。Next typecheck/build（43 个预渲染页面）及 `git diff --check` 通过；仅有既有 middleware 弃用提示。真实英文预览为 `.tmp/intent-pages/keyword-title-comparison-en.png`；手机截图来自受控 iframe fixture。仅调整共享 EN/ZH 文案、已有测试和文档，未改工作区逻辑，未部署。

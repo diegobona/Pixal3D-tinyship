@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { exportGeometry } from "./export-geometry.mjs";
 import { assertReferenceIntegrity } from "./generate-space-samples.mjs";
+import { verifiedPreview } from "./render-previews.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const defaultPublicRoot = path.join(root, "apps/next-app/public");
@@ -25,6 +26,8 @@ export async function refreshManifest({ publicRoot = defaultPublicRoot, manifest
     const glb = await readFile(glbPath);
     const hash = createHash("sha256").update(glb).digest("hex");
     if (hash !== record.output.sha256 || glb.length !== record.output.bytes) throw new Error(`Generation integrity check failed for ${id}`);
+    const previewImage = await verifiedPreview({ folder, id, glbSha256: hash });
+    if (!previewImage) throw new Error(`Missing verified preview for ${id}; run scripts/model-samples/render-previews.mjs before publishing the manifest.`);
     const report = await exportModelGeometry(glbPath);
     const files = [
       { format: "GLB", path: `/model-samples/${id}/model.glb`, filename: `pixal3d-${id}.glb`, bytes: glb.length, sha256: hash },
@@ -32,7 +35,7 @@ export async function refreshManifest({ publicRoot = defaultPublicRoot, manifest
     ];
     const publicReport = { ...report, inputPath: `/model-samples/${id}/model.glb`, outputs: files.slice(1) };
     await writeFile(path.join(folder, "geometry-exports.json"), JSON.stringify(publicReport, null, 2) + "\n");
-    samples.push({ id, referenceImage: `/model-samples/${id}/reference.png`, sourceUrl: record.sourceSpace, licenseUrl: "/model-samples/usage.txt", files });
+    samples.push({ id, referenceImage: `/model-samples/${id}/reference.png`, previewImage, sourceUrl: record.sourceSpace, licenseUrl: "/model-samples/usage.txt", files });
   }
   await writeFile(manifestPath, JSON.stringify(samples, null, 2) + "\n");
   log(`Manifest refreshed: ${samples.length} verified samples, ${samples.reduce((sum, sample) => sum + sample.files.length, 0)} real files.`);

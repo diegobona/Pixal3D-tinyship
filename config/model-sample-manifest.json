@@ -2,6 +2,7 @@
   {
     "id": "mushroom",
     "referenceImage": "/model-samples/mushroom/reference.png",
+    "previewImage": "/model-samples/mushroom/preview.png",
     "sourceUrl": "https://huggingface.co/spaces/victor/pixal3d-studio",
     "licenseUrl": "/model-samples/usage.txt",
     "files": [

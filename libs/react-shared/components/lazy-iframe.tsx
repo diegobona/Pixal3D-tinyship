@@ -20,6 +20,8 @@ interface LazyIframeProps {
   labels: LazyIframeLabels;
   className: string;
   testId: string;
+  /** A core workspace already in the first viewport can render before hydration. */
+  loadImmediately?: boolean;
   children?: ReactNode;
   onLoad?: () => void;
 }
@@ -30,9 +32,9 @@ export function LazyIframe(props: LazyIframeProps) {
   return <LazyIframeSession key={props.src} {...props} />;
 }
 
-function LazyIframeSession({ src, title, labels, className, testId, children, onLoad }: LazyIframeProps) {
+function LazyIframeSession({ src, title, labels, className, testId, loadImmediately = false, children, onLoad }: LazyIframeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isNearViewport, setIsNearViewport] = useState(false);
+  const [isNearViewport, setIsNearViewport] = useState(loadImmediately);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isSlow, setIsSlow] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -40,6 +42,10 @@ function LazyIframeSession({ src, title, labels, className, testId, children, on
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    if (loadImmediately) {
+      setIsNearViewport(true);
+      return;
+    }
     const container = containerRef.current;
     if (!container) return;
     if (!("IntersectionObserver" in window)) {
@@ -54,13 +60,15 @@ function LazyIframeSession({ src, title, labels, className, testId, children, on
     }, { rootMargin: "200px" });
     observer.observe(container);
     return () => observer.disconnect();
-  }, []);
+  }, [loadImmediately]);
 
   useEffect(() => {
-    if (!isNearViewport || hasLoaded) return;
+    // An SSR frame may finish before hydration attaches onLoad. Only time a
+    // client-observed retry for that path, rather than reporting a false delay.
+    if (!isNearViewport || hasLoaded || (loadImmediately && attempt === 0)) return;
     const timer = window.setTimeout(() => setIsSlow(true), 30_000);
     return () => window.clearTimeout(timer);
-  }, [isNearViewport, hasLoaded, attempt]);
+  }, [isNearViewport, hasLoaded, attempt, loadImmediately]);
 
   const reload = () => {
     setHasLoaded(false);
@@ -92,7 +100,7 @@ function LazyIframeSession({ src, title, labels, className, testId, children, on
           }}
         />
       ) : null}
-      {!hasLoaded && !isSlow ? (
+      {!loadImmediately && !hasLoaded && !isSlow ? (
         <div data-testid={`${testId}-placeholder`} className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#0b0f1a] px-6 text-center text-sm text-[#aeb6ca]" role="status">
           <span aria-hidden="true" className="h-8 w-8 animate-pulse rounded-full border-2 border-[#48bdff]/40 motion-reduce:animate-none" />
           <p>{isNearViewport ? labels.loading : labels.waiting}</p>

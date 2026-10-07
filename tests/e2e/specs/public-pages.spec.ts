@@ -4,6 +4,10 @@ import { test, expect } from '@playwright/test';
 import { en } from '../../../libs/i18n/locales/en';
 import { zhCN } from '../../../libs/i18n/locales/zh-CN';
 import { PAGES, TIMEOUTS } from '../helpers/constants';
+import { SPACE_DEFAULT_TARGETS, workspaceUrl } from '../../../config/space-workspaces';
+import { startWorkspaceFixtureServer } from '../helpers/space-workspace-fixture';
+
+let workspaceFixture: Awaited<ReturnType<typeof startWorkspaceFixtureServer>>;
 
 /**
  * Public Pages Smoke Tests
@@ -14,10 +18,12 @@ import { PAGES, TIMEOUTS } from '../helpers/constants';
  */
 
 test.describe('Public Pages', () => {
+  test.beforeAll(async () => { workspaceFixture = await startWorkspaceFixtureServer(); });
+  test.afterAll(async () => { await workspaceFixture.close(); });
   test.beforeEach(async ({ page }) => {
     await page.route('**/api/auth/get-session**', (route) => route.fulfill({ json: null }));
     await page.route('**/api/credits/status', (route) => route.fulfill({ json: { credits: { balance: 0 }, subscription: null } }));
-    await page.route('https://victor-pixal3d-studio.hf.space/**', (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Workspace fixture</title><body style="margin:0;background:#0b0f1a"></body>' }));
+    await page.route('**' + workspaceUrl('pixal3d'), (route) => route.fulfill({ status: 307, headers: { Location: workspaceFixture.destination(SPACE_DEFAULT_TARGETS.pixal3d.url), 'Cache-Control': 'no-store' } }));
     await page.route('**/embed.tawk.to/**', (route) => route.abort());
     await page.route('https://ldyang694.github.io/**', (route) => route.abort());
   });
@@ -88,6 +94,8 @@ test.describe('Public Pages', () => {
 
     const englishLink = page.getByTestId('pixal3d-reference-image-cta');
     const workspaceIframe = page.getByTestId('pixal3d-inline-trial-iframe');
+    await expect(workspaceIframe).toHaveAttribute('src', workspaceUrl('pixal3d'));
+    await expect(page.frameLocator('[data-testid="pixal3d-inline-trial-iframe"]').getByTestId('fixture-provider')).toHaveText(SPACE_DEFAULT_TARGETS.pixal3d.url);
     await expect(page.getByTestId('pixal3d-inline-trial-auth-overlay')).toHaveCount(0);
     await expect(englishLink).toContainText('No image? Create one free');
     await expect(englishLink).toHaveAttribute(

@@ -11,7 +11,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@libs': resolve(__dirname, './libs'),
+      '@config': resolve(__dirname, './config'),
       '@tests': resolve(__dirname, './tests'),
     },
   },
-}); 
+});

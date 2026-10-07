@@ -1,0 +1,52 @@
+{
+  "renderedAt": "2026-10-07T03:34:28.055Z",
+  "method": "Local GLB rendered with model-viewer in Chromium; no image synthesis or reference overlay",
+  "renderer": {
+    "modelViewer": "4.2.0",
+    "chromium": "149.0.7827.55",
+    "backend": "SwiftShader",
+    "script": "scripts/model-samples/render-previews.mjs"
+  },
+  "settings": {
+    "width": 768,
+    "height": 768,
+    "deviceScaleFactor": 1,
+    "cameraOrbit": "30deg 70deg auto",
+    "fieldOfView": "30deg",
+    "environmentImage": "neutral",
+    "exposure": 1,
+    "shadowIntensity": 1,
+    "shadowSoftness": 1,
+    "background": "#f4f1ea",
+    "animation": false
+  },
+  "framing": {
+    "orbit": {
+      "theta": 0.5235987755982988,
+      "phi": 1.2217304763960306,
+      "radius": 1.7736108359822198
+    },
+    "target": {
+      "x": -0.00042800605297088623,
+      "y": -0.005155891180038452,
+      "z": 0.090476393699646
+    },
+    "dimensions": {
+      "x": 0.5631938278675079,
+      "y": 0.6386334896087646,
+      "z": 0.7582381963729858
+    }
+  },
+  "input": {
+    "path": "/model-samples/mushroom/model.glb",
+    "bytes": 3114164,
+    "sha256": "95375bf830b2ad4fdbae0d44f84b50b5bc5d97f3e1f48746d13a68db0ac94984"
+  },
+  "output": {
+    "path": "/model-samples/mushroom/preview.png",
+    "bytes": 131893,
+    "sha256": "3783cb486442ad3161dc773297b00a3912b254857a91fa6c1a33be6c1421aedb",
+    "width": 768,
+    "height": 768
+  }
+}

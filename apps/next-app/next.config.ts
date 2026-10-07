@@ -14,6 +14,8 @@ const useStandaloneOutput = process.platform !== 'win32' || process.env.NEXT_OUT
 
 /** @type {import('next').NextConfig} */
 const nextConfig: NextConfig= {
+  // Next's dev React stream uses HMR; both local preview origins must be allowed.
+  allowedDevOrigins: ['127.0.0.1'],
   webpack(config: any) {
     // Modify webpack configuration to handle SVG files
     config.module.rules.push({

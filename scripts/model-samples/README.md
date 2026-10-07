@@ -14,6 +14,25 @@ The reference provenance JSON records source paths and SHA-256 hashes. These fil
 
 `export-geometry.mjs` converts an actual embedded static triangle GLB to geometry-only OBJ and binary STL, preserves transforms/units/topology, and verifies its saved bytes and counts. `refresh-manifest.mjs` includes only completed outputs whose GLB and input PNG match the recorded hashes. After a successful additional run, refresh the manifest, rerun the relevant Next E2E and rebuild Next.
 
+## Actual output previews
+
+`render-previews.mjs` renders each completed, hash-verified local GLB with the installed model-viewer and Chromium. It serves the model, viewer bundle and Draco decoder on an ephemeral loopback port, refuses external browser requests, and produces a 768 × 768 `preview.png`. It does not call a generation provider. The screenshot shows the actual model, materials and geometry artifacts with a fixed camera, neutral environment, background and contact shadow; no reference image is overlaid and no model repair is performed.
+
+```sh
+node scripts/model-samples/render-previews.mjs
+node scripts/model-samples/refresh-manifest.mjs
+```
+
+The normal Playwright Chromium installation is required. The script also respects the existing `E2E_CHROMIUM_EXECUTABLE_PATH` override when a compatible local browser is already installed. This machine currently uses:
+
+```powershell
+$env:E2E_CHROMIUM_EXECUTABLE_PATH = 'C:/Users/zhouw/AppData/Local/ms-playwright/chromium-1228/chrome-win64/chrome.exe'
+node scripts/model-samples/render-previews.mjs
+node scripts/model-samples/refresh-manifest.mjs
+```
+
+Each `preview-provenance.json` records the GLB and PNG byte counts and SHA-256 hashes, render settings, resolved framing, model-viewer version and Chromium version. The manifest refresh preserves `previewImage` only after verifying that evidence against both files. Missing, stale or changed poster evidence stops publication before that sample's exports or the public manifest are rewritten. Run the renderer after each new completed generation so every published card has both its real input and output. Different browser/rendering versions may change PNG bytes; rerender and refresh together when changing them.
+
 See `docs/implementation/image-to-3d-pages.md` for the Windows proxy command, source revision, current quota failure and resume procedure. The current library contains one completed mushroom model (1/4); the other three references have no downloadable 3D output. Do not add them to the manifest until generation succeeds.
 
 ## Generation recovery

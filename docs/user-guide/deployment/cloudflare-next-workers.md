@@ -61,6 +61,12 @@ STRIPE_PRICE_PRO_YEARLY=price_...
 Add other provider keys only when the feature is enabled, such as fal.ai or
 storage provider credentials.
 
+For the three-day Hugging Face workspace monitor, also set `SPACE_MONITOR_SECRET`
+as a Worker secret and apply the targeted `0003_space_monitor.sql` migration after
+backing up the database. The existing daily Cron Trigger checks each model's
+persisted 72-hour due time. This secret is independent of the yearly-credit
+job's `CRON_SECRET`. See [monitor deployment and rollback](../../implementation/space-monitor.md).
+
 ## Stripe Webhook
 
 In Stripe Dashboard, set the production webhook endpoint to:

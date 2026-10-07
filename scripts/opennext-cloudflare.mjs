@@ -187,50 +187,12 @@ function patchOpenNextCronWorker() {
   const workerPath = join(process.cwd(), ".open-next", "worker.js");
   const source = readFileSync(workerPath, "utf8");
 
-  if (source.includes("[yearly-credit-cron]")) {
+  if (source.includes("runScheduledJobs")) {
     return;
   }
 
   const scheduledMethod = `    scheduled(controller, env, ctx) {
-    const secret = env.CRON_SECRET;
-
-    if (!secret) {
-      console.warn("[yearly-credit-cron] CRON_SECRET is not configured; skipping yearly credit refresh.");
-      return;
-    }
-
-    const origin = env.APP_BASE_URL;
-
-    if (!origin) {
-      console.warn("[yearly-credit-cron] APP_BASE_URL is not configured; skipping yearly credit refresh.");
-      return;
-    }
-
-    const url = new URL("/api/cron/refresh-yearly-credits", origin);
-    const requestInit = {
-      method: "POST",
-      headers: {
-        "x-cron-secret": secret,
-        "x-cron-source": "cloudflare-scheduled",
-        "x-cron-scheduled-time": String(controller.scheduledTime || Date.now()),
-      },
-    };
-
-    ctx.waitUntil(
-      fetch(url.toString(), requestInit)
-        .then(async (response) => {
-          if (!response.ok) {
-            console.error(
-              "[yearly-credit-cron] Refresh failed:",
-              response.status,
-              await response.text(),
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("[yearly-credit-cron] Refresh crashed:", error);
-        }),
-    );
+    ctx.waitUntil(runScheduledJobs(controller, env));
   },
 `;
   const patched = source.replace(/export default\s*\{\s*async fetch/, (match) => {
@@ -242,7 +204,8 @@ function patchOpenNextCronWorker() {
     throw new Error("Could not find OpenNext default worker export to patch.");
   }
 
-  writeFileSync(workerPath, patched, "utf8");
+  writeFileSync(join(dirname(workerPath), "scheduled.js"), readFileSync(new URL("./cloudflare-scheduled.mjs", import.meta.url), "utf8"), "utf8");
+  writeFileSync(workerPath, `import { runScheduledJobs } from "./scheduled.js";\n${patched}`, "utf8");
 }
 
 function patchOpenNextWindowsCopy() {

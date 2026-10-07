@@ -187,3 +187,35 @@ test("manifest publication refuses a changed source image before writing exports
   assert.equal(exports, 0);
   assert.equal(await readFile(manifestPath, "utf8"), "[]\n");
 });
+
+test("manifest refresh retains a poster only when its bytes and source GLB match provenance", async (t) => {
+  const f = await fixture(t);
+  await writeFile(f.recordPath, JSON.stringify({ ...f.record, status: "complete", result, output: { bytes: model.length, sha256: sha256(model) } }));
+  await writeFile(path.join(f.folder, "model.glb"), model);
+  const manifestPath = path.join(f.directory, "manifest.json");
+  const options = { publicRoot: path.join(f.directory, "public"), manifestPath, exportModelGeometry: async () => ({ outputs: [] }), log: () => {} };
+  await assert.rejects(refreshManifest(options), /missing verified preview.*render-previews/i);
+  const poster = Buffer.from("offline poster fixture");
+  const previewPath = "/model-samples/mushroom/preview.png";
+  await writeFile(path.join(f.folder, "preview.png"), poster);
+  await writeFile(path.join(f.folder, "preview-provenance.json"), JSON.stringify({ input: { path: "/model-samples/mushroom/model.glb", sha256: sha256(model) }, output: { path: previewPath, bytes: poster.length, sha256: sha256(poster) } }));
+  assert.equal((await refreshManifest(options))[0].previewImage, previewPath);
+  assert.equal((await refreshManifest(options))[0].previewImage, previewPath);
+});
+
+for (const changed of ["source GLB", "poster bytes"]) {
+  test(`manifest refuses stale preview after changed ${changed}`, async (t) => {
+    const f = await fixture(t);
+    await writeFile(f.recordPath, JSON.stringify({ ...f.record, status: "complete", result, output: { bytes: model.length, sha256: sha256(model) } }));
+    await writeFile(path.join(f.folder, "model.glb"), model);
+    const poster = Buffer.from("offline poster fixture");
+    await writeFile(path.join(f.folder, "preview.png"), changed === "poster bytes" ? Buffer.from("changed offline poster") : poster);
+    await writeFile(path.join(f.folder, "preview-provenance.json"), JSON.stringify({ input: { path: "/model-samples/mushroom/model.glb", sha256: changed === "source GLB" ? sha256(Buffer.from("older model")) : sha256(model) }, output: { path: "/model-samples/mushroom/preview.png", bytes: poster.length, sha256: sha256(poster) } }));
+    const manifestPath = path.join(f.directory, "manifest.json");
+    await writeFile(manifestPath, "[]\n");
+    let exports = 0;
+    await assert.rejects(refreshManifest({ publicRoot: path.join(f.directory, "public"), manifestPath, exportModelGeometry: async () => { exports++; return { outputs: [] }; }, log: () => {} }), /preview.*integrity/i);
+    assert.equal(exports, 0);
+    assert.equal(await readFile(manifestPath, "utf8"), "[]\n");
+  });
+}

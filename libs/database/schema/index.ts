@@ -7,3 +7,4 @@ export * from './credit-transaction';
 export * from './blog-post';
 export * from './pixal3d-generation';
 export * from './pain-point-feedback';
+export * from './space-monitor';

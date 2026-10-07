@@ -188,7 +188,7 @@ describe("Next home page layout", () => {
 
     expect(visibilitySource).toContain("export const PIXAL3D_SHOW_HOME_GENERATOR = false;");
     expect(visibilitySource).toContain("export const PIXAL3D_SHOW_FREE_TRIAL_CALLOUT = false;");
-    expect(visibilitySource).toContain('export const PIXAL3D_INLINE_TRIAL_IFRAME_URL = "https://victor-pixal3d-studio.hf.space";');
+    expect(visibilitySource).toContain('export const PIXAL3D_INLINE_TRIAL_IFRAME_URL = workspaceUrl("pixal3d");');
     expect(pageSource).not.toContain('data-testid="pixal3d-inline-trial-header"');
     expect(pageSource).not.toContain('data-testid="pixal3d-inline-trial-loading"');
     expect(pageSource).not.toContain("isInlineHfTrialFrameLoading");
