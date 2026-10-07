@@ -113,6 +113,14 @@ Native browser previews are `.tmp/intent-pages/redesign-download.jpg` and `redes
 
 The subsequent header edit removes the visible left Pixal3D workspace title from both intent pages, in EN/ZH. The section uses its translated accessible name and the iframe retains its title; the right caption remains. Browser inspection, the four localized content E2E scenarios (4/4, 8.0s), Next typecheck and build pass. The updated strip is `.tmp/intent-pages/workspace-title-removed.jpg`.
 
+## Sitemap fetch investigation (2026-10-07)
+
+Search Console reports that `https://pixal3d.net/sitemap.xml` cannot be read, despite successful live inspection and verified Googlebot requests returning HTTP 200/XML at 21:51 and 22:23 Asia/Shanghai. Downloaded responses parse successfully and contain 14 URLs; the owner reports no manual actions. The cause is not confirmed.
+
+`/sitemap.txt` provides a diagnostic alternative using the same sitemap function and the same `<loc>` URL set, one absolute URL per line with UTF-8 `text/plain`. It retains the existing database fallback and revalidation policy. XML, robots and Cloudflare configuration are unchanged. [Google supports text sitemaps](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#text-sitemap).
+
+After deployment, verify the public TXT response is 200 with the expected content and matches XML, then submit `https://pixal3d.net/sitemap.txt` in Search Console once, retaining the existing XML record. TXT success offers an alternate URL-discovery path and narrows the investigation; it does not establish an XML parser defect, since the submission URL also changes. If it also fails, correlate its actual Googlebot fetch with the new report before changing site configuration. Local tests do not verify Google processing or indexing.
+
 ## Download and model-selection focus (2026-10-07)
 
 Homepage entry hierarchy prioritizes Pixal3D use and the existing sign-in/email-registration flow: the hero leads directly into `pixal3d-inline-trial` with its authentication overlay. A single compact outlined secondary link sits at the lower right below the workspace, before the existing feedback section: “More AI 3D Generators” / “更多 AI 3D 生成工具”. Bold mint text, a thin cyan border and a pale cyan background make the link easier to see. It uses `common.homeMultiModel.action` and the localized `/image-to-3d` destination. The link remains subordinate to the Pixal3D workspace, without a banner, explanatory heading, model chips or prominent gradient button. The FAQ-adjacent section retains a subdued download-guide link with general 3D generation, export and format guidance. Public intent-page permissions, iframe loading, and generation behavior are unchanged.

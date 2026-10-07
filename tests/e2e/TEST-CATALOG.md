@@ -1232,3 +1232,15 @@ CUA 已检查桌面英文、中文390/768px与真实 Blog/Features 导航，E2E 
 相关 E2E `public-pages.spec.ts` 与 `image-to-3d-pages.spec.ts`，筛选 `Home page loads|Embedded workspace shows|links from the homepage|homepage multi-model entry`：**12项均已通过验证**（组合运行11项通过；旧内链场景截图时节点脱离，未改逻辑，单项重跑1/1通过，3.2s）。中文 Features 的 href 断言按实际 DOM 使用 `/zh-CN#features`。覆盖 EN/ZH ×1280/768/390、当前页语义、跨页功能区跳转、手机菜单收起、免费标签位置、768px已登录头部不重叠与既有登录/更多工具入口。使用 Chromium headless 149.0.7827.55、工作台 fixture 与跳过用户清理配置。
 
 预览 `.tmp/home-polish/home-header-{1280,768,390}-{en,zh-CN}.png`。修改分组：Next 为全局导航和首页；docs 为实施说明、用户指南与本验收记录；测试为现有首页 E2E及换行兼容修正。共享字典和配置无变更，未触发生成/计费，未提交推送。
+
+### Search Console 站点地图纯文本对照（2026-10-07）
+
+**状态：** Green（本地实现与回归；部署和 Google 处理结果另行验证。Spec 先于实现记录）。真实 Googlebot 已多次获得 `sitemap.xml` 的 200/XML 响应，本地 XML/压缩校验正常，GSC 仍显示无法读取，人工处置无问题。新增 Google 支持的 `/sitemap.txt` 作为格式对照，不能把本地测试或 TXT 成功等同于原错误已修复。
+
+- 匿名 GET `/sitemap.txt` 直接返回 200、UTF-8 `text/plain`，没有登录或语言跳转，每行只有一个完整 URL。
+- TXT 使用现有 sitemap 数据源，其 URL 集合与 XML 的 `<loc>` 完全一致、无重复，不另列 XHTML alternate 或私有/API 页面。
+- 带中文语言 cookie/请求头及模拟 Googlebot UA 也返回相同内容；不设置会产生长期陈旧内容的额外缓存。
+- XML、robots 与站点安全配置保持现状；既有 sitemap/robots 回归通过。
+- 先在实际运行的 Next 服务核对响应，再写请求级 E2E。通过 Next typecheck/build、相关 E2E 与 diff 检查后记录；部署及 GSC 处理结果单独验证。
+
+**结果：** Next typecheck、build（44 个预渲染条目）通过，仅既有 middleware 弃用提示。针对机器可读文件，先在 `next start` 生产服务器检查真实 HTTP 响应：200、`text/plain; charset=utf-8`、14 个 URL，与 XML 完全一致；无新 UI 或选择器，使用响应核验。之后新增两项请求级 E2E并运行既有 XML/robots 用例：`corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/sitemap-text.spec.ts tests/e2e/specs/image-to-3d-pages.spec.ts --grep 'text sitemap|localized sitemap'` **3/3 通过（5.0s）**。沿用 Chromium headless 149.0.7827.55 与 `E2E_SKIP_CLEANUP=true`，未触发账号创建、生成或计费。独立代码复核无阻断项。
