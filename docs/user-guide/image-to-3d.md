@@ -22,7 +22,7 @@ Both pages show the Pixal3D community Space first. On the model-selection page, 
 
 English pages have clean URLs; Chinese pages use `/zh-CN`. Related links connect the two pages to local installation, GGUF, low-VRAM and ComfyUI tutorials.
 
-The homepage focuses on using Pixal3D: its title leads directly to the Pixal3D workspace and the existing sign-in prompt. At the lower right below the workspace, a compact outlined “Explore more 3D models” (“使用更多 3D 生成模型”) secondary link uses bold mint text and a pale cyan background. It opens the model-selection page, where you can switch between Pixal3D, TRELLIS.2 and Hunyuan3D 2.1. Below the FAQ, “3D model download & usage guide” (“3D 模型下载与使用指南”) explains generation, export and file choices for editing, games or 3D printing. Its “Download 3D models for free” (“免费下载 3D 模型”) link opens the download page. The download page retains its “Choose a model and generate 3D” (“选择模型，在线生成 3D”) cross-link.
+The homepage focuses on using Pixal3D: its title leads directly to the Pixal3D workspace and the existing sign-in prompt. At the lower right below the workspace, a compact outlined “More AI 3D Generators” (“更多 AI 3D 生成工具”) secondary link uses bold mint text and a pale cyan background. It opens the model-selection page, where you can switch between Pixal3D, TRELLIS.2 and Hunyuan3D 2.1. Below the FAQ, “3D model download & usage guide” (“3D 模型下载与使用指南”) explains generation, export and file choices for editing, games or 3D printing. Its “Download 3D models for free” (“免费下载 3D 模型”) link opens the download page. The download page retains its “Choose a model and generate 3D” (“选择模型，在线生成 3D”) cross-link.
 
 ## Requesting a tool
 

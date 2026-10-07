@@ -26,7 +26,7 @@ export const imageTo3DZhCN: ImageTo3DTranslations = {
     homeLinksTitle: "3D 模型下载与使用指南",
     homeLinksDescription: "了解 3D 模型的生成与导出步骤，选择适合建模、游戏或 3D 打印的文件格式。",
     homeMultiModel: {
-      action: "使用更多 3D 生成模型",
+      action: "更多 AI 3D 生成工具",
     },
   },
   download: downloadZhCN,

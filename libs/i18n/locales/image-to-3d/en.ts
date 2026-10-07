@@ -26,7 +26,7 @@ export const imageTo3DEn: ImageTo3DTranslations = {
     homeLinksTitle: "3D model download & usage guide",
     homeLinksDescription: "Learn how to generate and export a 3D model, and choose a file format for editing, games or 3D printing.",
     homeMultiModel: {
-      action: "Explore more 3D models",
+      action: "More AI 3D Generators",
     },
   },
   download: downloadEn,

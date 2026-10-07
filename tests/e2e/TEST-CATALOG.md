@@ -1206,3 +1206,11 @@ E2E 使用已有 Chromium headless 149.0.7827.55 路径覆盖及 `E2E_SKIP_CLEAN
 CUA 已核对中文首页新文案及实际点击、下载区提示移除、Pixal3D 卡片与相邻 Rodin 卡片；E2E 核验双语内容和390px布局，已查看新首页指南截图及手机格式区截图。既有 E2E `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts --grep 'has distinct public content|links from the homepage|within 390px'` **6/6通过（9.7s）**，未增加测试数量。`corepack pnpm --filter @tinyship/next-app typecheck`、`build`（43个预渲染页面）及 `git diff --check`通过；构建仅有既有middleware弃用提示。
 
 截图 `.tmp/intent-pages/home-download-guide-{en,zh-CN}.png`，报告 `test-results/e2e-report/index.html`；沿用 Chromium headless 149.0.7827.55、工作台fixture及跳过用户清理配置。修改分组：共享libs为翻译类型与EN/ZH字典，Next为卡片可选版本与工作台文案节点，docs为实施说明、用户指南与测试目录；配置没有新增变化。未触发生成或计费，未部署。
+
+### 首页入口明确为 AI 3D 生成工具（2026-10-07）
+
+**状态：** Green（Spec 先于文案修改记录）。英文入口使用 “More AI 3D Generators”，中文使用“更多 AI 3D 生成工具”，明确指向生成工具而非 3D 模型资源。工作台下方位置、次要按钮样式及本地化 `/image-to-3d` 目标保持。
+
+**验收：** 浏览器核对双语按钮文字；复用现有首页内链及 EN/ZH × 桌面/390px 入口 E2E，验证文字、布局、登录入口及键盘跳转。现有断言读取共享字典，无需新增测试。完成 Next typecheck/build 后记录结果。`agent-browser` 当前不可用，使用 CUA 浏览器核验。
+
+**结果：** CUA 已核对中文文案和英文实际按钮；既有 E2E `--grep 'links from the homepage|homepage multi-model entry'` **5/5 通过（12.4s）**，覆盖双语桌面/390px、登录及生成工具页跳转。Next typecheck、build（43 页）和 `git diff --check` 通过；构建保留既有 middleware 弃用提示。沿用 Chromium headless 149.0.7827.55、工作台 fixture 及跳过用户清理配置。截图 `.tmp/intent-pages/home-more-models-{desktop,mobile}-{en,zh-CN}.png` 已更新。仅修改 EN/ZH 共享字典并同步两份文档，无 Next 组件或配置变更。
