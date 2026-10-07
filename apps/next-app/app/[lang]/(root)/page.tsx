@@ -19,7 +19,7 @@ import { Button } from "@libs/react-shared/ui/button";
 import { Input } from "@libs/react-shared/ui/input";
 import { LazyIframe } from "@libs/react-shared/components/lazy-iframe";
 import { tutorialPath, tutorialSlugs } from "@config/tutorials";
-import { intentPagePath, intentPageSlugs } from "@config/image-to-3d";
+import { intentPagePath } from "@config/image-to-3d";
 import { useTranslation } from "@/hooks/use-translation";
 import { authClientReact } from "@libs/auth/authClient";
 import { dispatchCreditBalanceUpdated } from "@/lib/credit-balance-events";
@@ -1030,6 +1030,17 @@ export default function Home() {
             </div>
           </section>
 
+          <div data-testid="pixal3d-multi-model-entry" className="mt-2 flex w-full justify-end">
+            <a
+              data-testid="pixal3d-multi-model-link"
+              href={localizedPath(intentPagePath("image-to-3d"))}
+              className="inline-flex min-h-11 items-center gap-3 rounded-lg border border-[#28e4cf]/35 bg-[#28e4cf]/[0.08] px-5 py-2.5 text-sm font-bold text-[#b5f3e6] transition hover:border-[#28e4cf]/65 hover:bg-[#28e4cf]/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#48bdff] sm:text-base"
+            >
+              {t.imageTo3D.common.homeMultiModel.action}
+              <span aria-hidden="true" className="text-lg">→</span>
+            </a>
+          </div>
+
           {PIXAL3D_SHOW_FREE_TRIAL_CALLOUT ? (
           <div
             data-testid="pixal3d-free-trial-callout"
@@ -1867,15 +1878,11 @@ export default function Home() {
           </div>
 
           <section data-testid="pixal3d-intent-links" aria-labelledby="pixal3d-intent-links-title" className="mt-12 w-full max-w-[1420px] border-t border-[#25314f] py-8">
-            <h2 id="pixal3d-intent-links-title" className="text-2xl font-extrabold tracking-normal text-white sm:text-3xl">{t.imageTo3D.common.homeLinksTitle}</h2>
-            <p className="mt-3 max-w-3xl text-base leading-7 text-[#aeb6ca]">{t.imageTo3D.common.homeLinksDescription}</p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {intentPageSlugs.map((slug) => (
-                <a key={slug} href={localizedPath(intentPagePath(slug))} className="flex items-center justify-between gap-3 rounded-xl border border-[#25314f] bg-[#0b1426]/88 px-5 py-4 text-sm font-bold leading-6 text-[#d1e5ff] transition hover:border-[#48bdff]/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#48bdff]">
-                  <span>{slug === "image-to-3d" ? t.imageTo3D.common.compareLink : t.imageTo3D.common.downloadLink}</span><span aria-hidden="true" className="shrink-0 text-[#28e4cf]">→</span>
-                </a>
-              ))}
-            </div>
+            <h2 id="pixal3d-intent-links-title" className="text-lg font-bold text-[#d1d9e8]">{t.imageTo3D.common.homeLinksTitle}</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#aeb6ca]">{t.imageTo3D.common.homeLinksDescription}</p>
+            <a href={localizedPath(intentPagePath("image-to-3d-model-free-download"))} className="mt-3 inline-flex min-h-11 items-center gap-2 rounded text-sm font-semibold text-[#aeb6ca] underline decoration-[#64748b] underline-offset-4 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#48bdff]">
+              {t.imageTo3D.common.downloadLink}<span aria-hidden="true">→</span>
+            </a>
           </section>
           <section
             data-testid="pixal3d-tutorial-links"

@@ -19,7 +19,7 @@ export interface IntentModelCopy {
   accessBadge: string;
   access: string;
   quickFacts: { formats: string; memory: string; time: string; quality: string; avoid: string };
-  version: string;
+  version?: string;
   summary: string;
   suitable: string;
   avoid: string;
@@ -57,9 +57,11 @@ export interface ImageTo3DTranslations {
     downloadLink: string;
     homeLinksTitle: string;
     homeLinksDescription: string;
+    homeMultiModel: {
+      action: string;
+    };
   };
   download: IntentPageCopy & {
-    workspaceNote: string;
     jump: string;
     workspaceSteps: string[];
     downloadFallbackHint: string;

@@ -1115,3 +1115,94 @@ Next.js 生产 build 通过（43 个预渲染页面，仅既有 middleware 弃�
 - 复用 EN/ZH 两页内容/metadata/FAQ 与 390px 响应式 E2E；真实浏览器核对首屏和文字换行，完成 Next typecheck/build 后记录结果。
 
 **结果：** 真实浏览器已核对两页英文 H1、B 页摘要及工作区上方层级；E2E 的 390px 截图已检查英文 B 页和中文 A 页标题换行。现有内容测试增加 OG/Twitter 标题和比较区 H2 的一致性断言，`--grep 'has distinct public content|within 390px'` **5/5 通过（9.1s）**，覆盖 EN/ZH H1、HTML title、社交标题、canonical、FAQ、样本内容与响应式布局。Next typecheck/build（43 个预渲染页面）及 `git diff --check` 通过；仅有既有 middleware 弃用提示。真实英文预览为 `.tmp/intent-pages/keyword-title-comparison-en.png`；手机截图来自受控 iframe fixture。仅调整共享 EN/ZH 文案、已有测试和文档，未改工作区逻辑，未部署。
+
+### A 页暂时隐藏样本下载入口与样本库（2026-10-07）
+
+**状态：** Green（Spec 已先于实现记录）。用户要求暂时隐藏 A 页的样本按钮及下方样本库；保留已生成资源与组件，便于以后恢复。
+
+| # | 验收场景 | 预期行为 |
+|---|---------|---------|
+| 1 | 样本入口与样本库均不渲染 | EN/ZH A 页不显示页头“Download free samples”及对应中文按钮、不显示导出说明内的样本链接，也不渲染样本库、样本卡片或输入/结果海报；页面不残留指向不存在的 `#downloads` 的链接或空白区域。 |
+| 2 | 可见说明与元数据一致 | A 页摘要、description、FAQ、下载步骤附近说明等不再承诺可见的示例库或引导用户下载本站样本；B 页相关入口及首页指向这两页的说明同步保持准确。A 页仍围绕工作台生成与文件导出，保留已确认的标题及格式说明。 |
+| 3 | 隐藏不等于删除资源 | `modelSampleLibraryEnabled=false` 控制当前显示；已完成样本的清单、GLB/OBJ/STL、原图、海报和溯源文件保留。已有文件验证仍通过匿名直接 GET 检查实际内容、大小、哈希及格式，不依赖隐藏的按钮，也不把其他三个未完成样本标为完成。 |
+| 4 | 工作台与格式表正常 | A 页三步流程、分享按钮下载提示、单个默认 iframe、恢复入口和可见格式表保持；支持内容以格式表和 FAQ 为主，滚动定位使用真实存在的 `#formats`，不依赖已隐藏的样本区。 |
+| 5 | 双语、无脚本与手机布局 | EN/ZH 桌面和 390px 均无样本入口或卡片、无整页横向溢出；父页面脚本失败时默认 iframe 与格式表仍可读。B 页模型选择、导航、会话保留与恢复，以及两页 SEO/FAQ/内链回归继续有效。 |
+
+**验证顺序：** 配置与页面文案实现 → 真实浏览器检查 EN/ZH A 页、390px 与相关入口 → 仅更新 `specs/image-to-3d-pages.spec.ts` 中现有内容、文件下载、无脚本和手机场景，不新增测试；保留真实文件验证，将隐藏区相关 UI 断言改为不渲染 → 相关 Next.js E2E 与 typecheck/build → 补记结果。本轮不删除样本文件，不调用供应商生成、试用或计费流程。
+
+**结果：** CUA 核对英文首屏和展开后的 FAQ，真实工作区正常加载；首屏截图 `.tmp/intent-pages/download-samples-hidden-en.png`。已检查 E2E 中文格式表及 390px 首屏截图（E2E iframe 使用受控 fixture）。现有 `image-to-3d-pages.spec.ts` **24/24 通过（1.1m）**，覆盖双语内容/SEO、隐藏样本、保留资源完整性、模型切换与会话保留、无父页面脚本、内链、sitemap 与手机布局。Next typecheck/build（43 个预渲染页面）及 `git diff --check` 通过；构建仅有既有 middleware 弃用提示。本轮未部署。
+
+### 在线生成入口命名（2026-10-07）
+
+**状态：** Green（Spec 已先于实现记录）。首页通向 B 页的入口明确表达“选择模型、在线生成”，英文同步；共享标签也用于 A 页通向 B 页的内链。首页说明不再把 B 页描述为只比较模型。目标 URL 与页面内模型比较标题不变，复用现有双语首页/内链 E2E，核对实际入口文字与跳转，完成 Next typecheck/build。
+
+**结果：** 入口改为“选择模型，在线生成 3D”/“Choose a model and generate 3D”。CUA 已核对中文首页显示并实际点击进入 B 页，截图 `.tmp/intent-pages/online-generation-entry-zh-CN.png`。既有 `--grep 'links from the homepage'` 场景 **1/1 通过（3.1s）**，覆盖 EN/ZH 首页与两页互链。Next typecheck/build（43 个预渲染页面）及 `git diff --check` 通过，仅有原有 middleware 弃用提示；未部署。
+
+### 首页多模型入口优先级（2026-10-07；位置方案已由下方用户反馈修正替代）
+
+**状态：** Green（以下验收场景先于实现记录）。仅调整 Next.js 首页入口布局与 EN/ZH 文案，保留现有页面和生成逻辑。
+
+| # | 验收场景 | 预期行为 |
+|---|---|---|
+| 1 | 首屏发现多模型能力 | 在首页标题下、Pixal3D iframe 上方展示醒目的多模型入口；说明首页使用 Pixal3D，多模型页支持切换；列出真实可站内切换的 Pixal3D、TRELLIS.2、Hunyuan3D 2.1 名称和明确行动按钮。 |
+| 2 | 正确进入多模型页 | EN/ZH 入口分别进入 `/image-to-3d` 和 `/zh-CN/image-to-3d`；公开入口不受首页登录遮罩阻挡，到达后模型选项正常可用。 |
+| 3 | 下载入口降级 | FAQ 下保留较轻的 Pixal3D 生成与下载说明入口，明确它与首页使用同一模型；不再并列展示两个同等权重的大按钮。 |
+| 4 | 响应式与可访问性 | 桌面与 390px 手机首屏能看到并点击多模型按钮；无整页横向溢出；链接支持键盘焦点，中英文无硬编码和缺失文案。 |
+| 5 | 现有功能回归 | 两页互链、语言 URL、首页 iframe 与登录遮罩保持可用；相关意图页、共享工作台、首页 E2E 通过。 |
+
+**实施与验证计划：** 扩展共享翻译类型及 EN/ZH 字典 → 首页首屏多模型卡片与下方轻量下载入口 → 实际浏览器检查双语桌面/390px布局与点击 → 基于真实 DOM 更新现有首页内链 E2E → Next typecheck、build、相关 E2E及 diff 检查 → 记录结果与文档。当前环境没有 `agent-browser` 命令，视觉验收使用可用的浏览器工具；不运行真实生成或计费操作。
+
+**结果：** CUA 已检查双语桌面和 390px 首页，并从中文首屏按钮进入真实多模型页；英文手机按钮缩短后完整单行显示。新增四项 EN/ZH × 桌面/手机 E2E 验证入口与模型标签完整出现在初始视口、键盘聚焦、实际跳转、模型选项可用，以及首页单 iframe 和匿名登录遮罩。原首页/意图页内链场景适配下方单一指南入口。独立静态复核无遗留问题。
+
+| 验证 | 结果 |
+|---|---|
+| `corepack pnpm --filter @tinyship/next-app typecheck` | 通过 |
+| `corepack pnpm --filter @tinyship/next-app build` | 通过，43 个预渲染页面；仅既有 middleware 弃用提示 |
+| `corepack pnpm exec vitest run tests/unit/next/home-page-layout.test.ts` | 10/10 通过（443ms） |
+| `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts tests/e2e/specs/embedded-workspace.spec.ts tests/e2e/specs/public-pages.spec.ts --grep 'Public image-to-3D intent pages\|Embedded workspace foundation\|Home page loads\|Embedded workspace shows'` | 33/33 通过（57.8s） |
+| `git diff --check` | 通过 |
+
+E2E 使用已有 Chromium headless 149.0.7827.55 路径覆盖及 `E2E_SKIP_CLEANUP=true`，外部工作台使用 fixture，未运行生成、试用或计费操作。截图为 `.tmp/intent-pages/home-multi-model-{desktop,mobile}-{en,zh-CN}.png`；报告 `test-results/e2e-report/index.html`。本轮未部署。环境自带的 `pnpm` 包装器尝试安装依赖并因无 TTY 中止，改用项目指定的 `corepack pnpm` 后全部验证通过，没有重新安装依赖。
+
+### 首页以 Pixal3D 登录使用为主：更多模型入口下移（2026-10-07）
+
+**状态：** Green（Spec 先于修正实现记录）。用户明确：首页主要引导登录并使用 Pixal3D，以支持邮箱收集；更多模型仅作为工作台下方的补充入口。此要求替代上节首屏大卡片方案。
+
+- 首页标题后直接展示现有 Pixal3D 工作台与登录遮罩，不插入多模型卡片或大按钮。
+- “使用更多 3D 生成模型”/“Explore more 3D models”作为轻量文字链接紧接 Pixal3D 工作台下方，位于后续反馈等内容之前；不保留额外大标题、说明块、模型标签或渐变主按钮。
+- EN/ZH、桌面与390px：初始视口优先呈现 Pixal3D，滚动到工作台底部后才看到更多模型链接；链接不溢出、可键盘聚焦，并进入正确的本地化多模型页。
+- 首页登录按钮继续通向对应登录页，单一 Pixal3D iframe及登录状态切换行为保持；不新增或改变两篇公开意图页的访问策略。
+- 根据实际浏览器结果修正上一轮的四项布局 E2E，保留首页/两页互链回归，完成 Next typecheck、build及相关 E2E 后记录结果。
+
+**结果：** CUA 已检查中文桌面/390px 的工作台底部链接、键盘焦点及真实跳转。修正后的四项布局 E2E覆盖 EN/ZH × 桌面/手机：更多模型入口不在初始视口，紧接工作台且位于反馈区之前；真实点击登录按钮进入对应语言的 `/signin`，返回后用 Enter 打开多模型页；单 iframe、登录遮罩、双语标签与无横向溢出均通过。没有新增测试数量或访问策略。
+
+| 验证 | 结果 |
+|---|---|
+| `corepack pnpm --filter @tinyship/next-app typecheck` | 通过 |
+| `corepack pnpm --filter @tinyship/next-app build` | 通过，43 个预渲染页面；仅既有 middleware 弃用提示 |
+| `corepack pnpm exec vitest run tests/unit/next/home-page-layout.test.ts` | 10/10 通过（358ms） |
+| `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts tests/e2e/specs/embedded-workspace.spec.ts tests/e2e/specs/public-pages.spec.ts --grep 'links from the homepage\|homepage multi-model entry\|Embedded workspace foundation\|Home page loads\|Embedded workspace shows'` | 10/10 通过（19.5s） |
+| `git diff --check` | 通过 |
+
+沿用已有 Chromium headless 149.0.7827.55、`E2E_SKIP_CLEANUP=true` 与第三方工作台 fixture。初始视口截图为 `.tmp/intent-pages/home-more-models-initial-{desktop,mobile}-{en,zh-CN}.png`；工作台下方截图为 `.tmp/intent-pages/home-more-models-{desktop,mobile}-{en,zh-CN}.png`。报告保留在 `test-results/e2e-report/index.html`。未创建账号、运行生成或消费积分；未部署。
+
+### 工作台下方更多模型入口适度加重（2026-10-07）
+
+**状态：** Green（Spec 先于样式修改记录）。保留工作台下方靠右的位置及双语文字，将灰色下划线文字改为加粗浅青色文字、细边框、淡背景与适当内边距的紧凑次要按钮；不增加横幅、模型列表或渐变主按钮。桌面及390px无溢出，键盘焦点和本地化跳转可用，Pixal3D登录入口继续保持主位。复用既有四项首页入口 E2E及双语内链场景，不新增样式实现细节测试；浏览器核验后运行相关 E2E、Next typecheck/build并记录结果。
+
+**结果：** CUA 核对中文桌面/390px 加粗文字、浅青描边背景与键盘焦点，手机按钮宽约210px且文字完整显示。`corepack pnpm --filter @tinyship/next-app typecheck`、`build`（43页）及 `git diff --check` 通过；构建仅保留既有 middleware 弃用提示。`corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts --grep 'links from the homepage|homepage multi-model entry'` **5/5通过（17.6s）**，验证双语桌面/手机布局、登录跳转和多模型页入口。复用已有 Chromium 路径覆盖、跳过清理及工作台 fixture，截图已更新至 `.tmp/intent-pages/home-more-models-{desktop,mobile}-{en,zh-CN}.png`。仅修改 Next 页面样式并同步文档，无新文案、业务或配置变更；未部署。
+
+### 下载入口差异化文案与指定说明精简（2026-10-07）
+
+**状态：** Green（Spec 先于实现记录）。按用户三张截图修改 Next.js 可见文案，中英文同步。
+
+- 首页下方下载指南围绕生成、文件导出、格式选择与后续使用，不再提及 Pixal3D 或“与首页相同”；链接明确为“免费下载 3D 模型”及对应英文，保持原本地化目标地址。
+- 多模型页仅移除 Pixal3D 卡片标题下“当前基于 TRELLIS.2 的版本”及对应英文，不影响其他模型版本行、模型名称、使用动作及其余卡片内容。
+- 下载页工作台下方移除单独的第三方 Hugging Face Space 排队、额度和登录提示行及对应英文；保留下载操作提示、格式表、FAQ与工作台行为。
+- 使用实际浏览器核验 EN/ZH 与390px布局，再调整现有内容/内链 E2E中的对应断言，不新增独立测试。完成相关 Next.js E2E、typecheck/build与 diff 检查后记录结果。
+
+**结果：** 首页标题改为“3D 模型下载与使用指南”，摘要说明生成/导出步骤及建模、游戏、3D打印的格式选择，链接改为“免费下载 3D 模型”；英文同步。Pixal3D 的版本文案与下载工作台提示已从字典中移除，版本字段改为可选并仅在有内容时渲染，其他三张卡片仍有各自版本行；同时删除已无用途的 `download.workspaceNote` 类型与节点。
+
+CUA 已核对中文首页新文案及实际点击、下载区提示移除、Pixal3D 卡片与相邻 Rodin 卡片；E2E 核验双语内容和390px布局，已查看新首页指南截图及手机格式区截图。既有 E2E `corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/image-to-3d-pages.spec.ts --grep 'has distinct public content|links from the homepage|within 390px'` **6/6通过（9.7s）**，未增加测试数量。`corepack pnpm --filter @tinyship/next-app typecheck`、`build`（43个预渲染页面）及 `git diff --check`通过；构建仅有既有middleware弃用提示。
+
+截图 `.tmp/intent-pages/home-download-guide-{en,zh-CN}.png`，报告 `test-results/e2e-report/index.html`；沿用 Chromium headless 149.0.7827.55、工作台fixture及跳过用户清理配置。修改分组：共享libs为翻译类型与EN/ZH字典，Next为卡片可选版本与工作台文案节点，docs为实施说明、用户指南与测试目录；配置没有新增变化。未触发生成或计费，未部署。

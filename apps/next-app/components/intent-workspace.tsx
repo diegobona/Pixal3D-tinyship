@@ -1,4 +1,4 @@
-import { comparisonModelIds, comparisonWorkspaces, intentWorkspaces, isEmbeddedComparisonModel } from "@config/image-to-3d";
+import { comparisonModelIds, comparisonWorkspaces, intentWorkspaces, isEmbeddedComparisonModel, modelSampleLibraryEnabled } from "@config/image-to-3d";
 import type { ImageTo3DTranslations, IntentPageSlug } from "@libs/ai3d/intent-pages";
 import { translations } from "@libs/i18n";
 import { LazyIframe } from "@libs/react-shared/components/lazy-iframe";
@@ -77,10 +77,9 @@ export function IntentWorkspace({
       {slug === "image-to-3d-model-free-download" && (
         <div data-testid="download-export-help" className="flex flex-col gap-3 border-b border-[#263246] px-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           <p className="max-w-3xl text-sm leading-6 text-[#c3d0e0]">{translation.download.exportHint}</p>
-          <a href="#downloads" className="inline-flex min-h-10 shrink-0 items-center gap-2 text-sm font-medium text-[#9af2dc] underline decoration-[#46d9bd]/30 underline-offset-4 hover:text-white">{translation.download.jump}<span aria-hidden="true">↓</span></a>
+          {modelSampleLibraryEnabled && <a href="#downloads" className="inline-flex min-h-10 shrink-0 items-center gap-2 text-sm font-medium text-[#9af2dc] underline decoration-[#46d9bd]/30 underline-offset-4 hover:text-white">{translation.download.jump}<span aria-hidden="true">↓</span></a>}
         </div>
       )}
-      {!isComparison && <p className="mt-3 px-1 text-xs leading-5 text-[#94a3b8]">{translation.download.workspaceNote}</p>}
     </section>
   );
 }

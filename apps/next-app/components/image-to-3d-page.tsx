@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { comparisonModelIds, comparisonSources, IMAGE_TO_3D_REVIEWED_AT, intentPagePath, publicModelSamples } from "@config/image-to-3d";
+import { comparisonModelIds, comparisonSources, IMAGE_TO_3D_REVIEWED_AT, intentPagePath, modelSampleLibraryEnabled, publicModelSamples } from "@config/image-to-3d";
 import { tutorialPath, tutorialSlugs } from "@config/tutorials";
 import type { ImageTo3DTranslations, IntentFaq, IntentPageSlug } from "@libs/ai3d/intent-pages";
 import { IntentWorkspace } from "@/components/intent-workspace";
@@ -126,7 +126,7 @@ function ModelComparison({ locale, translation }: { locale: SiteLocale; translat
           return (
             <article id={`model-${id}`} key={id} data-testid={`model-comparison-${id}`} className="flex min-w-0 scroll-mt-24 flex-col rounded-2xl border border-[#263246] bg-[#0c1627] p-5 sm:p-6">
               <h3 className="text-xl font-semibold text-white">{model.name}</h3>
-              <p className="mt-1 text-xs leading-5 text-[#70cbb8]">{model.version}</p>
+              {model.version && <p className="mt-1 text-xs leading-5 text-[#70cbb8]">{model.version}</p>}
               <dl className="mb-4 mt-4 border-l-2 border-[#46d9bd]/40 pl-3">
                 <dt className="text-xs font-medium text-[#dce6f2]">{labels.suitable}</dt>
                 <dd className={`mt-1 ${bodyClass}`}>{model.suitable}</dd>
@@ -183,14 +183,14 @@ export function ImageTo3DPage({ slug, locale, translation }: { slug: IntentPageS
             <h1 className="max-w-4xl text-2xl font-semibold leading-tight tracking-tight sm:text-3xl xl:text-4xl">{content.title}</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#aebdd0]">{content.summary}</p>
           </div>
-          <a href={isComparison ? "#models" : "#downloads"} className={`inline-flex min-h-11 w-fit shrink-0 items-center justify-center gap-3 rounded-full border px-5 py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#48bdff] ${isComparison ? "border-[#43617c] bg-[#15263a] text-[#a8e8f7] hover:border-[#8cd7f7] hover:bg-[#1b3047]" : "border-[#70e6cc] bg-[#70e6cc] text-[#08201e] hover:bg-[#9af2dc]"}`}>
+          {(isComparison || modelSampleLibraryEnabled) && <a href={isComparison ? "#models" : "#downloads"} className={`inline-flex min-h-11 w-fit shrink-0 items-center justify-center gap-3 rounded-full border px-5 py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#48bdff] ${isComparison ? "border-[#43617c] bg-[#15263a] text-[#a8e8f7] hover:border-[#8cd7f7] hover:bg-[#1b3047]" : "border-[#70e6cc] bg-[#70e6cc] text-[#08201e] hover:bg-[#9af2dc]"}`}>
             {content.jump}<span aria-hidden="true">↓</span>
-          </a>
+          </a>}
         </header>
         <article className="min-w-0">
           <IntentWorkspace slug={slug} locale={locale} translation={translation} />
           <div data-testid="intent-supporting-content" className="mx-auto mt-12 min-w-0 max-w-[1120px] space-y-10 sm:mt-14 sm:space-y-12">
-            {isComparison ? <ModelComparison locale={locale} translation={translation} /> : <><SampleLibrary locale={locale} translation={translation} /><DownloadFormats translation={translation} /></>}
+            {isComparison ? <ModelComparison locale={locale} translation={translation} /> : <>{modelSampleLibraryEnabled && <SampleLibrary locale={locale} translation={translation} />}<DownloadFormats translation={translation} /></>}
             <Faq title={content.faqTitle} entries={content.faq} />
             <nav data-testid="intent-related-links" aria-label={content.relatedTitle} className="min-w-0 border-t border-[#263246] pt-6">
               <h2 className="text-sm font-medium text-[#aebdd0]">{content.relatedTitle}</h2>

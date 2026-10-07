@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { test, expect, type ElementHandle, type Page } from '@playwright/test';
 import { comparisonActions, comparisonSources, comparisonWorkspaces, IMAGE_TO_3D_REVIEWED_AT, intentWorkspaces, publicModelSamples } from '../../../config/image-to-3d';
@@ -40,6 +40,10 @@ async function captureIntentPage(page: Page, filename: string, fullPage = false)
   const directory = path.join(process.cwd(), '.tmp', 'intent-pages');
   await mkdir(directory, { recursive: true });
   await page.screenshot({ path: path.join(directory, filename), fullPage });
+}
+
+async function expectSampleLibraryHidden(page: Page) {
+  await expect(page.locator('#downloads, [data-testid^="sample-"], a[href="#downloads"], a[href^="/model-samples/"], img[src^="/model-samples/"]')).toHaveCount(0);
 }
 
 type Bounds = { min: number[]; max: number[] };
@@ -322,6 +326,7 @@ test.describe('Public image-to-3D intent pages', () => {
         const intentPage = page.getByTestId('intent-page');
         await expect(intentPage).toBeVisible();
         await expect(intentPage.getByRole('heading', { level: 1, name: content.title, exact: true })).toBeVisible();
+        await expect(page.getByTestId('intent-page-header').locator('p')).toHaveText(content.summary);
         await expect(page.locator('html')).toHaveAttribute('lang', locale);
         const frameId = isComparison ? 'intent-workspace-compare' : 'intent-workspace-download';
         const frame = page.getByTestId(frameId);
@@ -348,7 +353,6 @@ test.describe('Public image-to-3D intent pages', () => {
             await expect(useLink).toHaveAccessibleName((external ? dictionary.comparison.openOnline : dictionary.comparison.tryHere) + ': ' + copy.shortName);
             await expect(navigation.getByText(copy.accessBadge, { exact: true }).first()).toBeVisible();
           }
-          await expect(page.getByTestId('intent-page-header').locator('p')).toHaveText(content.summary);
           await expect(intentPage.locator('#workspace > p')).toHaveCount(0);
           await expect(intentPage.locator('#models > p')).toHaveCount(0);
           await expect(intentPage.locator('#models-title')).toHaveText(dictionary.comparison.modelsTitle);
@@ -357,21 +361,26 @@ test.describe('Public image-to-3D intent pages', () => {
           const workflow = page.getByTestId('download-workflow');
           await expect(workflow.locator('li')).toHaveText(dictionary.download.workspaceSteps.map((step, index) => (index + 1) + step));
           await expect(workflow).toBeInViewport();
+          await expect(page.getByTestId('intent-workspace-bar').getByText(dictionary.download.downloadFallbackHint, { exact: true })).toBeVisible();
           const exportHelp = page.getByTestId('download-export-help');
           await expect(exportHelp.locator('p')).toHaveText(dictionary.download.exportHint);
-          await expect(exportHelp.getByRole('link')).toHaveAttribute('href', '#downloads');
-          await expect(exportHelp.getByRole('link')).toHaveAccessibleName(dictionary.download.jump);
-          await expect(intentPage.locator('#workspace > p')).toHaveText(dictionary.download.workspaceNote);
+          await expect(exportHelp.getByRole('link')).toHaveCount(0);
+          await expect(intentPage.locator('#workspace > p')).toHaveCount(0);
         }
         await expect(intentPage.locator('#workspace')).toHaveAccessibleName(isComparison ? dictionary.comparison.modelNavigation : workspaceName);
         await expect(frame).toHaveAttribute('title', workspaceName);
-        await expect(intentPage.locator('header a[href^="#"]')).toHaveAttribute('href', isComparison ? '#models' : '#downloads');
-        await intentPage.locator('header a[href^="#"]').click();
-        await expect(page).toHaveURL(ORIGIN + pagePath + '?campaign=intent-e2e' + (isComparison ? '#models' : '#downloads'));
+        if (isComparison) {
+          await expect(intentPage.locator('header a[href^="#"]')).toHaveAttribute('href', '#models');
+          await intentPage.locator('header a[href^="#"]').click();
+          await expect(page).toHaveURL(ORIGIN + pagePath + '?campaign=intent-e2e#models');
+        } else {
+          await expect(intentPage.locator('header a[href^="#"]')).toHaveCount(0);
+          await expect(page).toHaveURL(ORIGIN + pagePath + '?campaign=intent-e2e');
+        }
 
         expect(await intentPage.locator(':scope > div > article > section').evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(['workspace']);
         const supporting = page.getByTestId('intent-supporting-content');
-        expect(await supporting.locator(':scope > section').evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(isComparison ? ['models', 'faq'] : ['downloads', 'formats', 'faq']);
+        expect(await supporting.locator(':scope > section').evaluateAll((nodes) => nodes.map((node) => node.id))).toEqual(isComparison ? ['models', 'faq'] : ['formats', 'faq']);
         await expect(intentPage.locator('#workflow, #selection')).toHaveCount(0);
         if (isComparison) {
           const fields = ['avoid', 'quality', 'formats', 'runtime', 'memory', 'time'] as const;
@@ -382,6 +391,12 @@ test.describe('Public image-to-3D intent pages', () => {
             const copy = dictionary.comparison.models[model];
             await expect(card).toHaveAttribute('id', 'model-' + model);
             await expect(card.getByRole('heading', { level: 3 })).toHaveText(copy.name);
+            if (model === 'pixal3d') {
+              await expect(card.locator(':scope > p')).toHaveCount(0);
+            } else {
+              expect(copy.version).toBeTruthy();
+              await expect(card.locator(':scope > p')).toHaveText(copy.version!);
+            }
             await expect(card.locator(':scope > dl').first().locator('dt')).toHaveText(dictionary.common.suitable);
             await expect(card.locator(':scope > dl').first().locator('dd')).toHaveText(copy.suitable);
             await expect(card.locator(':scope > dl').first().locator('dd')).toBeVisible();
@@ -439,33 +454,7 @@ test.describe('Public image-to-3D intent pages', () => {
             await expect(details.locator('dl')).not.toBeVisible();
           }
         } else {
-          expect(publicModelSamples.length, 'The download library must contain completed real samples').toBeGreaterThan(0);
-          await expect(page.getByTestId('sample-library').locator('article')).toHaveCount(publicModelSamples.length);
-          await expect(page.getByTestId('sample-library').getByText(dictionary.download.downloadConditions, { exact: true })).toBeVisible();
-          for (const sample of publicModelSamples) {
-            const card = page.getByTestId('sample-' + sample.id);
-            await expect(card.getByRole('heading', { level: 3 })).toHaveText(dictionary.samples[sample.id].name);
-            expect(sample.previewImage, 'Every published sample must have a rendered result').toBeTruthy();
-            expect(sample.previewImage).not.toBe(sample.referenceImage);
-            await expect(card.getByTestId('sample-input')).toHaveAttribute('src', sample.referenceImage);
-            await expect(card.getByTestId('sample-input')).toHaveAttribute('alt', dictionary.samples[sample.id].referenceAlt);
-            await expect(card.getByTestId('sample-result')).toHaveAttribute('src', sample.previewImage!);
-            await expect(card.getByTestId('sample-result')).toHaveAttribute('alt', dictionary.samples[sample.id].name + ': ' + dictionary.download.resultAlt);
-            await expect(card.locator('figcaption')).toHaveText([dictionary.download.referenceLabel, dictionary.download.resultLabel]);
-            for (const image of await card.locator('img').all()) {
-              await image.scrollIntoViewIfNeeded();
-              await expect.poll(() => image.evaluate((node) => (node as HTMLImageElement).complete && (node as HTMLImageElement).naturalWidth > 0)).toBe(true);
-            }
-            await expect(card.locator('a[download]')).toHaveCount(sample.files.length);
-            for (const file of sample.files) {
-              const download = card.locator('a[download="' + file.filename + '"]');
-              await expect(download).toHaveAttribute('href', file.path);
-              await expect(download).toContainText(dictionary.download.fileNotes[file.format]);
-            }
-            await expect(card.locator('dl a').first()).toHaveAttribute('href', sample.sourceUrl);
-            await expect(card.locator('dl a').last()).toHaveAttribute('href', sample.licenseUrl);
-          }
-          await expect(page.getByTestId('sample-library').locator('a[download$=".fbx"]')).toHaveCount(0);
+          await expectSampleLibraryHidden(page);
           const formats = intentPage.locator('#formats').getByRole('table');
           await expect(formats).toHaveAccessibleName(dictionary.download.formatsTitle);
           await expect(formats.getByRole('row')).toHaveCount(5);
@@ -514,7 +503,7 @@ test.describe('Public image-to-3D intent pages', () => {
           await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
           const prefix = isComparison ? 'comparison' : 'download';
           await captureIntentPage(page, prefix + '-top-' + locale + '.png');
-          await intentPage.locator(isComparison ? '#models' : '#downloads').evaluate((node) => node.scrollIntoView({ block: 'start', behavior: 'instant' }));
+          await intentPage.locator(isComparison ? '#models' : '#formats').evaluate((node) => node.scrollIntoView({ block: 'start', behavior: 'instant' }));
           await captureIntentPage(page, prefix + '-supporting-' + locale + '.png');
           if (!isComparison && locale === 'en') await captureIntentPage(page, 'download-preview.png');
           await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
@@ -733,7 +722,7 @@ test.describe('Public image-to-3D intent pages', () => {
     }
   }
 
-  test('serves real completed model files anonymously and downloads every format through its card', async ({ playwright, page }) => {
+  test('retains real completed model files anonymously while sample download UI is hidden', async ({ playwright, page }) => {
     test.setTimeout(60_000);
     expect(publicModelSamples.length).toBeGreaterThan(0);
     const anonymous = await playwright.request.newContext({ baseURL: ORIGIN });
@@ -807,18 +796,8 @@ test.describe('Public image-to-3D intent pages', () => {
     }
 
     await page.goto('/image-to-3d-model-free-download', { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
-    for (const sample of publicModelSamples) {
-      for (const file of sample.files) {
-        const downloadEvent = page.waitForEvent('download');
-        await page.getByTestId('sample-' + sample.id).locator('a[download="' + file.filename + '"]').click();
-        const download = await downloadEvent;
-        expect(download.suggestedFilename()).toBe(file.filename);
-        expect(await download.failure()).toBeNull();
-        const downloadedPath = await download.path();
-        expect(downloadedPath).not.toBeNull();
-        expect(sha256(await readFile(downloadedPath!))).toBe(file.sha256);
-      }
-    }
+    await expectSampleLibraryHidden(page);
+    await expect(page.locator('#formats').getByRole('table')).toBeVisible();
     await expect(page).toHaveURL(ORIGIN + '/image-to-3d-model-free-download');
   });
 
@@ -857,7 +836,7 @@ test.describe('Public image-to-3D intent pages', () => {
     }
   });
 
-  test('keeps the workspace, result previews, and downloads usable when parent scripts cannot load', async ({ page }) => {
+  test('keeps the workspace and format guidance usable with hidden samples when parent scripts cannot load', async ({ page }) => {
     await page.route('**/_next/static/**', (route) => route.request().resourceType() === 'script' ? route.abort() : route.continue());
     for (const slug of slugs) {
       await page.goto('/' + slug, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
@@ -876,20 +855,16 @@ test.describe('Public image-to-3D intent pages', () => {
         }
       }
       if (slug === 'image-to-3d-model-free-download') {
-        for (const sample of publicModelSamples) {
-          const card = page.getByTestId('sample-' + sample.id);
-          const poster = card.getByTestId('sample-result');
-          await poster.scrollIntoViewIfNeeded();
-          await expect(poster).toBeVisible();
-          await expect.poll(() => poster.evaluate((node) => (node as HTMLImageElement).complete && (node as HTMLImageElement).naturalWidth > 0)).toBe(true);
-          for (const file of sample.files) {
-            const downloadEvent = page.waitForEvent('download');
-            await card.locator('a[download="' + file.filename + '"]').click();
-            const download = await downloadEvent;
-            expect(await download.failure()).toBeNull();
-            expect(download.suggestedFilename()).toBe(file.filename);
-          }
-        }
+        await expectSampleLibraryHidden(page);
+        const formats = page.locator('#formats').getByRole('table');
+        await formats.scrollIntoViewIfNeeded();
+        await expect(formats).toBeVisible();
+        await expect(formats.getByRole('row')).toHaveCount(5);
+        for (const cell of await formats.getByRole('cell').all()) await expect(cell).toBeVisible();
+        const firstFaq = page.locator('#faq details').first();
+        await firstFaq.locator('summary').click();
+        await expect(firstFaq.locator('p')).toBeVisible();
+        await expect(firstFaq.locator('p')).toHaveText(imageTo3DEn.download.faq[0].answer);
       }
     }
   });
@@ -922,11 +897,22 @@ test.describe('Public image-to-3D intent pages', () => {
       const home = locale === 'en' ? '/' : '/zh-CN';
       const dictionary = dictionaries[locale];
       await page.goto(home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
+      const primary = page.getByTestId('pixal3d-multi-model-entry');
+      await expect(primary.getByRole('link')).toHaveCount(1);
+      await expect(primary.getByTestId('pixal3d-multi-model-link')).toHaveAccessibleName(dictionary.common.homeMultiModel.action);
+      await expect(primary.getByTestId('pixal3d-multi-model-link')).toHaveAttribute('href', localizedPath(slugs[1], locale));
       const links = page.getByTestId('pixal3d-intent-links');
-      await expect(links.getByRole('link')).toHaveCount(2);
-      await expect(links.getByRole('link', { name: dictionary.common.downloadLink })).toHaveAttribute('href', localizedPath(slugs[0], locale));
-      await expect(links.getByRole('link', { name: dictionary.common.compareLink })).toHaveAttribute('href', localizedPath(slugs[1], locale));
-      await links.getByRole('link', { name: dictionary.common.downloadLink }).click();
+      await expect(links.getByRole('link')).toHaveCount(1);
+      await expect(links.getByRole('heading')).toHaveText(dictionary.common.homeLinksTitle);
+      await expect(links).toContainText(dictionary.common.homeLinksDescription);
+      await expect(links).not.toContainText('Pixal3D');
+      const downloadLink = links.getByRole('link', { name: dictionary.common.downloadLink, exact: true });
+      await expect(downloadLink).toHaveText(locale === 'en' ? /free/i : /免费/);
+      await expect(downloadLink).toHaveAttribute('href', localizedPath(slugs[0], locale));
+      const directory = path.join(process.cwd(), '.tmp', 'intent-pages');
+      await mkdir(directory, { recursive: true });
+      await links.screenshot({ path: path.join(directory, 'home-download-guide-' + locale + '.png') });
+      await downloadLink.click();
       await expect(page).toHaveURL(ORIGIN + localizedPath(slugs[0], locale));
       for (const slug of slugs) {
         const related = page.getByTestId('intent-related-links');
@@ -944,6 +930,79 @@ test.describe('Public image-to-3D intent pages', () => {
       await expect(page).toHaveURL(ORIGIN + home);
     }
   });
+
+  for (const viewport of [
+    { name: 'desktop', width: 1280, height: 900 },
+    { name: 'mobile', width: 390, height: 844 },
+  ] as const) {
+    for (const locale of locales) {
+      test(locale + ' homepage multi-model entry stays below the workspace and preserves sign-in on ' + viewport.name, async ({ page }) => {
+        test.setTimeout(45_000);
+        await page.setViewportSize({ width: viewport.width, height: viewport.height });
+        const dictionary = dictionaries[locale];
+        const home = locale === 'en' ? '/' : '/zh-CN';
+        await page.goto(home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
+        const entry = page.getByTestId('pixal3d-multi-model-entry');
+        const link = entry.getByTestId('pixal3d-multi-model-link');
+        await expect(entry.getByRole('heading')).toHaveCount(0);
+        await expect(entry.getByRole('list')).toHaveCount(0);
+        await expect(entry.getByRole('link')).toHaveCount(1);
+        await expect(link).toHaveAccessibleName(dictionary.common.homeMultiModel.action);
+        await expect(link).toHaveAttribute('href', localizedPath('image-to-3d', locale));
+        await expect(entry).not.toBeInViewport();
+        const workspace = page.getByTestId('pixal3d-inline-trial');
+        await expect(workspace).toBeInViewport();
+        const overlay = page.getByTestId('pixal3d-inline-trial-auth-overlay');
+        await expect(overlay).toBeVisible();
+        const frame = page.getByTestId('pixal3d-inline-trial-iframe');
+        await expect(frame).toHaveAttribute('src', workspaceUrl('pixal3d'));
+        await expect(page.locator('iframe')).toHaveCount(1);
+        const entryBox = (await entry.boundingBox())!;
+        const workspaceBox = (await workspace.boundingBox())!;
+        const feedbackBox = (await page.getByTestId('pixal3d-pain-point-feedback').boundingBox())!;
+        const gap = entryBox.y - (workspaceBox.y + workspaceBox.height);
+        expect(gap).toBeGreaterThanOrEqual(0);
+        expect(gap).toBeLessThanOrEqual(12);
+        expect(await entry.evaluate((node) => node.previousElementSibling?.getAttribute('data-testid'))).toBe('pixal3d-inline-trial');
+        expect(entryBox.y + entryBox.height).toBeLessThanOrEqual(feedbackBox.y);
+        expect(await page.evaluate(() => window.scrollY)).toBe(0);
+        await captureIntentPage(page, 'home-more-models-initial-' + viewport.name + '-' + locale + '.png');
+
+        await overlay.getByRole('button').click();
+        await expect(page).toHaveURL(ORIGIN + localizedPath('signin', locale));
+        await page.goto(home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
+        await expect(overlay).toBeVisible();
+        await expect(frame).toHaveAttribute('src', workspaceUrl('pixal3d'));
+        await link.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+        await expect(link).toBeInViewport({ ratio: 1 });
+        const scrolledWorkspace = (await workspace.boundingBox())!;
+        const scrolledEntry = (await entry.boundingBox())!;
+        expect(scrolledWorkspace.y + scrolledWorkspace.height).toBeGreaterThan(0);
+        expect(scrolledWorkspace.y + scrolledWorkspace.height).toBeLessThanOrEqual(scrolledEntry.y);
+        const layout = await page.evaluate(() => ({
+          document: document.documentElement.scrollWidth,
+          body: document.body.scrollWidth,
+          viewport: document.documentElement.clientWidth,
+        }));
+        expect(layout.document).toBeLessThanOrEqual(layout.viewport + 1);
+        expect(layout.body).toBeLessThanOrEqual(layout.viewport + 1);
+        const linkBox = (await link.boundingBox())!;
+        expect(linkBox.x).toBeGreaterThanOrEqual(0);
+        expect(linkBox.x + linkBox.width).toBeLessThanOrEqual(viewport.width);
+        await captureIntentPage(page, 'home-more-models-' + viewport.name + '-' + locale + '.png');
+        await link.focus();
+        await expect(link).toBeFocused();
+        await link.press('Enter');
+        await expect(page).toHaveURL(ORIGIN + localizedPath('image-to-3d', locale));
+        const navigation = page.getByTestId('model-navigation');
+        await expect(navigation).toBeVisible();
+        for (const id of embeddedModels) {
+          await expect(navigation.getByRole('link', { name: dictionary.comparison.models[id].shortName, exact: true })).toBeVisible();
+          await expect(navigation.getByTestId('model-use-' + id)).toBeEnabled();
+        }
+      });
+    }
+  }
 
   test('publishes stable localized sitemap entries and allows public crawling', async ({ request, page }) => {
     const response = await request.get('/sitemap.xml');
@@ -978,7 +1037,7 @@ test.describe('Public image-to-3D intent pages', () => {
     }
   });
 
-  test('keeps both localized pages within 390px and decodes input and result images', async ({ page }) => {
+  test('keeps both localized pages within 390px with hidden sample UI and readable formats', async ({ page }) => {
     test.setTimeout(60_000);
     await page.setViewportSize({ width: 390, height: 844 });
     for (const locale of locales) {
@@ -997,16 +1056,7 @@ test.describe('Public image-to-3D intent pages', () => {
           await captureIntentPage(page, prefix + '-mobile-top-' + locale + '.png');
         }
         if (slug === 'image-to-3d-model-free-download') {
-          for (const sample of publicModelSamples) {
-            const images = page.getByTestId('sample-' + sample.id).locator('img');
-            await expect(images).toHaveCount(2);
-            for (const image of await images.all()) {
-              await image.scrollIntoViewIfNeeded();
-              await expect.poll(() => image.evaluate((node) => (node as HTMLImageElement).complete && (node as HTMLImageElement).naturalWidth > 0)).toBe(true);
-              expect((await image.boundingBox())!.width).toBeGreaterThan(0);
-              expect((await image.boundingBox())!.width).toBeLessThanOrEqual(390);
-            }
-          }
+          await expectSampleLibraryHidden(page);
           const formats = page.locator('#formats [role="row"]').filter({ has: page.getByRole('rowheader') });
           await expect(formats).toHaveCount(4);
           for (const format of await formats.all()) {
@@ -1026,7 +1076,7 @@ test.describe('Public image-to-3D intent pages', () => {
         }
         await expect(page.getByTestId(frameId)).toHaveCount(1);
         if (process.env.E2E_CAPTURE_INTENT_PAGES === 'true') {
-          await page.locator(slug === 'image-to-3d' ? '#models' : '#downloads').evaluate((node) => node.scrollIntoView({ block: 'start', behavior: 'instant' }));
+          await page.locator(slug === 'image-to-3d' ? '#models' : '#formats').evaluate((node) => node.scrollIntoView({ block: 'start', behavior: 'instant' }));
           await captureIntentPage(page, prefix + '-mobile-supporting-' + locale + '.png');
         }
       }

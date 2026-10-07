@@ -45,6 +45,9 @@ export const comparisonSources: Record<ComparisonModelId, readonly string[]> = {
   hunyuan3d: ["https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1", "https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1/blob/main/gradio_app.py", "https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1/blob/main/LICENSE", "https://github.com/Tencent-Hunyuan/Hunyuan3D-2"],
 };
 
+// Temporarily hide the library and its entry points while retaining the verified assets.
+export const modelSampleLibraryEnabled = false;
+
 // Refreshed only by the operator after actual generation and geometry validation.
 // Existing homepage preview assets are not eligible for this new download library.
 export const publicModelSamples: readonly PublicModelSample[] = modelSampleManifest as PublicModelSample[];
