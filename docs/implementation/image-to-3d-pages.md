@@ -117,9 +117,9 @@ The subsequent header edit removes the visible left Pixal3D workspace title from
 
 Search Console reports that `https://pixal3d.net/sitemap.xml` cannot be read, despite successful live inspection and verified Googlebot requests returning HTTP 200/XML at 21:51 and 22:23 Asia/Shanghai. Downloaded responses parse successfully and contain 14 URLs; the owner reports no manual actions. The cause is not confirmed.
 
-`/sitemap.txt` provides a diagnostic alternative using the same sitemap function and the same `<loc>` URL set, one absolute URL per line with UTF-8 `text/plain`. It retains the existing database fallback and revalidation policy. XML, robots and Cloudflare configuration are unchanged. [Google supports text sitemaps](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#text-sitemap).
+`/sitemap.txt` uses the same sitemap function and the same `<loc>` URL set, one absolute URL per line with UTF-8 `text/plain`. It retains the existing database fallback and revalidation policy. [Google supports text sitemaps](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#text-sitemap).
 
-After deployment, verify the public TXT response is 200 with the expected content and matches XML, then submit `https://pixal3d.net/sitemap.txt` in Search Console once, retaining the existing XML record. TXT success offers an alternate URL-discovery path and narrows the investigation; it does not establish an XML parser defect, since the submission URL also changes. If it also fails, correlate its actual Googlebot fetch with the new report before changing site configuration. Local tests do not verify Google processing or indexing.
+After deployment, the public TXT response was verified as HTTP 200 with 14 production-domain URLs matching XML. The owner then provided a Search Console screenshot showing TXT success and 14 discovered pages, while XML still failed. `robots.txt` now advertises the verified TXT address. XML remains available, and Cloudflare configuration is unchanged. This confirms a working URL-discovery path, not an XML parser defect or indexing of all 14 pages. Keep the TXT submission; it is generated from the shared sitemap data rather than a manually maintained list.
 
 ## Download and model-selection focus (2026-10-07)
 

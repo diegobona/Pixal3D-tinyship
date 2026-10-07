@@ -1244,3 +1244,13 @@ CUA 已检查桌面英文、中文390/768px与真实 Blog/Features 导航，E2E 
 - 先在实际运行的 Next 服务核对响应，再写请求级 E2E。通过 Next typecheck/build、相关 E2E 与 diff 检查后记录；部署及 GSC 处理结果单独验证。
 
 **结果：** Next typecheck、build（44 个预渲染条目）通过，仅既有 middleware 弃用提示。针对机器可读文件，先在 `next start` 生产服务器检查真实 HTTP 响应：200、`text/plain; charset=utf-8`、14 个 URL，与 XML 完全一致；无新 UI 或选择器，使用响应核验。之后新增两项请求级 E2E并运行既有 XML/robots 用例：`corepack pnpm exec playwright test --config=tests/e2e/playwright.config.ts tests/e2e/specs/sitemap-text.spec.ts tests/e2e/specs/image-to-3d-pages.spec.ts --grep 'text sitemap|localized sitemap'` **3/3 通过（5.0s）**。沿用 Chromium headless 149.0.7827.55 与 `E2E_SKIP_CLEANUP=true`，未触发账号创建、生成或计费。独立代码复核无阻断项。
+
+### 采用已验证的 TXT 站点地图入口（2026-10-07）
+
+**状态：** Green（Spec 先于实现）。用户提供的 GSC 截图确认 `sitemap.txt` 状态成功、发现 14 页，XML 仍显示无法抓取。将 robots 的 `Sitemap` 声明改为已验证的 TXT 地址。
+
+- 匿名 `/robots.txt` 返回 200，唯一 `Sitemap` 声明为当前站点绝对地址 `/sitemap.txt`；抓取放行和私有路径限制保持。
+- robots 声明的 TXT 可直接请求且返回与 XML `<loc>` 相同的 URL 集合；继续通过中文偏好/模拟爬虫请求与既有 XML/robots 回归。
+- 实际 HTTP 核验后扩展现有 E2E，完成 Next typecheck/build、相关 E2E；推送 main 后验证生产 robots 声明。GSC 发现网址不等同于网页已收录，XML 原报错根因仍未确定。
+
+**结果：** Next typecheck/build（44 条目）通过，构建仅保留既有 middleware 弃用提示。生产模式本地 HTTP 核验得到 robots 200 且声明 `/sitemap.txt`；随后在现有匿名 TXT 用例加入 robots 的唯一声明与实际请求地址一致的断言。沿用上一节命令、Chromium 与跳过清理配置，相关 E2E **3/3 通过（5.9s）**；`git diff --check` 通过。Next 改动仅 robots 声明，测试与实施说明同步，无共享库或配置修改。

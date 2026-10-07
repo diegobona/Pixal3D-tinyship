@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('serves an anonymous text sitemap with the same URLs as XML', async ({ request, page }) => {
+test('advertises and serves an anonymous text sitemap with the same URLs as XML', async ({ request, page }) => {
   const response = await request.get('/sitemap.txt', { maxRedirects: 0 });
   expect(response.status()).toBe(200);
   expect(response.headers()['content-type']).toBe('text/plain; charset=utf-8');
@@ -28,6 +28,11 @@ test('serves an anonymous text sitemap with the same URLs as XML', async ({ requ
   }, await xmlResponse.text());
   expect(xml.errors).toBe(0);
   expect([...urls].sort()).toEqual(xml.urls.sort());
+
+  const robotsResponse = await request.get('/robots.txt', { maxRedirects: 0 });
+  expect(robotsResponse.status()).toBe(200);
+  const advertised = Array.from((await robotsResponse.text()).matchAll(/^Sitemap:\s*(\S+)\s*$/gim), (match) => match[1]);
+  expect(advertised).toEqual([response.url()]);
 });
 
 test('keeps the text sitemap public for Chinese preferences and a crawler user agent', async ({ request }) => {
