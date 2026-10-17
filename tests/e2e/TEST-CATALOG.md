@@ -54,7 +54,7 @@
 | 3 | 注册页加载 | 打开 `/en/signup` → 验证姓名输入框（`#name`）、邮箱输入框、密码输入框、提交按钮均可见 |
 | 4 | 忘记密码页加载 | 打开 `/en/forgot-password` → 验证邮箱输入框可见 → 验证表单内按钮可见 |
 | 5 | 定价页加载 | 打开 `/en/pricing` → 验证标题不含错误 → 验证至少有一个含 ¥ 或 $ 价格的元素可见 |
-| 6 | 登录后在内嵌工作台参考图标题行提供免费生成入口 | 未登录打开 `/en` → 登录遮罩可见且免费生成入口不存在；登录后分别打开 `/en` 和 `/zh-CN` → 验证入口以不超过 24px 高的小型辅助按钮浮在 iframe 上层、与 `SOURCE IMAGE` 标题同行且不覆盖上传框 → 英文显示 `No image? Create one free`，中文显示 `没有参考图？免费生成一张` → 链接指向 `https://seedance3-pro.com/app/image/gpt-image-2?ref=pixal3d`，并在新窗口安全打开 → 页面不再渲染 AnyPoses Footer |
+| 6 | 登录后在内嵌工作台参考图标题行提供免费生成入口 | 未登录打开 `/en` → 登录遮罩可见且免费生成入口不存在；登录后分别打开 `/en` 和 `/zh-CN` → 验证入口以不超过 24px 高的小型辅助按钮浮在 iframe 上层、与 `SOURCE IMAGE` 标题同行且不覆盖上传框 → 英文显示 `No image? Create one free`，中文显示 `没有参考图？免费生成一张` → 链接指向 `https://seedance3-pro.com/app/image/gpt-image-2-5-1k`，并在新窗口安全打开 → 页面不再渲染 AnyPoses Footer |
 
 ---
 
@@ -1254,3 +1254,9 @@ CUA 已检查桌面英文、中文390/768px与真实 Blog/Features 导航，E2E 
 - 实际 HTTP 核验后扩展现有 E2E，完成 Next typecheck/build、相关 E2E；推送 main 后验证生产 robots 声明。GSC 发现网址不等同于网页已收录，XML 原报错根因仍未确定。
 
 **结果：** Next typecheck/build（44 条目）通过，构建仅保留既有 middleware 弃用提示。生产模式本地 HTTP 核验得到 robots 200 且声明 `/sitemap.txt`；随后在现有匿名 TXT 用例加入 robots 的唯一声明与实际请求地址一致的断言。沿用上一节命令、Chromium 与跳过清理配置，相关 E2E **3/3 通过（5.9s）**；`git diff --check` 通过。Next 改动仅 robots 声明，测试与实施说明同步，无共享库或配置修改。
+
+### 参考图生成按钮目标地址更新（2026-10-18）
+
+**状态：** Green（Spec 先于实现）。将红框对应的 `pixal3d-reference-image-cta` 链接改为用户指定的 `https://seedance3-pro.com/app/image/gpt-image-2-5-1k`，不添加额外查询参数。英文和中文入口使用同一目标，保持现有新窗口打开行为与登录可见性。复用已有双语按钮 E2E 和首页布局单测更新目标断言，完成 Next typecheck/build 与相关回归。
+
+**结果：** Next typecheck/build（44 条目）通过，构建仅保留既有 middleware 弃用提示。`agent-browser` 不可用，使用 Playwright 浏览器核对真实 EN/ZH 按钮，href 均为指定新地址、target 为 `_blank`。7001 已被另一个 Vite 服务占用，因此以独立的 `next start --port 7002` 和忽略目录下的临时 Playwright 配置覆盖 baseURL，不改变项目测试默认端口。既有 `public-pages.spec.ts --grep 'Embedded workspace shows'` **1/1通过（1.7s）**，验证匿名隐藏、双语链接和布局；首页布局单测 **10/10通过**。沿用已有 Chromium headless 149.0.7827.55、工作台/登录 fixture 及 `E2E_SKIP_CLEANUP=true`。修改范围为 Next 首页链接、现有测试断言和本验收目录。

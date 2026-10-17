@@ -48,7 +48,7 @@ describe("Next home page layout", () => {
     expect(pageSource).toContain("px-2");
     expect(pageSource).toContain("text-[10px]");
     expect(pageSource).not.toContain("min-h-9");
-    expect(pageSource).toContain('href="https://seedance3-pro.com/app/image/gpt-image-2?ref=pixal3d"');
+    expect(pageSource).toContain('href="https://seedance3-pro.com/app/image/gpt-image-2-5-1k"');
     expect(pageSource).toContain('target="_blank"');
     expect(pageSource).toContain('rel="noreferrer noopener"');
     expect(pageSource).toContain("t.pixal3d.generator.referenceImageCta");

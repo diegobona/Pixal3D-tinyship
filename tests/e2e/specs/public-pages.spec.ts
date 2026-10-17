@@ -179,7 +179,7 @@ test.describe('Public Pages', () => {
     await expect(englishLink).toContainText('No image? Create one free');
     await expect(englishLink).toHaveAttribute(
       'href',
-      'https://seedance3-pro.com/app/image/gpt-image-2?ref=pixal3d',
+      'https://seedance3-pro.com/app/image/gpt-image-2-5-1k',
     );
     await expect(englishLink).toHaveAttribute('target', '_blank');
     await expect(englishLink).toHaveAttribute('rel', 'noreferrer noopener');
@@ -214,7 +214,7 @@ test.describe('Public Pages', () => {
     await expect(chineseLink).toContainText('没有参考图？免费生成一张');
     await expect(chineseLink).toHaveAttribute(
       'href',
-      'https://seedance3-pro.com/app/image/gpt-image-2?ref=pixal3d',
+      'https://seedance3-pro.com/app/image/gpt-image-2-5-1k',
     );
   });
 
