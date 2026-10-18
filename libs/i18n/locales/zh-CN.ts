@@ -12,7 +12,7 @@ export const zhCN: Locale = {
     notifications: { success: "成功", error: "错误", notice: "提示", dismiss: "关闭通知" }
   },
   actions: { previous: "上一页", next: "下一页", createAccount: "创建账户" },
-  home: { metadata: {
+  home: { footer: { toolsLabel: "更多 AI 工具", bodyEditorLink: "AI 身材修图工具" }, metadata: {
     title: "Pixal3D - 免费 AI 图片转 3D 模型生成器",
     description: "Pixal3D 是由腾讯 ARC 开源项目驱动的免费 AI 图片转 3D 工具。上传一张图片，即可在线生成 3D 模型。",
     keywords: "Pixal3D, 图片转3D, AI 3D模型生成器, 3D模型制作, 图片转GLB, AI 3D资产"

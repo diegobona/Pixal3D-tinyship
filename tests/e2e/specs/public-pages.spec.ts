@@ -123,6 +123,43 @@ test.describe('Public Pages', () => {
     }
   }
 
+  for (const { locale, home, copy } of [
+    { locale: 'en', home: '/', copy: en },
+    { locale: 'zh-CN', home: '/zh-CN', copy: zhCN },
+  ]) {
+    test(`Home footer opens the body editor with descriptive text in ${locale}`, async ({ page, context }) => {
+      await context.route('https://aibodyeditor.net/**', (route) => route.fulfill({
+        contentType: 'text/html',
+        body: '<title>Body editor destination fixture</title>',
+      }));
+      await page.goto(home, { waitUntil: 'domcontentloaded' });
+      await expect(page.getByTestId('pixal3d-inline-trial-auth-overlay')).toBeVisible();
+      const footer = page.getByTestId('pixal3d-footer');
+      const link = footer.getByRole('link', { name: copy.home.footer.bodyEditorLink, exact: true });
+      await expect(footer).toContainText(copy.home.footer.toolsLabel);
+      await expect(footer).not.toContainText('aibodyeditor.net');
+      await expect(link).toHaveAttribute('href', 'https://aibodyeditor.net/');
+      await expect(link).toHaveAttribute('target', '_blank');
+      await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+      for (const width of [1280, 390]) {
+        await page.setViewportSize({ width, height: 900 });
+        await footer.scrollIntoViewIfNeeded();
+        await expect(link).toBeInViewport({ ratio: 1 });
+        const footerBox = (await footer.boundingBox())!;
+        const tutorialsBox = (await page.getByTestId('pixal3d-tutorial-links').boundingBox())!;
+        expect(footerBox.y).toBeGreaterThanOrEqual(tutorialsBox.y + tutorialsBox.height);
+        const widths = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth }));
+        expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+      }
+      await link.focus();
+      await expect(link).toBeFocused();
+      const [popup] = await Promise.all([context.waitForEvent('page'), link.press('Enter')]);
+      await expect(popup).toHaveURL('https://aibodyeditor.net/');
+      await expect(page).toHaveURL(new URL(home, test.info().project.use.baseURL).href);
+      await popup.close();
+    });
+  }
+
   test('Embedded workspace shows a small source-image helper only after sign-in', async ({ page }) => {
     await page.goto(PAGES.home, { timeout: TIMEOUTS.navigation, waitUntil: 'domcontentloaded' });
 

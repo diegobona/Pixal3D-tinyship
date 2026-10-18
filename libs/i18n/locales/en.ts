@@ -27,6 +27,10 @@ export const en: Locale = {
     createAccount: "Create account"
   },
   home: {
+    footer: {
+      toolsLabel: "More AI tools",
+      bodyEditorLink: "AI Body Editor"
+    },
     metadata: {
       title: "Pixal3D - Free AI Image to 3D Generator.",
       description: "Pixal3D is a free AI image-to-3D generator powered by the MIT-licensed Pixal3D project from TencentARC. Upload an image and generate 3D models online.",

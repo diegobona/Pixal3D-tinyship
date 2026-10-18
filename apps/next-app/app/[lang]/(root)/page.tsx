@@ -1912,6 +1912,20 @@ export default function Home() {
               ))}
             </div>
           </section>
+          <footer data-testid="pixal3d-footer" className="mt-8 w-full max-w-[1420px] border-t border-[#25314f] py-6">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+              <span className="text-[#8193ac]">{t.home.footer.toolsLabel}</span>
+              <a
+                href="https://aibodyeditor.net/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center gap-2 rounded text-[#b6c9df] underline decoration-[#40526d] underline-offset-4 transition hover:text-[#8debd8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#48bdff]"
+              >
+                {t.home.footer.bodyEditorLink}
+                <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </footer>
         </div>
       </section>
     </div>

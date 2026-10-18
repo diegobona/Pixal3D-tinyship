@@ -26,6 +26,8 @@ The compact top navigation highlights Home or the Blog section for the current p
 
 The homepage focuses on using Pixal3D: its title leads directly to the Pixal3D workspace and the existing sign-in prompt. At the lower right below the workspace, a compact outlined “More AI 3D Generators” (“更多 AI 3D 生成工具”) secondary link uses bold mint text and a pale cyan background. It opens the model-selection page, where you can switch between Pixal3D, TRELLIS.2 and Hunyuan3D 2.1. Below the FAQ, “3D model download & usage guide” (“3D 模型下载与使用指南”) explains generation, export and file choices for editing, games or 3D printing. Its “Download 3D models for free” (“免费下载 3D 模型”) link opens the download page. The download page retains its “Choose a model and generate 3D” (“选择模型，在线生成 3D”) cross-link.
 
+The bottom of the homepage includes a “More AI tools” row with an “AI Body Editor” link (Chinese: “更多 AI 工具” / “AI 身材修图工具”). It opens the external photo body-editing tool at `https://aibodyeditor.net/` in a new tab.
+
 ## Requesting a tool
 
 The homepage feedback form asks what you need from 3D modeling software, an online service or an AI tool. Describe the part of your workflow that is difficult and what a tool should do for you, such as repairing mesh errors or processing models in batches. You can respond in any language, up to 3,000 characters.

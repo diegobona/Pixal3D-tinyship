@@ -1260,3 +1260,16 @@ CUA 已检查桌面英文、中文390/768px与真实 Blog/Features 导航，E2E 
 **状态：** Green（Spec 先于实现）。将红框对应的 `pixal3d-reference-image-cta` 链接改为用户指定的 `https://seedance3-pro.com/app/image/gpt-image-2-5-1k`，不添加额外查询参数。英文和中文入口使用同一目标，保持现有新窗口打开行为与登录可见性。复用已有双语按钮 E2E 和首页布局单测更新目标断言，完成 Next typecheck/build 与相关回归。
 
 **结果：** Next typecheck/build（44 条目）通过，构建仅保留既有 middleware 弃用提示。`agent-browser` 不可用，使用 Playwright 浏览器核对真实 EN/ZH 按钮，href 均为指定新地址、target 为 `_blank`。7001 已被另一个 Vite 服务占用，因此以独立的 `next start --port 7002` 和忽略目录下的临时 Playwright 配置覆盖 baseURL，不改变项目测试默认端口。既有 `public-pages.spec.ts --grep 'Embedded workspace shows'` **1/1通过（1.7s）**，验证匿名隐藏、双语链接和布局；首页布局单测 **10/10通过**。沿用已有 Chromium headless 149.0.7827.55、工作台/登录 fixture 及 `E2E_SKIP_CLEANUP=true`。修改范围为 Next 首页链接、现有测试断言和本验收目录。
+
+### 首页底部 AI Body Editor 文字链接（2026-10-18）
+
+**状态：** Green（相关本地验收通过，Spec 先于实现）。根据目标网站首页的实际功能，使用准确的品牌/功能锚文本，新增首页底部的轻量外链。
+
+- EN/ZH 首页最底部、教程入口之后展示页脚行：“More AI tools” / “更多 AI 工具”，链接文字为 “AI Body Editor” / “AI 身材修图工具”，不显示裸域名或没有依据的 Best/免费宣传。
+- 标准 `<a>` 指向 `https://aibodyeditor.net/`，公开可见、可键盘操作，以新标签页打开且带 `noopener noreferrer`；无需登录，不关联生成、支付或积分操作。
+- 1280px 和390px布局完整，无水平溢出；保留原首页内部入口与登录行为。
+- 实际浏览器核验后补充相关 E2E，验证中英文锚文本、位置、响应式与键盘打开目标。完成 Next typecheck/build和相关测试后记录结果。
+
+**结果：** Next typecheck/build（44 条目）通过，仅既有 middleware 弃用提示。`agent-browser` 不可用，先使用 Playwright 浏览器核验 EN/ZH ×1280/390px 的真实 DOM、位置与截图，再补充双语页脚 E2E；图片保存在 `.tmp/body-editor-footer/footer-{en,zh-CN}-{1280,390}.png`。沿用上一节 7002 本地生产服务及临时配置，`public-pages.spec.ts --grep 'Home footer|Embedded workspace shows'` **3/3 通过（3.1s）**，覆盖匿名可见、键盘新标签页打开正确地址、原页面保留和现有登录入口；目标站用响应 fixture，不触发修图服务。首页布局单测 **10/10 通过**。Chromium 149.0.7827.55，`E2E_SKIP_CLEANUP=true`。
+
+扩展首页导航检查初次 7/9 通过；英文 1280/768px 的既有 Home `aria-current` 断言在本地 `next start` 重跑仍失败。页脚改动未修改导航代码；部署前实际线上浏览器的 Home 链接有正确 `aria-current="page"`。此处记录本地生产模式与线上差异，不将扩展套件报告为全通过；部署后继续核对线上。
